@@ -162,6 +162,12 @@ a:hover { color: var(--blue-700); }
   color: var(--blue-700);
 }
 
+.nav-external::after {
+  content: ' ↗';
+  font-size: 0.75em;
+  opacity: 0.6;
+}
+
 /* ---- Search ---- */
 .search-wrap {
   position: relative;
@@ -816,6 +822,29 @@ a:hover { color: var(--blue-700); }
 @media (max-width: 900px) {
   .tracks-grid { grid-template-columns: 1fr; }
 
+  .header-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.25rem;
+  }
+
+  .header-nav .nav-link {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .search-wrap {
+    order: 3;
+    flex: 1 1 100%;
+    max-width: none;
+    margin-top: 0.25rem;
+  }
+
+  .header-inner {
+    flex-wrap: wrap;
+  }
+
   .reader-layout { grid-template-columns: 1fr; }
 
   .reader-sidebar {
@@ -833,7 +862,6 @@ a:hover { color: var(--blue-700); }
 
   .reader-main { padding: 1.25rem 1rem 3rem; }
 
-  .header-nav { display: none; }
   .menu-toggle { display: block; }
 
   .search-wrap { max-width: none; }

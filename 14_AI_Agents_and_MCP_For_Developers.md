@@ -36,6 +36,7 @@
 20. ["Training" Your Agent — What It Actually Means](#20-training-your-agent--what-it-actually-means)
 21. [Beginner → Pro Roadmap & Skill Levels](#21-beginner--pro-roadmap--skill-levels)
 22. [Production Checklist — Pro Level](#22-production-checklist--pro-level)
+23. [Agentic AI Production Problems — Deep Dive](#23-agentic-ai-production-problems--deep-dive)
 
 ### Reference
 12. [Project Ideas (Beginner → Advanced)](#12-project-ideas-beginner--advanced)
@@ -1478,6 +1479,313 @@ EVALS
 
 ---
 
+## 23. Agentic AI Production Problems — Deep Dive
+
+Real-world agent systems fail in predictable ways. These four problems appear in almost every production agent deployment — know them for interviews and for building reliable systems.
+
+```
+User request
+    ↓
+Agent loop (LLM → tool → LLM → tool → ...)
+    ↓
+FAILURE MODES:
+  ① Memory bloating   — context grows until model chokes
+  ② Partial failures  — step 3 of 5 fails, state is inconsistent
+  ③ Hallucinations    — model invents tools, data, or outcomes
+  ④ Performance       — latency, cost, token explosion
+```
+
+---
+
+### 23.1 Memory Bloating in Agentic AI
+
+**What it is:** Every agent turn appends to context — user messages, assistant replies, tool calls, tool results, retrieved RAG chunks, and scratchpad reasoning. Over multiple iterations, the context window fills up. Cost spikes, latency grows, and the model starts **forgetting** early instructions ("lost in the middle" problem).
+
+**Why agents are worse than chatbots:**
+| Chatbot | Agent |
+|---------|-------|
+| 1 user + 1 assistant turn | 5–20 turns per task |
+| Small context | Tool JSON payloads are huge |
+| No history of API responses | Full API responses stuffed into prompt |
+
+**Common causes:**
+- Appending **full** tool outputs (10KB JSON) instead of summaries
+- Never trimming conversation history
+- Storing entire RAG corpus in prompt instead of top-k chunks
+- Recursive sub-agents each passing full parent context downstream
+- No max-iteration guard — agent loops until context limit
+
+**Symptoms:**
+- Token usage grows linearly with each tool call
+- Model ignores system prompt after turn 8+
+- `context_length_exceeded` API errors
+- Bill jumps from $0.02/request to $0.50/request
+
+**Fixes (production patterns):**
+
+```python
+# 1. Summarize old turns instead of keeping raw history
+def compress_history(messages, keep_last=4):
+    old = messages[:-keep_last]
+    summary = llm.summarize(old)  # one short paragraph
+    return [{"role": "system", "content": f"Prior context: {summary}"}] + messages[-keep_last:]
+
+# 2. Truncate tool results
+def trim_tool_result(result: str, max_chars=2000) -> str:
+    if len(result) <= max_chars:
+        return result
+    return result[:max_chars] + "\n...[truncated]"
+
+# 3. Sliding window + external memory
+# Short-term: last N messages in prompt
+# Long-term: vector DB / key-value store for facts the agent can re-fetch via tool
+```
+
+| Strategy | When to use |
+|----------|-------------|
+| **Sliding window** | Simple agents, short tasks |
+| **Summarization** | Long multi-step workflows |
+| **External memory tool** | "Remember user preferences across sessions" |
+| **Structured state** | Pass `{step: 3, order_id: "X"}` not full chat log |
+| **Token budget per tool** | Hard cap on each tool response size |
+
+**Interview answer:**
+> "Memory bloating happens because agent loops accumulate tool outputs and history in the context window. I mitigate it with sliding windows, summarizing older turns, truncating tool payloads, external memory for long-term facts, and hard limits on max iterations and tokens per request."
+
+---
+
+### 23.2 Partial Failures in Agentic AI
+
+**What it is:** An agent runs a **multi-step plan** — call API A, then B, then C. Step B fails (timeout, 500, rate limit). Steps A may have already **committed** side effects (DB write, payment, email sent). The agent is now in an inconsistent state.
+
+**Example — order cancellation agent:**
+```
+Step 1: Cancel order in DB        ✅ success
+Step 2: Refund via payment API    ❌ timeout (unknown if refund happened)
+Step 3: Send confirmation email   ⏸ never ran
+```
+User sees: order cancelled, no refund, no email. Agent may **hallucinate** "refund completed."
+
+**Types of partial failure:**
+
+| Type | Example |
+|------|---------|
+| **Tool timeout** | External API slow, agent retries blindly |
+| **Idempotency violation** | Retry creates duplicate charge |
+| **Inconsistent read** | Tool A updated DB, Tool B reads stale cache |
+| **Orchestration gap** | 3 parallel tools, 1 fails — no rollback |
+| **Human-in-the-loop timeout** | Agent waits for approval, session expires |
+
+**Fixes:**
+
+```
+1. IDEMPOTENCY KEYS
+   Every write tool accepts idempotency_key → safe retries
+
+2. SAGA / COMPENSATING TRANSACTIONS
+   Step 2 fails → run compensating action for Step 1
+   (e.g. re-activate order if refund failed)
+
+3. EXPLICIT STATE MACHINE
+   Agent tracks: PENDING → REFUNDING → COMPLETED | FAILED
+   Never skip states; resume from last known good state
+
+4. OUTBOX PATTERN
+   Write "refund pending" event to DB → async worker retries refund
+
+5. HUMAN ESCALATION
+   On partial failure → pause agent, alert ops, don't guess
+```
+
+```python
+# Saga-style agent step with compensation
+class AgentStep:
+    def execute(self): ...
+    def compensate(self): ...  # undo on downstream failure
+
+steps = [CancelOrder(), RefundPayment(), SendEmail()]
+completed = []
+try:
+    for step in steps:
+        step.execute()
+        completed.append(step)
+except ToolError as e:
+    for step in reversed(completed):
+        step.compensate()
+    raise AgentPartialFailure(e)
+```
+
+**Interview answer:**
+> "Partial failures are inevitable in multi-tool agents. I design tools to be idempotent, use explicit workflow state, implement compensating transactions for critical paths, and never let the LLM assume a failed step succeeded — I verify tool responses and surface uncertainty to the user or a human queue."
+
+---
+
+### 23.3 Hallucinations in Agentic AI
+
+**What it is:** The model produces **plausible but false** information — inventing API responses, tool names that don't exist, fake citations, or claiming an action succeeded when the tool returned an error.
+
+**Agentic hallucination is worse than chat hallucination:**
+
+| Chat hallucination | Agent hallucination |
+|--------------------|---------------------|
+| Wrong fact in text | **Wrong action taken** or **reported as done** |
+| User can fact-check | Side effects may already be committed |
+| No tool access | Model fakes tool output if not constrained |
+
+**Common patterns:**
+1. **Tool hallucination** — model calls `get_order_status_v2` when only `get_order_status` exists
+2. **Result hallucination** — model says "refund processed" without calling refund tool
+3. **Parameter hallucination** — invents `order_id: "12345"` instead of using user's real ID
+4. **Source hallucination** — RAG cites documents that weren't retrieved
+5. **Plan hallucination** — describes steps it never executed
+
+**Fixes:**
+
+```
+GROUNDING
+  □ Force answers only from tool results + retrieved docs
+  □ System prompt: "Never state facts not in tool output"
+
+TOOL CONSTRAINTS
+  □ Strict JSON schema for tool args (reject invalid calls)
+  □ Allowlist of tool names — reject unknown tools server-side
+
+VERIFICATION LAYER
+  □ After LLM says "done" → verify DB/API state matches claim
+  □ Require tool success response before confirmation message
+
+CITATIONS
+  □ RAG: require chunk IDs in answer; display sources to user
+
+CONFIDENCE & ABSTENTION
+  □ "I don't know" / "I need to check" when retrieval empty
+  □ Lower temperature for factual/tool-selection turns
+
+EVAL SUITE
+  □ Test: "Did agent call tool before claiming success?"
+  □ Test: adversarial prompts that trick agent into faking results
+```
+
+```python
+# Guardrail: verify before telling user success
+def finalize_agent_response(claimed_action, tool_log):
+    if claimed_action.requires_tool:
+        if not tool_log.has_success(claimed_action.tool_name):
+            return "I couldn't complete that action. Please try again."
+    return claimed_action.message
+```
+
+**Interview answer:**
+> "Agent hallucinations are dangerous because they can drive real side effects. I ground responses in tool outputs, validate tool calls against schemas, verify state before confirming success to the user, use RAG with citations, and run evals that specifically test for 'claimed success without tool call' scenarios."
+
+---
+
+### 23.4 Performance Issues in Agentic AI
+
+**What it is:** Agents are **slow and expensive** compared to traditional APIs. Each "think → act → observe" cycle is at least one LLM call (often 2–10+ seconds). Multiple tools in sequence multiply latency. Unoptimized prompts burn tokens.
+
+**Latency breakdown (typical agent request):**
+
+```
+User message                    0 ms
+LLM call #1 (plan + tool pick)  1–4 s
+Tool execution (API/DB)         200 ms – 5 s
+LLM call #2 (interpret result)  1–4 s
+LLM call #3 (next tool)         1–4 s
+...
+Final response synthesis        1–3 s
+────────────────────────────────────
+Total: 5–30+ seconds (multi-step)
+```
+
+**Cost breakdown:**
+```
+Input tokens:  system prompt + history + tool schemas + RAG chunks
+Output tokens: reasoning + tool call JSON + final answer
+Tool calls:    external API costs
+Iterations:    5 loops × 8K tokens = 40K tokens/request
+```
+
+**Performance problems:**
+
+| Problem | Impact |
+|---------|--------|
+| Sequential tool calls | Latency adds up linearly |
+| Huge system prompt | Every call pays full prompt cost |
+| Large tool schemas | 20 tools × 500 tokens = 10K overhead |
+| No caching | Same RAG query embedded every turn |
+| Wrong model size | GPT-4 for simple routing tasks |
+| Unbounded loops | Agent runs 15 iterations on stuck task |
+
+**Optimizations:**
+
+```
+LATENCY
+  □ Parallel tool calls when independent (async gather)
+  □ Route simple queries to small/fast model (Haiku, GPT-4o-mini)
+  □ Cache frequent RAG embeddings and retrieval results
+  □ Stream partial responses to user (SSE)
+  □ Pre-compute tool schemas; don't rebuild each request
+  □ Set max_iterations (e.g. 5) — fail fast
+
+COST
+  □ Smaller model for planning vs execution
+  □ Prompt compression / remove redundant examples
+  □ Only inject relevant tools per step (dynamic tool loading)
+  □ Batch embedding jobs offline
+  □ Log tokens per request; alert on outliers
+
+THROUGHPUT
+  □ Queue long agent jobs (async: "we'll email you")
+  □ Rate limit per user
+  □ Separate worker pool for tool execution
+  □ Circuit breaker on slow external APIs
+```
+
+```python
+# Model routing — cheap model for classification, expensive for synthesis
+intent = fast_model.classify(user_message)  # 200ms
+if intent == "simple_faq":
+    return fast_model.answer(user_message)
+else:
+    return agent_loop(capable_model, tools)  # multi-step
+```
+
+**Metrics to monitor:**
+
+| Metric | Target (rule of thumb) |
+|--------|------------------------|
+| P95 latency | < 15s for 3-step agent |
+| Tokens/request | Track trend; alert if 2× baseline |
+| Cost/request | Dashboard per feature |
+| Tool error rate | < 2% |
+| Iterations to complete | Avg < 4 |
+| User abandonment | Spike = too slow |
+
+**Interview answer:**
+> "Agent performance is dominated by sequential LLM round-trips. I parallelize independent tools, use model routing for simple vs complex tasks, cap iterations, cache RAG results, stream responses, and monitor P95 latency and token cost per request with alerts on regression."
+
+---
+
+### 23.5 Interview Q&A — Agentic AI Failures
+
+**Q: What is memory bloating in agents?**  
+A: Unbounded growth of context from chat history, tool outputs, and RAG chunks across agent loops — causing high cost, latency, and degraded instruction-following. Fix with summarization, sliding windows, truncated tool results, and external memory.
+
+**Q: How do you handle partial failures?**  
+A: Idempotent tools, saga/compensating transactions, explicit workflow state, async retry via outbox pattern, and human escalation — never let the LLM assume an uncertain step succeeded.
+
+**Q: How are agent hallucinations different from chat hallucinations?**  
+A: They can trigger or misreport real tool actions. Mitigate with schema validation, grounding in tool output, post-action verification, and evals for fake success claims.
+
+**Q: Why are agents slow?**  
+A: Multiple sequential LLM calls plus tool latency. Optimize with parallel tools, model routing, caching, streaming, iteration limits, and async processing for long jobs.
+
+**Q: Name four production risks of agentic AI.**  
+A: Memory bloating, partial failures, hallucinations, performance/cost — plus security (tool injection) as a fifth bonus topic.
+
+---
+
 ## Quick Reference Card
 
 ```
@@ -1493,6 +1801,7 @@ Skill path:
 
 Sections to master:
   16 = Prompts | 17 = Context | 18 = Agents | 19 = MCP | 20 = "Training"
+  23 = Production failures (memory, partial fail, hallucination, performance)
 ```
 
 ---

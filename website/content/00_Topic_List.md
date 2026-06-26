@@ -415,4 +415,13 @@
 
 ---
 
+## SECTION 7 — AI AGENTS & MCP (in `14_AI_Agents_and_MCP_For_Developers.md`)
+
+- [ ] §23 Memory bloating in agentic AI
+- [ ] §23 Partial failures in agentic AI
+- [ ] §23 Hallucinations in agentic AI
+- [ ] §23 Performance issues in agentic AI
+
+---
+
 > **Next Step**: Open `01_Java_Core_to_Advanced.md` and start reading!

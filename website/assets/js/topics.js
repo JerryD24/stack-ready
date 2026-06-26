@@ -226,10 +226,10 @@ const INTERVIEW_TRACKS = [
         file: '14_AI_Agents_and_MCP_For_Developers.md',
         title: 'AI Agents & MCP',
         description: 'Prompt engineering, context engineering, building agents & MCP servers, RAG, evals, roadmap',
-        sections: 22,
+        sections: 23,
         level: 'Beginner → Pro',
         priority: 'high',
-        tags: ['AI', 'MCP', 'Agents', 'RAG']
+        tags: ['AI', 'MCP', 'Agents', 'RAG', 'Agentic AI']
       }
     ]
   }
