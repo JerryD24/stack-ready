@@ -111,6 +111,25 @@ a:hover { color: var(--blue-700); }
   text-decoration: none;
 }
 
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.logo-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--blue-800);
+}
+
+.logo-author {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--blue-500);
+  letter-spacing: 0.02em;
+}
+
 .logo-icon {
   width: 40px;
   height: 40px;
@@ -239,6 +258,12 @@ a:hover { color: var(--blue-700); }
   color: var(--gray-600);
   max-width: 640px;
   margin: 0 auto 2rem;
+}
+
+.hero-byline {
+  font-size: 1rem !important;
+  color: var(--blue-600) !important;
+  margin: -0.25rem auto 1rem !important;
 }
 
 /* ---- Stats row ---- */

@@ -245,14 +245,6 @@ const UTILITY_DOCS = [
     type: 'checklist'
   },
   {
-    id: 'study-plan',
-    file: '00_Study_Plan_Day_by_Day.txt',
-    title: '12-Week Study Plan',
-    description: '84-day day-by-day schedule for Java, Spring, Python, DSA, AWS',
-    icon: '📅',
-    type: 'plan'
-  },
-  {
     id: 'peer-review',
     file: 'Complete_PeerReview_Report.md',
     title: 'Peer Review Report',

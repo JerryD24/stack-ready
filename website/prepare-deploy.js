@@ -17,15 +17,24 @@ const CONFIG_FILE = path.join(WEBSITE_DIR, 'config.js');
 const repoName = process.argv[2] || '';
 
 const EXTENSIONS = new Set(['.md', '.txt']);
+const EXCLUDE_FILES = new Set(['00_Study_Plan_Day_by_Day.txt']);
 
 function copyGuides() {
   if (!fs.existsSync(CONTENT_DIR)) fs.mkdirSync(CONTENT_DIR, { recursive: true });
 
-  const files = fs.readdirSync(PREP_DIR).filter(f => EXTENSIONS.has(path.extname(f).toLowerCase()));
+  const files = fs.readdirSync(PREP_DIR).filter(f => {
+    const ext = path.extname(f).toLowerCase();
+    return EXTENSIONS.has(ext) && !EXCLUDE_FILES.has(f);
+  });
   let count = 0;
   for (const file of files) {
     fs.copyFileSync(path.join(PREP_DIR, file), path.join(CONTENT_DIR, file));
     count++;
+  }
+  // Remove excluded files if previously deployed
+  for (const excluded of EXCLUDE_FILES) {
+    const p = path.join(CONTENT_DIR, excluded);
+    if (fs.existsSync(p)) fs.unlinkSync(p);
   }
   console.log(`Copied ${count} guide files to website/content/`);
 }
