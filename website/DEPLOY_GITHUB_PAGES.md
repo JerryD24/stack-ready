@@ -16,31 +16,40 @@ StackReady uses **GitHub Actions** to deploy the `website/` folder instead.
 
 ---
 
-## Enable GitHub Pages (correct way)
+## Enable GitHub Pages (use gh-pages branch)
+
+After the first successful **Deploy StackReady to GitHub Pages** run:
 
 1. Open: [github.com/JerryD24/stack-ready/settings/pages](https://github.com/JerryD24/stack-ready/settings/pages)
 
 2. Under **Build and deployment** → **Source**, select:
 
-   ### **GitHub Actions**  ← choose this (NOT "Deploy from a branch")
+   **Deploy from a branch**
 
-3. Save. The workflow `Deploy StackReady to GitHub Pages` runs automatically.
+3. Set:
+   - **Branch:** `gh-pages`
+   - **Folder:** `/ (root)`
 
-4. Check progress: repo → **Actions** tab → latest workflow run
+4. Click **Save**
 
-5. After it succeeds (~1–2 min), your site is live at:
+5. Live URL (1–2 min):
    ```
    https://jerryd24.github.io/stack-ready/
    ```
 
 ---
 
-## If "GitHub Actions" is not visible
+## What you see in Actions
 
-1. Make sure the repo is **Public**
-2. Go to **Settings** → **Actions** → **General** → allow Actions
-3. Push the latest code (includes `.github/workflows/deploy-pages.yml`)
-4. Return to **Settings** → **Pages** → Source: **GitHub Actions**
+| Workflow | Meaning |
+|----------|---------|
+| **Deploy StackReady to GitHub Pages** | Builds site → pushes to `gh-pages` branch |
+| **Sync StackReady content** | Copies updated `.md` files into `website/content/` on `main` |
+
+If **Deploy** shows red ❌ — click it → read the error log, then tell me the message.
+
+**Re-run after fixing Pages settings:**
+Actions → Deploy StackReady to GitHub Pages → **Re-run all jobs**
 
 ---
 

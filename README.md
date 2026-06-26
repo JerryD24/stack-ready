@@ -48,9 +48,9 @@ node prepare-deploy.js stack-ready
 
 ## GitHub Pages setup (one-time)
 
-Repo → **Settings** → **Pages** → Source: **GitHub Actions** (not "Deploy from a branch")
-
-GitHub only offers `/` or `/docs` for branch deploy — we use Actions to deploy the `website/` folder.
+1. Wait for **Deploy StackReady to GitHub Pages** to succeed (Actions tab)
+2. Settings → **Pages** → Source: **Deploy from a branch**
+3. Branch: **`gh-pages`** → Folder: **`/ (root)`** → Save
 
 Live URL: **https://jerryd24.github.io/stack-ready/**
 
