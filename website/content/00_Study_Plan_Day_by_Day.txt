@@ -1,0 +1,1279 @@
+================================================================================
+         COMPLETE INTERVIEW PREP — DAY BY DAY STUDY PLAN
+         Java | SpringBoot | Python | Go | DSA | System Design | AWS
+         Total Duration : 12 Weeks (84 Days)
+         Daily Study   : 2-3 hrs on Weekdays | 4-5 hrs on Weekends
+================================================================================
+
+NOTE: All study material is in the Interview_Prep folder:
+  01_Java_Core_to_Advanced.md
+  02_SpringBoot.md
+  03_System_Design_HLD.md
+  04_System_Design_LLD.md
+  05_DSA.md
+  06_CP_Tricks.md          (Java CP Tricks)
+  07_Python_Core_to_Advanced.md
+  08_FastAPI_and_Falcon.md
+  09_GoLang.md
+  10_Python_System_Design_HLD.md
+  11_Python_System_Design_LLD.md
+  12_Python_CP_Tricks.md
+  13_AWS_Complete_Guide.md
+
+================================================================================
+  LEGEND
+  [ ] = Task to complete
+  [R] = Revise previously studied topic
+  [P] = Practice / Code it yourself
+  [Q] = Solve Interview Questions from the doc
+  [*] = Important / High Priority
+================================================================================
+
+
+================================================================================
+  WEEK 1 — JAVA CORE FOUNDATIONS
+  File: 01_Java_Core_to_Advanced.md
+================================================================================
+
+------------------------------------------------------------------------
+DAY 1  (Date: __________)
+Topic: Java Basics + JVM Internals
+------------------------------------------------------------------------
+[ ] Read: JDK vs JRE vs JVM — understand the difference
+[ ] Read: JVM Memory Areas (Heap, Stack, Method Area, PC Register)
+[ ] Read: Class Loading Process (Bootstrap, Extension, App classloaders)
+[ ] Read: Data Types — Primitives vs Wrappers, autoboxing, unboxing
+[ ] Read: Naming conventions, static, final keywords
+[ ] [P] Write: Small program demonstrating autoboxing trap (Integer cache -128 to 127)
+[ ] [P] Write: Demonstrate static vs instance variables
+[ ] [Q] Answer: What is the difference between == and .equals() for String?
+[ ] [Q] Answer: Why is String immutable in Java?
+
+Daily Goal: Understand how Java runs code before writing code.
+
+------------------------------------------------------------------------
+DAY 2  (Date: __________)
+Topic: OOP — Encapsulation, Inheritance, Polymorphism, Abstraction
+------------------------------------------------------------------------
+[ ] Read: Encapsulation — private fields, getters/setters, why it matters
+[ ] Read: Inheritance — extends, super(), method overriding rules
+[ ] Read: Polymorphism — compile-time (overloading) vs runtime (overriding)
+[ ] Read: Abstraction — abstract classes vs interfaces
+[ ] Read: Interface default methods (Java 8), sealed classes (Java 17)
+[ ] [P] Code: Design a Shape hierarchy (Shape → Circle, Rectangle, Triangle)
+[ ] [P] Code: Demonstrate covariant return types
+[ ] [P] Code: Interface with default + static methods
+[ ] [Q] Answer: Can you override a static method? Why or why not?
+[ ] [Q] Answer: Difference between abstract class and interface?
+
+------------------------------------------------------------------------
+DAY 3  (Date: __________)
+Topic: String + Object class methods
+------------------------------------------------------------------------
+[ ] Read: String pool, String immutability internals
+[ ] Read: StringBuilder vs StringBuffer — when to use which
+[ ] Read: Object class methods: equals, hashCode, toString, clone
+[ ] Read: equals-hashCode contract (critical for HashMap)
+[ ] [P] Code: Implement equals() and hashCode() for a custom class
+[ ] [P] Code: Demonstrate String pool vs new String()
+[ ] [P] Code: Use StringBuilder for string reversal and palindrome check
+[ ] [Q] Answer: What happens if you override equals() but NOT hashCode()?
+[ ] [Q] Answer: What is the difference between String, StringBuilder, StringBuffer?
+
+------------------------------------------------------------------------
+DAY 4  (Date: __________)
+Topic: Collections Framework — Part 1 (List, Set, Queue)
+------------------------------------------------------------------------
+[ ] Read: ArrayList internals (dynamic array, resize logic, initial capacity)
+[ ] Read: LinkedList — doubly linked, when to prefer over ArrayList
+[ ] Read: HashSet, LinkedHashSet, TreeSet — differences and use cases
+[ ] Read: PriorityQueue — min-heap by default, custom Comparator
+[ ] Read: Deque — ArrayDeque as stack and queue
+[ ] [P] Code: Demonstrate ArrayList resize behavior
+[ ] [P] Code: TreeSet with custom Comparator (sort by length then alphabetically)
+[ ] [P] Code: PriorityQueue for top-K elements problem
+[ ] [Q] Answer: ArrayList vs LinkedList — when to use which?
+[ ] [Q] Answer: How does HashSet check for duplicates?
+
+------------------------------------------------------------------------
+DAY 5  (Date: __________)
+Topic: Collections Framework — Part 2 (Map) [*MOST IMPORTANT*]
+------------------------------------------------------------------------
+[ ] Read: HashMap internals — hashing, buckets, load factor, resize
+[ ] Read: HashMap in Java 8+ — treeify bucket when > 8 entries (Red-Black Tree)
+[ ] Read: LinkedHashMap — insertion order
+[ ] Read: TreeMap — sorted by key, Red-Black Tree
+[ ] Read: ConcurrentHashMap — segment locking (Java 7) vs CAS (Java 8)
+[ ] Read: Fail-fast vs Fail-safe iterators
+[ ] Read: Comparable vs Comparator
+[ ] [P] Code: Implement a frequency counter using HashMap
+[ ] [P] Code: ConcurrentHashMap in a multi-threaded scenario
+[ ] [Q] Answer: HashMap vs Hashtable vs ConcurrentHashMap?
+[ ] [Q] Answer: What is the internal structure of HashMap in Java 8?
+
+------------------------------------------------------------------------
+DAY 6  (Date: __________)   WEEKEND
+Topic: Generics + Exception Handling
+------------------------------------------------------------------------
+[ ] Read: Generics — type parameters, bounded wildcards (<? extends T>, <? super T>)
+[ ] Read: PECS — Producer Extends, Consumer Super (very common interview topic)
+[ ] Read: Type Erasure — what happens at runtime
+[ ] Read: Exception hierarchy — Checked vs Unchecked vs Error
+[ ] Read: try-with-resources, multi-catch, finally behavior
+[ ] Read: Custom exceptions — when to use checked vs unchecked
+[ ] [P] Code: Generic Pair<T, U> class with bounded type parameters
+[ ] [P] Code: Custom exception with error code enum
+[ ] [P] Code: try-with-resources for AutoCloseable
+[ ] [Q] Answer: What is PECS with a real example?
+[ ] [Q] Answer: When would you use checked vs unchecked exception?
+
+------------------------------------------------------------------------
+DAY 7  (Date: __________)   WEEKEND + REVISION
+Topic: Java 8 Features — Lambdas, Streams, Optional
+------------------------------------------------------------------------
+[ ] Read: Lambda expressions — syntax, functional interfaces
+[ ] Read: Built-in functional interfaces: Predicate, Function, Consumer, Supplier
+[ ] Read: Method references — 4 types
+[ ] Read: Stream API — lazy evaluation, intermediate vs terminal operations
+[ ] Read: Stream operations: filter, map, flatMap, reduce, collect, groupingBy
+[ ] Read: Optional — orElse, orElseGet, orElseThrow, map, flatMap
+[ ] [P] Code: Stream pipeline — filter employees by dept, sort by salary, collect names
+[ ] [P] Code: groupingBy — group words by first letter
+[ ] [P] Code: Custom Collector
+[ ] [Q] Answer: What is the difference between map() and flatMap()?
+[ ] [Q] Answer: orElse() vs orElseGet() — when does the expression execute?
+[ ] [R] REVISE: Days 1-6 key concepts (30 min)
+
+Weekly Review: Can you explain Java memory model, Collections internals, and Streams?
+
+
+================================================================================
+  WEEK 2 — JAVA ADVANCED (Concurrency + Java 9-21 + JVM)
+  File: 01_Java_Core_to_Advanced.md (continued)
+================================================================================
+
+------------------------------------------------------------------------
+DAY 8  (Date: __________)
+Topic: Multithreading — Basics
+------------------------------------------------------------------------
+[ ] Read: Thread lifecycle (New, Runnable, Blocked, Waiting, Terminated)
+[ ] Read: Creating threads — Thread class, Runnable, Callable, Future
+[ ] Read: synchronized keyword — method level vs block level
+[ ] Read: volatile — visibility guarantee (NOT atomicity)
+[ ] Read: wait(), notify(), notifyAll() — producer-consumer pattern
+[ ] [P] Code: Producer-Consumer using wait/notify
+[ ] [P] Code: Demonstrate race condition without synchronization
+[ ] [P] Code: Fix race condition with synchronized
+[ ] [Q] Answer: What is the difference between synchronized and volatile?
+[ ] [Q] Answer: What is a race condition? Give a real example.
+
+------------------------------------------------------------------------
+DAY 9  (Date: __________)
+Topic: Multithreading — Advanced (ExecutorService, CompletableFuture)
+------------------------------------------------------------------------
+[ ] Read: ExecutorService — fixed, cached, single, scheduled thread pools
+[ ] Read: Future vs CompletableFuture — chaining, combining
+[ ] Read: CompletableFuture: thenApply, thenCompose, thenCombine, allOf, anyOf
+[ ] Read: ForkJoinPool — work-stealing algorithm
+[ ] Read: Virtual Threads (Java 21) — Project Loom, structured concurrency
+[ ] [P] Code: Parallel HTTP calls using CompletableFuture.allOf()
+[ ] [P] Code: ExecutorService with fixed thread pool of 10
+[ ] [P] Code: Virtual Thread executor (Java 21)
+[ ] [Q] Answer: ThreadPoolExecutor parameters — corePoolSize, maxPoolSize, queue
+[ ] [Q] Answer: What is the difference between thenApply and thenCompose?
+
+------------------------------------------------------------------------
+DAY 10 (Date: __________)
+Topic: Concurrency Utilities (Locks, Atomics, Concurrent Collections)
+------------------------------------------------------------------------
+[ ] Read: ReentrantLock vs synchronized — tryLock, lockInterruptibly
+[ ] Read: ReadWriteLock — multiple readers, exclusive writer
+[ ] Read: AtomicInteger, AtomicLong, AtomicReference — CAS operations
+[ ] Read: CountDownLatch, CyclicBarrier, Semaphore, Phaser
+[ ] Read: Deadlock, Livelock, Starvation — detection and prevention
+[ ] [P] Code: Bank account transfer with ReentrantLock (prevent deadlock)
+[ ] [P] Code: CountDownLatch for parallel service health checks
+[ ] [P] Code: Semaphore as rate limiter
+[ ] [Q] Answer: How do you detect and prevent deadlock?
+[ ] [Q] Answer: ReentrantLock vs synchronized — key differences?
+
+------------------------------------------------------------------------
+DAY 11 (Date: __________)
+Topic: Java 9-21 Features + JVM Internals Deep Dive
+------------------------------------------------------------------------
+[ ] Read: Java 9 — Modules (JPMS), var (Java 10)
+[ ] Read: Java 14+ — Records, Sealed Classes, Pattern Matching instanceof
+[ ] Read: Java 21 — Sequenced Collections, Pattern Matching switch
+[ ] Read: GC Algorithms — Serial, Parallel, G1, ZGC, Shenandoah
+[ ] Read: G1 GC — Regions, Eden, Survivor, Old, Humongous
+[ ] Read: Memory leaks in Java — static collections, listeners, classloaders
+[ ] [P] Code: Record class for a DTO, demonstrate pattern matching
+[ ] [Q] Answer: When would you use G1 GC vs ZGC?
+[ ] [Q] Answer: How do Records differ from regular classes?
+[ ] [Q] Answer: What causes memory leaks in Java?
+
+------------------------------------------------------------------------
+DAY 12 (Date: __________)
+Topic: Design Patterns in Java [*CRITICAL FOR INTERVIEWS*]
+------------------------------------------------------------------------
+[ ] Read: Singleton — lazy, eager, enum, double-checked locking
+[ ] Read: Factory Method + Abstract Factory
+[ ] Read: Builder pattern — immutable objects, fluent API
+[ ] Read: Prototype — clone()
+[ ] Read: Adapter, Decorator, Proxy, Facade, Composite
+[ ] [P] Code: Thread-safe Singleton (enum approach)
+[ ] [P] Code: Builder pattern for a complex Request object
+[ ] [P] Code: Decorator pattern for logging/caching wrapper
+[ ] [Q] Answer: How do you implement a thread-safe Singleton?
+[ ] [Q] Answer: Builder vs Factory — when to use which?
+
+------------------------------------------------------------------------
+DAY 13 (Date: __________)  WEEKEND
+Topic: Behavioral Design Patterns
+------------------------------------------------------------------------
+[ ] Read: Observer — event handling
+[ ] Read: Strategy — replace if-else chains
+[ ] Read: Command — undo/redo, request encapsulation
+[ ] Read: Template Method — algorithm skeleton
+[ ] Read: Chain of Responsibility — request pipeline
+[ ] Read: Iterator, Mediator, State, Visitor (overview)
+[ ] [P] Code: Strategy pattern for payment processor (UPI, Card, Wallet)
+[ ] [P] Code: Observer for real-time notification system
+[ ] [P] Code: Chain of Responsibility for request validation
+[ ] [Q] Answer: When would you use Strategy vs Command pattern?
+
+------------------------------------------------------------------------
+DAY 14 (Date: __________)  WEEKEND + FULL REVISION
+Topic: Java Full Revision Day
+------------------------------------------------------------------------
+[ ] [R] Revise: JVM memory model + GC
+[ ] [R] Revise: Collections internals (HashMap, ConcurrentHashMap)
+[ ] [R] Revise: Java 8 Streams — write 5 complex stream pipelines from scratch
+[ ] [R] Revise: Concurrency — CompletableFuture chain from memory
+[ ] [R] Revise: Design Patterns — draw UML for Singleton, Builder, Observer, Strategy
+[ ] [Q] Answer out loud: 10 most common Java interview questions
+[ ] Mock: "Explain Java memory model to a colleague" (5 min)
+
+Weekly Review: Can you code any design pattern from scratch? Can you explain ConcurrentHashMap internals?
+
+
+================================================================================
+  WEEK 3 — SPRING BOOT
+  File: 02_SpringBoot.md
+================================================================================
+
+------------------------------------------------------------------------
+DAY 15 (Date: __________)
+Topic: Spring Core — IoC, DI, Bean Lifecycle
+------------------------------------------------------------------------
+[ ] Read: IoC Container — ApplicationContext vs BeanFactory
+[ ] Read: Dependency Injection — constructor, setter, field injection
+[ ] Read: Bean lifecycle — @PostConstruct, @PreDestroy, init-method
+[ ] Read: Bean scopes — singleton, prototype, request, session
+[ ] Read: @Component, @Service, @Repository, @Controller hierarchy
+[ ] [P] Code: Spring Boot app with constructor injection (best practice)
+[ ] [P] Code: Prototype bean vs Singleton bean behavior
+[ ] [Q] Answer: Why is constructor injection preferred over field injection?
+[ ] [Q] Answer: What is the difference between @Component and @Bean?
+
+------------------------------------------------------------------------
+DAY 16 (Date: __________)
+Topic: Spring AOP + Auto-Configuration + Profiles
+------------------------------------------------------------------------
+[ ] Read: AOP concepts — Aspect, Advice, Pointcut, Join Point, Weaving
+[ ] Read: Advice types: @Before, @After, @AfterReturning, @Around, @AfterThrowing
+[ ] Read: Proxy-based AOP — JDK Dynamic vs CGLIB proxy
+[ ] Read: @SpringBootApplication = @Configuration + @EnableAutoConfiguration + @ComponentScan
+[ ] Read: Spring profiles — @Profile, spring.profiles.active
+[ ] Read: Externalized config — @Value, @ConfigurationProperties
+[ ] [P] Code: @Around advice for logging execution time of all service methods
+[ ] [P] Code: @ConfigurationProperties with nested YAML
+[ ] [Q] Answer: How does Spring Boot auto-configuration work?
+[ ] [Q] Answer: When does CGLIB proxy get used instead of JDK proxy?
+
+------------------------------------------------------------------------
+DAY 17 (Date: __________)
+Topic: Spring REST API (Complete)
+------------------------------------------------------------------------
+[ ] Read: @RestController, @GetMapping, @PostMapping, @PutMapping, @DeleteMapping
+[ ] Read: @PathVariable, @RequestParam, @RequestBody, @RequestHeader, @CookieValue
+[ ] Read: ResponseEntity — return status codes, headers
+[ ] Read: Bean Validation — @Valid, @NotNull, @Size, @Email, custom validator
+[ ] Read: @ControllerAdvice + @ExceptionHandler — global exception handling
+[ ] Read: HTTP status codes (200, 201, 204, 400, 401, 403, 404, 409, 422, 500)
+[ ] [P] Code: Full CRUD REST API with validation and global error handler
+[ ] [P] Code: Custom validator for password strength
+[ ] [Q] Answer: How do you handle exceptions globally in Spring Boot?
+[ ] [Q] Answer: What is the difference between @Controller and @RestController?
+
+------------------------------------------------------------------------
+DAY 18 (Date: __________)
+Topic: Spring Data JPA [*MOST INTERVIEW QUESTIONS*]
+------------------------------------------------------------------------
+[ ] Read: @Entity, @Table, @Id, @GeneratedValue, @Column
+[ ] Read: Relationships: @OneToMany, @ManyToOne, @ManyToMany, @OneToOne
+[ ] Read: Fetch types: LAZY vs EAGER — default for each relationship type
+[ ] Read: N+1 problem — how it happens, how to fix (JOIN FETCH, @EntityGraph)
+[ ] Read: Derived queries, @Query (JPQL + native), Pagination
+[ ] Read: @Transactional — propagation, isolation levels
+[ ] Read: Optimistic vs Pessimistic locking (@Version, @Lock)
+[ ] [P] Code: Repository with derived queries + JPQL + pagination
+[ ] [P] Code: Fix N+1 problem with @EntityGraph
+[ ] [Q] Answer: Explain the N+1 problem and how you solve it in Spring Boot
+[ ] [Q] Answer: What are transaction isolation levels?
+
+------------------------------------------------------------------------
+DAY 19 (Date: __________)
+Topic: Spring Security — JWT Authentication
+------------------------------------------------------------------------
+[ ] Read: Spring Security filter chain — SecurityFilterChain
+[ ] Read: Authentication vs Authorization
+[ ] Read: JWT — header.payload.signature structure
+[ ] Read: JWT flow: login → generate token → send in Authorization header → validate
+[ ] Read: BCrypt password hashing
+[ ] Read: @PreAuthorize, @PostAuthorize, method-level security
+[ ] [P] Code: Complete JWT auth flow (register, login, protected endpoint)
+[ ] [Q] Answer: How does Spring Security process a request?
+[ ] [Q] Answer: How do you implement JWT authentication in Spring Boot?
+[ ] [Q] Answer: What is the difference between authentication and authorization?
+
+------------------------------------------------------------------------
+DAY 20 (Date: __________)  WEEKEND
+Topic: Microservices with Spring Cloud
+------------------------------------------------------------------------
+[ ] Read: Microservices concepts — loose coupling, independent deployability
+[ ] Read: Spring Cloud Config — centralized config server
+[ ] Read: Eureka — service discovery (register, discover, heartbeat)
+[ ] Read: OpenFeign — declarative HTTP client between services
+[ ] Read: Resilience4j — Circuit Breaker, Retry, Rate Limiter, Bulkhead
+[ ] Read: API Gateway (Spring Cloud Gateway) — routing, filters, rate limiting
+[ ] Read: Saga Pattern — distributed transactions (Choreography vs Orchestration)
+[ ] [P] Code: Feign client with fallback using Resilience4j CircuitBreaker
+[ ] [Q] Answer: How does a Circuit Breaker work? What are the 3 states?
+[ ] [Q] Answer: How do you handle distributed transactions in microservices?
+
+------------------------------------------------------------------------
+DAY 21 (Date: __________)  WEEKEND + REVISION
+Topic: Spring Boot Actuator + Kafka Integration + Full Revision
+------------------------------------------------------------------------
+[ ] Read: Actuator endpoints — /health, /metrics, /info, /env, /beans
+[ ] Read: Custom health indicator, custom metrics (Micrometer)
+[ ] Read: Spring Kafka — @KafkaListener, KafkaTemplate, consumer groups
+[ ] [P] Code: Custom health indicator for external service
+[ ] [P] Code: Produce and consume Kafka messages in Spring Boot
+[ ] [R] Revise: Full Spring Boot mental model (IoC → AOP → REST → JPA → Security → Cloud)
+[ ] [Q] Answer out loud: 10 Spring Boot interview questions from the doc
+
+Weekly Review: Can you build a production-ready Spring Boot REST API with JWT, JPA, and exception handling?
+
+
+================================================================================
+  WEEK 4 — SYSTEM DESIGN HLD
+  File: 03_System_Design_HLD.md
+================================================================================
+
+------------------------------------------------------------------------
+DAY 22 (Date: __________)
+Topic: HLD Framework + Scalability + Load Balancing
+------------------------------------------------------------------------
+[ ] Read: RESHADED framework for HLD interviews
+[ ] Read: Scalability — Vertical vs Horizontal scaling
+[ ] Read: Load Balancing — L4 vs L7, algorithms (Round Robin, Least Connections, IP Hash)
+[ ] Read: CDN — how it works, push vs pull, use cases
+[ ] Read: Stateless vs Stateful architecture — why stateless is preferred
+[ ] [P] Draw: Architecture diagram for a basic web app (LB + App Servers + DB)
+[ ] [Q] Answer: How would you scale a web application from 1000 to 1 million users?
+
+------------------------------------------------------------------------
+DAY 23 (Date: __________)
+Topic: Database Choices + Replication + Sharding
+------------------------------------------------------------------------
+[ ] Read: SQL vs NoSQL — types, use cases, trade-offs
+[ ] Read: Database Replication — Primary-Replica, Multi-Primary
+[ ] Read: Sharding — Hash, Range, Geographic, Directory-based
+[ ] Read: Consistent Hashing — how it works, virtual nodes
+[ ] Read: Database Indexing — B-Tree vs Hash, composite indexes
+[ ] [P] Draw: Sharding strategy for a user database of 1 billion users
+[ ] [Q] Answer: When would you use NoSQL over SQL?
+[ ] [Q] Answer: What is consistent hashing? Why is it used?
+
+------------------------------------------------------------------------
+DAY 24 (Date: __________)
+Topic: Caching (Redis) [*VERY IMPORTANT*]
+------------------------------------------------------------------------
+[ ] Read: Cache levels — browser, CDN, app, DB, CPU
+[ ] Read: Cache strategies — Cache-Aside, Write-Through, Write-Behind, Read-Through
+[ ] Read: Cache invalidation strategies
+[ ] Read: Cache problems — Stampede, Penetration, Avalanche, Hot Spot
+[ ] Read: Redis — data structures, persistence (RDB, AOF), Cluster vs Sentinel
+[ ] Read: Cache eviction policies — LRU, LFU, FIFO
+[ ] [P] Draw: Caching layer for a product catalog service
+[ ] [Q] Answer: What is cache stampede? How do you prevent it?
+[ ] [Q] Answer: Cache-Aside vs Write-Through — when to use which?
+
+------------------------------------------------------------------------
+DAY 25 (Date: __________)
+Topic: Message Queues + CAP Theorem + Distributed Concepts
+------------------------------------------------------------------------
+[ ] Read: Kafka vs RabbitMQ — when to use each
+[ ] Read: Message delivery semantics — at-most-once, at-least-once, exactly-once
+[ ] Read: CAP Theorem — consistency, availability, partition tolerance
+[ ] Read: ACID vs BASE
+[ ] Read: Consistency patterns — Strong, Eventual, Read-your-writes, Monotonic Read
+[ ] Read: Rate Limiting — Token Bucket, Leaky Bucket, Fixed Window, Sliding Window
+[ ] [Q] Answer: Kafka vs RabbitMQ — key differences?
+[ ] [Q] Answer: Explain CAP theorem with an example
+
+------------------------------------------------------------------------
+DAY 26 (Date: __________)
+Topic: Real-World Design — URL Shortener + Rate Limiter
+------------------------------------------------------------------------
+[ ] Read: URL Shortener — all sections (requirements → design → deep dive)
+[ ] Read: Rate Limiter — design at scale
+[ ] [P] DRAW on paper: URL Shortener complete architecture
+[ ] [P] DRAW on paper: Distributed Rate Limiter with Redis
+[ ] [Q] Practice: Explain URL shortener design in 10 minutes (talk out loud)
+
+------------------------------------------------------------------------
+DAY 27 (Date: __________)  WEEKEND
+Topic: Real-World Designs — WhatsApp + Twitter Feed
+------------------------------------------------------------------------
+[ ] Read: WhatsApp (Messaging System) design — full deep dive
+[ ] Read: Twitter Feed (News Feed System) design
+[ ] [P] DRAW: WhatsApp system design
+[ ] [P] DRAW: Twitter feed architecture (Pull vs Push model)
+[ ] [Q] Practice: "Design a chat application" — talk through it in 20 min
+
+------------------------------------------------------------------------
+DAY 28 (Date: __________)  WEEKEND + REVISION
+Topic: Real-World Designs — Netflix + Uber + Revision
+------------------------------------------------------------------------
+[ ] Read: Netflix design — video upload, streaming, CDN
+[ ] Read: Uber design — location tracking, ride matching
+[ ] [P] DRAW: Netflix architecture
+[ ] [R] Revise: All HLD concepts — make a mind map on paper
+[ ] [Q] Practice: "Design YouTube" (30 min, draw + explain)
+
+Weekly Review: Can you design any system with the RESHADED framework in 30 minutes?
+
+
+================================================================================
+  WEEK 5 — SYSTEM DESIGN LLD + DESIGN PATTERNS DEEP DIVE
+  Files: 04_System_Design_LLD.md, 11_Python_System_Design_LLD.md
+================================================================================
+
+------------------------------------------------------------------------
+DAY 29 (Date: __________)
+Topic: SOLID Principles (Deep Understanding)
+------------------------------------------------------------------------
+[ ] Read: SRP — Single Responsibility, real code examples
+[ ] Read: OCP — Open/Closed, extensibility without modification
+[ ] Read: LSP — Liskov Substitution, when inheritance breaks
+[ ] Read: ISP — Interface Segregation, fat interface problems
+[ ] Read: DIP — Dependency Inversion, program to abstractions
+[ ] [P] Code: Refactor a "bad" class to follow all SOLID principles
+[ ] [Q] Answer: Give a real-world violation of each SOLID principle from your work
+
+------------------------------------------------------------------------
+DAY 30 (Date: __________)
+Topic: Creational Design Patterns (GoF)
+------------------------------------------------------------------------
+[ ] Read: Singleton, Factory Method, Abstract Factory, Builder, Prototype
+[ ] [P] Code from scratch: Singleton (thread-safe, double-checked)
+[ ] [P] Code from scratch: Factory Method for Notification (Email, SMS, Push)
+[ ] [P] Code from scratch: Builder for a complex SQL Query Builder
+[ ] [Q] Answer: Factory Method vs Abstract Factory with a real example
+
+------------------------------------------------------------------------
+DAY 31 (Date: __________)
+Topic: Structural Design Patterns (GoF)
+------------------------------------------------------------------------
+[ ] Read: Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy
+[ ] [P] Code from scratch: Decorator for caching + logging (stack decorators)
+[ ] [P] Code from scratch: Proxy for access control
+[ ] [P] Code from scratch: Adapter for third-party payment gateway
+[ ] [Q] Answer: Proxy vs Decorator — what is the difference?
+
+------------------------------------------------------------------------
+DAY 32 (Date: __________)
+Topic: Behavioral Design Patterns (GoF) — Part 1
+------------------------------------------------------------------------
+[ ] Read: Chain of Responsibility, Command, Iterator, Mediator, Memento
+[ ] Read: Observer, State, Strategy, Template Method, Visitor
+[ ] [P] Code from scratch: State Pattern for a Vending Machine
+[ ] [P] Code from scratch: Observer for an Event System
+[ ] [P] Code from scratch: Strategy for different sorting/pricing algorithms
+[ ] [Q] Answer: Observer vs EventBus pattern — difference?
+
+------------------------------------------------------------------------
+DAY 33 (Date: __________)
+Topic: LLD Problem — Parking Lot + Elevator System
+------------------------------------------------------------------------
+[ ] Read: Parking Lot LLD design — all classes and relationships
+[ ] Read: Elevator System LLD — scheduling algorithm
+[ ] [P] Code: Parking Lot from scratch (no looking at notes)
+[ ] [P] Draw: Class diagram for Elevator System
+[ ] [Q] Practice: Explain Parking Lot design in 15 minutes
+
+------------------------------------------------------------------------
+DAY 34 (Date: __________)  WEEKEND
+Topic: LLD Problems — BookMyShow + ATM
+------------------------------------------------------------------------
+[ ] Read: BookMyShow LLD — Seat booking, concurrency, payment
+[ ] Read: ATM Machine LLD — State pattern application
+[ ] [P] Code: BookMyShow seat booking with concurrent lock handling
+[ ] [P] Code: ATM state machine from scratch
+[ ] [Q] Practice: Talk through BookMyShow design
+
+------------------------------------------------------------------------
+DAY 35 (Date: __________)  WEEKEND
+Topic: LLD Problems — Splitwise + Chess + Revision
+------------------------------------------------------------------------
+[ ] Read: Splitwise LLD — debt simplification algorithm
+[ ] Read: Chess Game LLD — piece hierarchy, move validation
+[ ] [P] Draw: Splitwise class diagram
+[ ] [P] Code: Debt simplification algorithm
+[ ] [R] Revise: All 23 design patterns — can you name them all?
+[ ] [Q] Practice: "Design a library management system" from scratch (45 min)
+
+Weekly Review: Can you solve any LLD problem with correct class design and design patterns?
+
+
+================================================================================
+  WEEK 6 — DSA FOUNDATIONS (Data Structures + Core Algorithms)
+  File: 05_DSA.md
+================================================================================
+
+------------------------------------------------------------------------
+DAY 36 (Date: __________)
+Topic: Complexity Analysis + Arrays & Strings
+------------------------------------------------------------------------
+[ ] Read: Big-O notation — O(1), O(log n), O(n), O(n log n), O(n²)
+[ ] Read: Space complexity
+[ ] Read: Two Pointers technique
+[ ] Read: Sliding Window technique (fixed + variable window)
+[ ] [P] Solve: Two Sum (HashMap approach)
+[ ] [P] Solve: Longest substring without repeating characters
+[ ] [P] Solve: Maximum subarray (Kadane's algorithm)
+[ ] [P] Solve: Container with most water (two pointers)
+[ ] [Q] Explain: When do you use two pointers vs sliding window?
+
+------------------------------------------------------------------------
+DAY 37 (Date: __________)
+Topic: Arrays — Advanced Patterns
+------------------------------------------------------------------------
+[ ] Read: Prefix Sum, Product Except Self
+[ ] Read: Trapping Rain Water — two approaches
+[ ] Read: Next Permutation algorithm
+[ ] [P] Solve: Product of array except self
+[ ] [P] Solve: Trapping rain water (two-pointer + stack approach)
+[ ] [P] Solve: Group anagrams
+[ ] [P] Solve: Longest consecutive sequence
+[ ] [P] Solve: Rotate array k times
+
+------------------------------------------------------------------------
+DAY 38 (Date: __________)
+Topic: Linked Lists
+------------------------------------------------------------------------
+[ ] Read: Reverse linked list — iterative + recursive
+[ ] Read: Cycle detection — Floyd's algorithm
+[ ] Read: Find middle node — slow/fast pointer
+[ ] Read: Merge two sorted lists
+[ ] [P] Solve: Reverse linked list
+[ ] [P] Solve: Detect cycle in linked list (+ find cycle start)
+[ ] [P] Solve: Remove Nth node from end
+[ ] [P] Solve: Merge K sorted lists (heap approach)
+[ ] [P] Solve: LRU Cache (LinkedHashMap / doubly linked list + HashMap)
+
+------------------------------------------------------------------------
+DAY 39 (Date: __________)
+Topic: Stack & Queue + Monotonic Stack
+------------------------------------------------------------------------
+[ ] Read: Stack applications — balanced brackets, expression evaluation
+[ ] Read: Monotonic Stack — next greater/smaller element
+[ ] Read: Sliding window maximum (deque/monotonic)
+[ ] [P] Solve: Valid parentheses
+[ ] [P] Solve: Daily temperatures (monotonic stack)
+[ ] [P] Solve: Largest rectangle in histogram
+[ ] [P] Solve: Min stack (get minimum in O(1))
+[ ] [P] Solve: Sliding window maximum
+
+------------------------------------------------------------------------
+DAY 40 (Date: __________)
+Topic: Trees — Traversals + Common Problems
+------------------------------------------------------------------------
+[ ] Read: Binary tree traversals — inorder, preorder, postorder (recursive + iterative)
+[ ] Read: Level order traversal (BFS)
+[ ] Read: Height, Diameter, Balanced tree
+[ ] Read: Lowest Common Ancestor
+[ ] [P] Solve: Binary tree level order traversal
+[ ] [P] Solve: Maximum depth of binary tree
+[ ] [P] Solve: Diameter of binary tree
+[ ] [P] Solve: Lowest Common Ancestor of BST
+[ ] [P] Solve: Binary tree right side view
+
+------------------------------------------------------------------------
+DAY 41 (Date: __________)  WEEKEND
+Topic: BST + Heaps
+------------------------------------------------------------------------
+[ ] Read: BST operations — insert, delete, search, validate
+[ ] Read: Kth smallest in BST (inorder property)
+[ ] Read: Heap — min-heap, max-heap, heapify
+[ ] Read: Heap sort, find Kth largest
+[ ] [P] Solve: Validate BST
+[ ] [P] Solve: Kth smallest in BST
+[ ] [P] Solve: Kth largest element (heap)
+[ ] [P] Solve: Top K frequent elements
+[ ] [P] Solve: Find median from data stream (two heaps)
+
+------------------------------------------------------------------------
+DAY 42 (Date: __________)  WEEKEND
+Topic: Graphs — Fundamentals
+------------------------------------------------------------------------
+[ ] Read: Graph representation — adjacency list, adjacency matrix
+[ ] Read: BFS — level traversal, shortest path (unweighted)
+[ ] Read: DFS — exploration, cycle detection
+[ ] Read: Topological sort — Kahn's algorithm (BFS) + DFS approach
+[ ] Read: Union-Find (DSU) — path compression + union by rank
+[ ] [P] Solve: Number of islands
+[ ] [P] Solve: Course schedule (topological sort / cycle detection)
+[ ] [P] Solve: Number of connected components
+[ ] [P] Solve: Surrounded regions
+[ ] [P] Solve: Clone graph
+
+Weekly Review: Can you solve medium-level array, linked list, tree, and graph problems?
+
+
+================================================================================
+  WEEK 7 — DSA ADVANCED + CP TRICKS
+  Files: 05_DSA.md (continued), 06_CP_Tricks.md
+================================================================================
+
+------------------------------------------------------------------------
+DAY 43 (Date: __________)
+Topic: Graphs — Advanced (Dijkstra, MST, Bipartite)
+------------------------------------------------------------------------
+[ ] Read: Dijkstra's algorithm — shortest path (weighted)
+[ ] Read: Bellman-Ford — negative weights
+[ ] Read: Kruskal's MST + Prim's MST
+[ ] Read: Bipartite graph check
+[ ] [P] Solve: Network delay time (Dijkstra)
+[ ] [P] Solve: Cheapest flights within K stops
+[ ] [P] Solve: Minimum spanning tree
+[ ] [P] Solve: Is graph bipartite?
+
+------------------------------------------------------------------------
+DAY 44 (Date: __________)
+Topic: Binary Search (All Patterns)
+------------------------------------------------------------------------
+[ ] Read: Standard binary search template
+[ ] Read: Find first/last occurrence
+[ ] Read: Search in rotated sorted array
+[ ] Read: Binary search on answer space
+[ ] [P] Solve: Find minimum in rotated sorted array
+[ ] [P] Solve: Search in rotated sorted array
+[ ] [P] Solve: Koko eating bananas (binary search on answer)
+[ ] [P] Solve: Median of two sorted arrays
+[ ] [P] Solve: Capacity to ship packages within D days
+
+------------------------------------------------------------------------
+DAY 45 (Date: __________)
+Topic: Dynamic Programming — 1D + Knapsack
+------------------------------------------------------------------------
+[ ] Read: Top-down memoization vs Bottom-up tabulation
+[ ] Read: 1D DP patterns — Fibonacci, climbing stairs, house robber
+[ ] Read: 0/1 Knapsack pattern
+[ ] Read: Unbounded knapsack (coin change)
+[ ] [P] Solve: Climbing stairs
+[ ] [P] Solve: House robber I and II
+[ ] [P] Solve: Coin change (min coins)
+[ ] [P] Solve: Partition equal subset sum
+[ ] [P] Solve: Target sum (count of ways)
+
+------------------------------------------------------------------------
+DAY 46 (Date: __________)
+Topic: Dynamic Programming — Strings (LCS, Edit Distance)
+------------------------------------------------------------------------
+[ ] Read: Longest Common Subsequence (LCS)
+[ ] Read: Edit Distance (Levenshtein)
+[ ] Read: Longest Increasing Subsequence (LIS) — O(n log n) approach
+[ ] Read: Palindromic substrings / subsequences
+[ ] [P] Solve: Longest common subsequence
+[ ] [P] Solve: Edit distance
+[ ] [P] Solve: Longest palindromic substring
+[ ] [P] Solve: Distinct subsequences
+[ ] [P] Solve: Longest increasing subsequence
+
+------------------------------------------------------------------------
+DAY 47 (Date: __________)
+Topic: Greedy + Backtracking
+------------------------------------------------------------------------
+[ ] Read: Greedy — activity selection, interval scheduling
+[ ] Read: Greedy proofs — when is greedy optimal?
+[ ] Read: Backtracking template
+[ ] Read: Pruning in backtracking
+[ ] [P] Solve: Non-overlapping intervals (greedy)
+[ ] [P] Solve: Jump game I and II
+[ ] [P] Solve: Subsets (backtracking)
+[ ] [P] Solve: Permutations (backtracking)
+[ ] [P] Solve: N-Queens (backtracking with pruning)
+[ ] [P] Solve: Word search (backtracking on grid)
+
+------------------------------------------------------------------------
+DAY 48 (Date: __________)  WEEKEND
+Topic: Trie + Advanced Data Structures + CP Tricks
+------------------------------------------------------------------------
+[ ] Read: Trie — insert, search, startsWith
+[ ] Read: Segment Tree (overview)
+[ ] Read: CP Tricks — Bit manipulation tricks (Java)
+[ ] Read: Fast I/O, modular arithmetic templates
+[ ] [P] Solve: Implement Trie
+[ ] [P] Solve: Word search II (Trie + backtracking)
+[ ] [P] Solve: Implement LRU Cache
+[ ] [P] Code: All bit manipulation tricks from doc
+
+------------------------------------------------------------------------
+DAY 49 (Date: __________)  WEEKEND
+Topic: Mock DSA Session + Problem Recognition
+------------------------------------------------------------------------
+[ ] Read: Problem recognition cheat sheet from 06_CP_Tricks.md
+[ ] [P] TIMED: Solve 4 medium problems in 2 hours (simulate interview)
+      Problem 1: ______________ (time: ___min)
+      Problem 2: ______________ (time: ___min)
+      Problem 3: ______________ (time: ___min)
+      Problem 4: ______________ (time: ___min)
+[ ] [R] Revise: All DP patterns you struggled with
+[ ] [Q] Review: Common mistakes list from CP Tricks doc
+
+Weekly Review: Can you identify the pattern and solve a medium problem in < 25 min?
+
+
+================================================================================
+  WEEK 8 — PYTHON CORE + FASTAPI + FALCON
+  Files: 07_Python_Core_to_Advanced.md, 08_FastAPI_and_Falcon.md
+================================================================================
+
+------------------------------------------------------------------------
+DAY 50 (Date: __________)
+Topic: Python Core — Data Types, Functions, OOP
+------------------------------------------------------------------------
+[ ] Read: Python execution model (CPython, GIL)
+[ ] Read: Mutable vs Immutable types — list vs tuple, dict vs frozenset
+[ ] Read: List, dict, set comprehensions
+[ ] Read: *args, **kwargs, keyword-only arguments, positional-only
+[ ] Read: Lambda, map, filter, functools.reduce, zip, enumerate
+[ ] [P] Code: 10 one-liners using comprehensions
+[ ] [P] Code: demonstrate *args/**kwargs with a decorator
+
+------------------------------------------------------------------------
+DAY 51 (Date: __________)
+Topic: Python OOP + Generators + Decorators
+------------------------------------------------------------------------
+[ ] Read: Dunder methods — __init__, __repr__, __str__, __eq__, __hash__, __len__
+[ ] Read: @classmethod, @staticmethod, @property
+[ ] Read: Multiple inheritance + MRO (C3 linearization)
+[ ] Read: Abstract classes vs Protocol
+[ ] Read: Generators — yield, yield from, send()
+[ ] Read: Decorators — simple, with params, class-based
+[ ] [P] Code: @retry decorator with exponential backoff
+[ ] [P] Code: Context manager using __enter__/__exit__ and @contextmanager
+[ ] [P] Code: Abstract base class hierarchy
+
+------------------------------------------------------------------------
+DAY 52 (Date: __________)
+Topic: Python Concurrency + asyncio + Type Hints
+------------------------------------------------------------------------
+[ ] Read: GIL — what it is, what it blocks, what it doesn't block
+[ ] Read: threading — when it helps (I/O bound), Lock, RLock, Semaphore
+[ ] Read: multiprocessing — CPU bound, ProcessPoolExecutor
+[ ] Read: asyncio — event loop, async/await, create_task, gather, TaskGroup
+[ ] Read: typing module — Optional, Union, TypeVar, Generic, Protocol
+[ ] [P] Code: async HTTP client with aiohttp (3 parallel API calls)
+[ ] [P] Code: Producer-consumer with asyncio.Queue
+[ ] [Q] Answer: How does asyncio work under the hood?
+[ ] [Q] Answer: When to use threading vs multiprocessing vs asyncio?
+
+------------------------------------------------------------------------
+DAY 53 (Date: __________)
+Topic: FastAPI — Core Features
+------------------------------------------------------------------------
+[ ] Read: Path operations, query params, request body (Pydantic)
+[ ] Read: Pydantic — validators, model_config, nested models
+[ ] Read: Dependency Injection with Depends()
+[ ] Read: Exception handling — HTTPException, custom handlers
+[ ] Read: Middleware — CORS, custom middleware
+[ ] [P] Code: CRUD API for a Blog app (posts + comments)
+[ ] [P] Code: Custom dependency for pagination (skip, limit)
+[ ] [Q] Answer: How does Dependency Injection work in FastAPI?
+
+------------------------------------------------------------------------
+DAY 54 (Date: __________)
+Topic: FastAPI — Auth + Database + Background Tasks
+------------------------------------------------------------------------
+[ ] Read: OAuth2 + JWT flow in FastAPI
+[ ] Read: SQLAlchemy Async + AsyncSession with FastAPI
+[ ] Read: Alembic migrations
+[ ] Read: Redis integration with aioredis
+[ ] Read: Background tasks and Celery integration
+[ ] [P] Code: FastAPI + SQLAlchemy async + JWT auth complete flow
+[ ] [Q] Answer: How do you prevent N+1 queries in SQLAlchemy with FastAPI?
+
+------------------------------------------------------------------------
+DAY 55 (Date: __________)  WEEKEND
+Topic: Falcon Framework + Testing FastAPI
+------------------------------------------------------------------------
+[ ] Read: Falcon — responders, routing, hooks, middleware
+[ ] Read: Falcon vs FastAPI — key differences
+[ ] Read: Testing FastAPI — TestClient, AsyncClient, dependency overrides
+[ ] Read: pytest fixtures, parametrization, mocking
+[ ] [P] Code: Simple Falcon API with middleware
+[ ] [P] Code: FastAPI test suite with mocked DB
+[ ] [Q] Answer: FastAPI vs Falcon vs Flask — when to choose what?
+
+------------------------------------------------------------------------
+DAY 56 (Date: __________)  WEEKEND
+Topic: Python System Design (HLD + LLD) + CP Tricks
+------------------------------------------------------------------------
+[ ] Read: 10_Python_System_Design_HLD.md — Python production stack overview
+[ ] Read: Celery task chains, chords, groups
+[ ] Read: Redis caching patterns in Python (cache-aside decorator)
+[ ] Read: 12_Python_CP_Tricks.md — collections, heapq, bisect tricks
+[ ] [P] Code: Celery task chain: upload → resize → notify
+[ ] [P] Code: heapq tricks — median finder, top-K
+[ ] [P] Code: bisect for binary search on sorted list
+
+Weekly Review: Can you build a production FastAPI app with auth, DB, caching, and tests?
+
+
+================================================================================
+  WEEK 9 — GO LANG
+  File: 09_GoLang.md
+================================================================================
+
+------------------------------------------------------------------------
+DAY 57 (Date: __________)
+Topic: Go Fundamentals — Syntax + Types + Control Flow
+------------------------------------------------------------------------
+[ ] Read: Go program structure, main package, imports
+[ ] Read: var, const, iota, zero values, type conversions
+[ ] Read: if, for (no while!), switch, defer (LIFO order)
+[ ] Read: Arrays vs Slices — make, append, copy, slice mutation
+[ ] Read: Maps — make, delete, iteration, concurrent-unsafe warning
+[ ] [P] Code: FizzBuzz, Fibonacci in Go
+[ ] [P] Code: Slice tricks — remove element, reverse, deduplicate
+[ ] [Q] Answer: What is the zero value of a slice? A map? A pointer?
+
+------------------------------------------------------------------------
+DAY 58 (Date: __________)
+Topic: Go — Functions, Structs, Methods, Interfaces
+------------------------------------------------------------------------
+[ ] Read: Multiple return values, named returns, variadic functions
+[ ] Read: Closures and first-class functions
+[ ] Read: Structs — embedding (composition over inheritance)
+[ ] Read: Value vs pointer receivers — when to use each
+[ ] Read: Interfaces — implicit, structural typing, empty interface
+[ ] Read: Interface composition — io.ReadWriter
+[ ] [P] Code: Stack data structure using generics
+[ ] [P] Code: Functional Options pattern for config
+[ ] [Q] Answer: How does Go achieve polymorphism without inheritance?
+
+------------------------------------------------------------------------
+DAY 59 (Date: __________)
+Topic: Go — Goroutines + Channels + Concurrency
+------------------------------------------------------------------------
+[ ] Read: Goroutines — go keyword, sync.WaitGroup
+[ ] Read: Channels — unbuffered vs buffered, directional channels
+[ ] Read: range over channel, close(), select statement
+[ ] Read: Done channel pattern (context.Context)
+[ ] Read: sync.Mutex, sync.RWMutex, sync.Once, sync.Map
+[ ] [P] Code: Worker pool with N goroutines processing jobs from channel
+[ ] [P] Code: Fan-out fan-in pipeline
+[ ] [P] Code: Context with timeout for HTTP calls
+[ ] [Q] Answer: When would you use buffered vs unbuffered channels?
+
+------------------------------------------------------------------------
+DAY 60 (Date: __________)
+Topic: Go — Error Handling + Generics + Packages
+------------------------------------------------------------------------
+[ ] Read: errors.New, fmt.Errorf %w (wrapping), errors.Is, errors.As
+[ ] Read: Custom error types, sentinel errors
+[ ] Read: panic and recover — when NOT to use panic
+[ ] Read: Generics — type parameters, constraints
+[ ] Read: Go modules — go.mod, exported vs unexported identifiers
+[ ] [P] Code: Domain error types with errors.Is chain
+[ ] [P] Code: Generic Min function, generic Stack
+
+------------------------------------------------------------------------
+DAY 61 (Date: __________)
+Topic: Go — REST API + Testing
+------------------------------------------------------------------------
+[ ] Read: net/http for REST API (standard library)
+[ ] Read: Gin framework — routing, middleware, binding
+[ ] Read: Database with pgx/sqlx
+[ ] Read: Go testing — _test.go files, table-driven tests, benchmarks
+[ ] [P] Code: REST API with Gin (CRUD for orders)
+[ ] [P] Code: Table-driven tests for a pure function
+[ ] [Q] Answer: Go vs Python vs Java — when would you choose Go?
+
+------------------------------------------------------------------------
+DAY 62 (Date: __________)  WEEKEND
+Topic: Go Memory + Advanced Patterns + Full Revision
+------------------------------------------------------------------------
+[ ] Read: Memory management — GC, stack vs heap, escape analysis
+[ ] Read: GOGC environment variable tuning
+[ ] Read: Pipeline pattern in Go
+[ ] Read: Go vs Python benefits — performance, concurrency, Docker size
+[ ] [P] Code: Build a simple CLI tool in Go
+[ ] [R] Revise: Key Go concepts — interfaces, goroutines, channels, error handling
+[ ] [Q] Answer: Top 5 things Go does better than Python/Java
+
+------------------------------------------------------------------------
+DAY 63 (Date: __________)  WEEKEND
+Topic: Go Mock Interview Day
+------------------------------------------------------------------------
+[ ] [Q] Practice: Explain Go's concurrency model in 3 minutes
+[ ] [Q] Practice: "Design a rate limiter in Go" — code it
+[ ] [P] TIMED: Solve 2 DSA problems in Go (use Go syntax)
+[ ] [R] Revise: Python + Go comparison table from 09_GoLang.md
+
+Weekly Review: Can you write production-quality Go code with proper error handling and tests?
+
+
+================================================================================
+  WEEK 10 — AWS COMPLETE
+  File: 13_AWS_Complete_Guide.md
+================================================================================
+
+------------------------------------------------------------------------
+DAY 64 (Date: __________)
+Topic: AWS Fundamentals + IAM + EC2
+------------------------------------------------------------------------
+[ ] Read: Cloud models (IaaS, PaaS, SaaS), Global Infrastructure
+[ ] Read: Shared Responsibility Model — what AWS manages vs what you manage
+[ ] Read: IAM — Users, Groups, Roles, Policies (JSON structure)
+[ ] Read: IAM best practices, Policy evaluation order
+[ ] Read: EC2 instance types, purchasing options (On-Demand, Reserved, Spot)
+[ ] Read: Security Groups, AMI, User Data, Auto Scaling
+[ ] [Q] Answer: What is the Shared Responsibility Model?
+[ ] [Q] Answer: EC2 Reserved vs Spot vs On-Demand — when to use each?
+
+------------------------------------------------------------------------
+DAY 65 (Date: __________)
+Topic: AWS Lambda + Containers (ECS/EKS/Fargate) + S3
+------------------------------------------------------------------------
+[ ] Read: Lambda limits, cold starts, triggers (sync/async/poll-based)
+[ ] Read: Lambda best practices, VPC Lambda, Provisioned Concurrency
+[ ] Read: S3 storage classes, lifecycle policies, security (pre-signed URLs)
+[ ] Read: S3 versioning, Object Lock, encryption types
+[ ] Read: ECS vs EKS vs Fargate — when to choose each
+[ ] [Q] Answer: How do you connect Lambda to a private RDS database?
+[ ] [Q] Answer: Explain S3 storage classes and when to use each
+
+------------------------------------------------------------------------
+DAY 66 (Date: __________)
+Topic: AWS Networking — VPC + Route 53 + ALB + CloudFront
+------------------------------------------------------------------------
+[ ] Read: VPC — subnets, IGW, NAT Gateway, SG vs NACL
+[ ] Read: VPC Peering vs Transit Gateway
+[ ] Read: VPC Endpoints — Gateway (free S3/DynamoDB) vs Interface (PrivateLink)
+[ ] Read: Route 53 routing policies (all 7)
+[ ] Read: ALB vs NLB — when to use each, routing rules
+[ ] Read: CloudFront — origins, behaviors, signed URLs
+[ ] [Q] Answer: What is the difference between a Security Group and a NACL?
+[ ] [Q] Answer: How does Route 53 weighted routing work?
+
+------------------------------------------------------------------------
+DAY 67 (Date: __________)
+Topic: AWS Databases — RDS, Aurora, DynamoDB, ElastiCache
+------------------------------------------------------------------------
+[ ] Read: RDS Multi-AZ vs Read Replicas — key differences
+[ ] Read: RDS Proxy — why it's needed, how it helps Lambda
+[ ] Read: Aurora — shared storage, Aurora Serverless v2, Global Database
+[ ] Read: DynamoDB — access patterns, GSI/LSI, Streams, TTL, Transactions, DAX
+[ ] Read: ElastiCache — Redis vs Memcached, Cluster mode, caching patterns
+[ ] [Q] Answer: When would you choose DynamoDB over RDS?
+[ ] [Q] Answer: What is the DynamoDB N+1 equivalent and how do you avoid it?
+
+------------------------------------------------------------------------
+DAY 68 (Date: __________)
+Topic: AWS Messaging + Security + Monitoring
+------------------------------------------------------------------------
+[ ] Read: SQS — Standard vs FIFO, Visibility Timeout, DLQ, Long Polling
+[ ] Read: SNS + SQS Fan-out pattern
+[ ] Read: EventBridge — rules, targets, vs SNS
+[ ] Read: KMS — CMK, envelope encryption
+[ ] Read: Secrets Manager vs Parameter Store
+[ ] Read: GuardDuty, WAF, Shield
+[ ] Read: CloudWatch — metrics, alarms, Logs Insights
+[ ] Read: CloudTrail — API audit log, use for security forensics
+[ ] [Q] Answer: SQS vs Kinesis — key differences and use cases?
+[ ] [Q] Answer: How do you store and rotate database credentials in AWS?
+
+------------------------------------------------------------------------
+DAY 69 (Date: __________)  WEEKEND
+Topic: AWS DevOps + Architecture Patterns
+------------------------------------------------------------------------
+[ ] Read: CodePipeline CI/CD flow (Source → Build → Deploy)
+[ ] Read: CloudFormation — template structure, intrinsic functions, drift detection
+[ ] Read: CDK vs CloudFormation — when to use each
+[ ] Read: 4 Real-World Architectures from doc (Serverless SPA, 3-Tier, EKS, Data Lake)
+[ ] Read: Well-Architected Framework — all 6 pillars
+[ ] [P] DRAW: Serverless web application architecture (from memory)
+[ ] [P] DRAW: 3-Tier web app architecture (from memory)
+[ ] [Q] Answer: How would you deploy a zero-downtime update on ECS?
+
+------------------------------------------------------------------------
+DAY 70 (Date: __________)  WEEKEND
+Topic: AWS Situation-Based Questions Practice
+------------------------------------------------------------------------
+[ ] [Q] Practice out loud: "Redesign for 99.99% HA" (Situation 1)
+[ ] [Q] Practice out loud: "Reduce AWS bill by 30%" (Situation 2)
+[ ] [Q] Practice out loud: "App is slow — troubleshoot" (Situation 3)
+[ ] [Q] Practice out loud: "Security breach detected" (Situation 4)
+[ ] [Q] Practice out loud: "Prepare for 100x traffic spike" (Situation 5)
+[ ] [Q] Practice out loud: "Migrate on-prem app to AWS" (Situation 6)
+[ ] [R] Revise: AWS Quick Reference Cheat Sheet (last page of doc)
+
+Weekly Review: Can you design a complete AWS architecture and explain cost/security trade-offs?
+
+
+================================================================================
+  WEEK 11 — FULL REVISION + MOCK INTERVIEWS
+================================================================================
+
+------------------------------------------------------------------------
+DAY 71 (Date: __________)
+Topic: Java + Spring Boot Full Revision
+------------------------------------------------------------------------
+[ ] [R] Java: Collections internals (HashMap, ConcurrentHashMap)
+[ ] [R] Java: CompletableFuture — write a chain from memory
+[ ] [R] Java: All Design Patterns — name all 23, draw 5 from memory
+[ ] [R] Spring: Full request lifecycle (SecurityFilter → DispatcherServlet → Controller → Service → Repository)
+[ ] [R] Spring: N+1 problem + how to fix it
+[ ] [Q] Mock: 10 random Java + Spring questions (use a friend or AI to quiz)
+
+------------------------------------------------------------------------
+DAY 72 (Date: __________)
+Topic: System Design HLD + LLD Full Revision
+------------------------------------------------------------------------
+[ ] [R] HLD: Draw URL Shortener from memory (no notes)
+[ ] [R] HLD: Draw WhatsApp architecture from memory
+[ ] [R] HLD: Explain Cache Stampede + solution
+[ ] [R] LLD: Draw Parking Lot class diagram from memory
+[ ] [R] LLD: Explain SOLID with code examples
+[ ] [Q] Mock: "Design a Notification System" — 30 minutes, whiteboard
+
+------------------------------------------------------------------------
+DAY 73 (Date: __________)
+Topic: DSA Intensive Practice
+------------------------------------------------------------------------
+[ ] [P] TIMED: 5 medium LeetCode problems in 2.5 hours
+      Mix: 1 array, 1 tree/graph, 1 DP, 1 string, 1 heap
+[ ] [R] Revisit problems you got wrong this week
+[ ] [R] Review all templates: two pointers, binary search, BFS, DFS, DP
+
+------------------------------------------------------------------------
+DAY 74 (Date: __________)
+Topic: Python + FastAPI + AWS Full Revision
+------------------------------------------------------------------------
+[ ] [R] Python: GIL, asyncio event loop, generators, decorators
+[ ] [R] FastAPI: DI, Pydantic, async SQLAlchemy, JWT auth
+[ ] [R] AWS: IAM, VPC, Lambda, S3, RDS, DynamoDB, SQS/SNS
+[ ] [R] AWS: Well-Architected pillars — recall all 6 with examples
+[ ] [Q] Mock: "Build a serverless order processing system on AWS" — design it
+
+------------------------------------------------------------------------
+DAY 75 (Date: __________)
+Topic: Go + Behavioral Interview Prep
+------------------------------------------------------------------------
+[ ] [R] Go: goroutines, channels, interfaces, error handling
+[ ] [R] Go: Go vs Python for backend — 5 key differences
+[ ] Prepare STAR stories (Situation, Task, Action, Result) for:
+    [ ] A time you improved performance significantly
+    [ ] A time you resolved a production incident
+    [ ] A time you disagreed with your team and what happened
+    [ ] Your most complex technical challenge
+    [ ] A time you learned something new quickly
+
+------------------------------------------------------------------------
+DAY 76 (Date: __________)  WEEKEND — FULL MOCK INTERVIEW 1
+------------------------------------------------------------------------
+[ ] MOCK INTERVIEW 1: Technical (45 minutes)
+    Round 1: DSA — 2 problems (timed, no hints)
+    Round 2: System Design HLD — "Design Twitter"
+    Score yourself: / 10
+
+[ ] Identify weak areas from Mock Interview 1:
+    Weak area 1: _______________________________________
+    Weak area 2: _______________________________________
+    Action plan:  _______________________________________
+
+------------------------------------------------------------------------
+DAY 77 (Date: __________)  WEEKEND — FULL MOCK INTERVIEW 2
+------------------------------------------------------------------------
+[ ] MOCK INTERVIEW 2: Technical (45 minutes)
+    Round 1: Java/Spring core questions (10 questions)
+    Round 2: LLD — "Design BookMyShow"
+    Score yourself: / 10
+
+[ ] MOCK INTERVIEW 3: Behavioral (30 minutes)
+    STAR questions + "Walk me through your experience"
+
+[ ] Post-mock review: write down every question you struggled with
+
+
+================================================================================
+  WEEK 12 — TARGETED IMPROVEMENT + FINAL PREPARATION
+================================================================================
+
+------------------------------------------------------------------------
+DAY 78 (Date: __________)
+Topic: Fix Weak Areas from Mock Interviews
+------------------------------------------------------------------------
+[ ] Study: _______________________________________ (your weak area 1)
+[ ] Study: _______________________________________ (your weak area 2)
+[ ] [P] Code: Re-solve all problems you got wrong in mocks
+[ ] [Q] Re-answer all questions you struggled with
+
+------------------------------------------------------------------------
+DAY 79 (Date: __________)
+Topic: DSA Final Sprint — Hard Problems
+------------------------------------------------------------------------
+[ ] [P] TIMED: 4 hard/medium-hard problems in 2 hours
+[ ] Focus on: DP (most common hard problem type) + Graph
+[ ] [R] Review: Bitmask DP, interval DP, digit DP (from CP Tricks docs)
+
+------------------------------------------------------------------------
+DAY 80 (Date: __________)
+Topic: AWS + System Design Mega Revision
+------------------------------------------------------------------------
+[ ] [R] HLD: Explain all 8 real-world designs from memory (2 min each)
+[ ] [R] AWS: Cost optimization strategies
+[ ] [R] AWS: Security (IAM, KMS, GuardDuty, WAF, Shield)
+[ ] [P] Draw: Complete AWS architecture for a microservices app
+
+------------------------------------------------------------------------
+DAY 81 (Date: __________)
+Topic: Company-Specific Research + Resume Review
+------------------------------------------------------------------------
+[ ] Research the companies you are interviewing with:
+    Company 1: _______________ Tech stack: _______________ Focus areas: _______________
+    Company 2: _______________ Tech stack: _______________ Focus areas: _______________
+[ ] Review your resume:
+    [ ] Every project/achievement has metrics (% improvement, scale, impact)
+    [ ] Technologies listed match what you actually know
+    [ ] Update with any new skills from this 12-week prep
+[ ] Prepare 3 questions to ask interviewers
+
+------------------------------------------------------------------------
+DAY 82 (Date: __________)  WEEKEND — FULL MOCK INTERVIEW 3
+------------------------------------------------------------------------
+[ ] MOCK INTERVIEW 3: Full loop simulation (3 hours)
+    Round 1: DSA (45 min) — 2 problems, walk through approach
+    Round 2: System Design HLD (45 min) — complex system
+    Round 3: LLD (45 min) — design a system with code
+    Round 4: Behavioral (30 min) — STAR responses
+[ ] Score: / 10 per round
+[ ] Final weak areas: _____________________________________
+
+------------------------------------------------------------------------
+DAY 83 (Date: __________)  WEEKEND — LIGHT REVISION
+------------------------------------------------------------------------
+[ ] [R] Quick scan: All topics (30 min each file, just headers)
+[ ] [R] Read: Interview Q&A sections of every file
+[ ] Write down: Your "top 10 most confident topics"
+    1. _______________
+    2. _______________
+    3. _______________
+    4. _______________
+    5. _______________
+    6. _______________
+    7. _______________
+    8. _______________
+    9. _______________
+   10. _______________
+[ ] Write down: "Top 3 topics I need to mention confidently in interviews"
+[ ] REST + prepare mentally
+
+------------------------------------------------------------------------
+DAY 84 (Date: __________)  FINAL DAY — Consolidation
+------------------------------------------------------------------------
+[ ] Morning (1 hr): Read Java + Spring quick reference
+[ ] Afternoon (1 hr): Read System Design cheat sheet + AWS cheat sheet
+[ ] Evening (30 min): Read your STAR behavioral stories
+[ ] NO new topics today — consolidate what you know
+[ ] Sleep early — you are ready.
+
+
+================================================================================
+  WEEKLY TRACKER
+================================================================================
+
+Week  | Focus Area                        | Status      | Confidence (1-10)
+------+-----------------------------------+-------------+------------------
+W1    | Java Core + OOP + Collections     |             |
+W2    | Java Advanced + Concurrency       |             |
+W3    | Spring Boot (Full)                |             |
+W4    | System Design HLD                 |             |
+W5    | LLD + Design Patterns             |             |
+W6    | DSA Foundations                   |             |
+W7    | DSA Advanced + CP Tricks          |             |
+W8    | Python + FastAPI + Falcon         |             |
+W9    | Go Lang                           |             |
+W10   | AWS Complete                      |             |
+W11   | Full Revision + Mock Interviews   |             |
+W12   | Targeted Fix + Final Prep         |             |
+
+
+================================================================================
+  DAILY SCHEDULE TEMPLATE (Weekday)
+================================================================================
+
+  6:30 AM - 7:30 AM  →  Study Session 1 (Fresh mind — read + understand concepts)
+  7:30 AM - 8:00 AM  →  Quick practice (code 1-2 small programs or solve 1 problem)
+  [Work Hours]
+  9:00 PM - 10:00 PM →  Study Session 2 (practice problems + Q&A from docs)
+  10:00 PM - 10:30 PM → Write key points in own words (reinforces memory)
+
+  WEEKEND SCHEDULE:
+  9:00 AM - 1:00 PM  →  4 hours deep study / problem solving
+  2:00 PM - 4:00 PM  →  Mock interview or revision
+  4:00 PM - 5:00 PM  →  Review + notes
+
+
+================================================================================
+  TIPS FOR SUCCESS
+================================================================================
+
+  1. CODE, DON'T JUST READ — Reading alone is not enough.
+     For every concept, write actual code. Even if it's a small example.
+
+  2. TALK OUT LOUD — Practice explaining concepts aloud.
+     Interviewers assess communication as much as knowledge.
+
+  3. USE SPACED REPETITION — Revise Day N's content on Day N+7.
+     Each week has [R] revision tasks for a reason.
+
+  4. TRACK YOUR WEAK AREAS — Write them down. Revisit them.
+     Don't avoid hard topics; spend extra time on them.
+
+  5. SIMULATE REAL INTERVIEWS — Time yourself on problems.
+     Pressure-practice is the only way to get interview-ready.
+
+  6. PRIORITIZE STARRED [*] TOPICS — If time is short, these
+     come up most frequently in actual interviews.
+
+  7. QUALITY OVER QUANTITY — Deeply understanding 50 problems
+     beats superficially reading 200 solutions.
+
+  8. CONSISTENCY > INTENSITY — 2 hrs daily beats 10 hrs on weekends.
+
+  9. REST IS PART OF PREPARATION — Sleep 7-8 hours.
+     Memory consolidation happens during sleep.
+
+ 10. BELIEVE YOU ARE READY — By Day 84, you will have covered
+     more than most candidates ever study. Trust the process.
+
+================================================================================
+  GOOD LUCK! YOU'VE GOT THIS!
+================================================================================

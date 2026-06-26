@@ -1,0 +1,39 @@
+name: Sync StackReady content
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'website/content/**'
+      - 'website/config.js'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-content:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Copy guides to website/content
+        run: node website/prepare-deploy.js stack-ready
+
+      - name: Commit synced content if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add website/content/ website/config.js
+          if git diff --staged --quiet; then
+            echo "No content changes to commit."
+          else
+            git commit -m "chore: sync website content for GitHub Pages [skip ci]"
+            git push
+          fi

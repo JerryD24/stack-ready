@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reading — StackReady</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="index.html" class="logo">
+          <span class="logo-icon">🚀</span>
+          <span>StackReady</span>
+        </a>
+
+        <button class="menu-toggle" id="tocToggle" aria-label="Toggle table of contents">☰</button>
+
+        <nav class="header-nav">
+          <a href="index.html" class="nav-link">← Dashboard</a>
+          <a href="reader.html?file=00_Topic_List.md" class="nav-link">Roadmap</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="reader-layout">
+      <aside class="reader-sidebar" id="readerSidebar">
+        <h3>Table of Contents</h3>
+        <ul class="toc-list" id="tocList">
+          <li class="toc-item"><span style="color:var(--gray-400);font-size:0.85rem;">Loading...</span></li>
+        </ul>
+      </aside>
+
+      <div class="reader-main">
+        <div class="reader-breadcrumb" id="breadcrumb">
+          <a href="index.html">Home</a> / <span id="breadcrumbTitle">Loading...</span>
+        </div>
+
+        <div class="reader-toolbar" id="readerToolbar" style="display:none;">
+          <span class="doc-title" id="docTitle"></span>
+          <div class="font-size-controls">
+            <button class="font-size-btn" data-size="sm" title="Smaller text">A-</button>
+            <button class="font-size-btn active" data-size="md" title="Default text">A</button>
+            <button class="font-size-btn" data-size="lg" title="Larger text">A+</button>
+          </div>
+          <button class="btn btn-outline" id="markCompleteBtn">Mark as Read</button>
+        </div>
+
+        <div id="contentArea">
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading study material...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="assets/js/site.js"></script>
+  <script src="assets/js/cookies.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+  <script src="assets/js/topics.js"></script>
+  <script src="assets/js/reader.js"></script>
+</body>
+</html>
