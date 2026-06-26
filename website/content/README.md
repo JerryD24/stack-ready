@@ -2,6 +2,8 @@
 
 **Full-stack interview preparation** — Java, Spring Boot, React, System Design, DSA, Python, AWS, AI Agents.
 
+**Author:** [Prabhat Singh Rajput](https://github.com/JerryD24)
+
 🌐 **Live site:** [https://jerryd24.github.io/stack-ready/](https://jerryd24.github.io/stack-ready/)
 
 ---
