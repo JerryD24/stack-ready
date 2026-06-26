@@ -1,0 +1,17 @@
+{
+  "name": "StackReady",
+  "short_name": "StackReady",
+  "description": "Interview preparation platform",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "theme_color": "#2563eb",
+  "background_color": "#eff6ff",
+  "display": "standalone",
+  "start_url": "./index.html"
+}
