@@ -2,3 +2,7 @@
 Thumbs.db
 *.log
 node_modules/
+
+# Local-only — not for public repo
+RESUME_STACKREADY.md
+RESUME_*.md
