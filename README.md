@@ -48,9 +48,11 @@ node prepare-deploy.js stack-ready
 
 ## GitHub Pages setup (one-time)
 
-Repo → **Settings** → **Pages** → Source: **Deploy from branch** → Branch: `main` → Folder: `/website`
+Repo → **Settings** → **Pages** → Source: **GitHub Actions** (not "Deploy from a branch")
 
----
+GitHub only offers `/` or `/docs` for branch deploy — we use Actions to deploy the `website/` folder.
+
+Live URL: **https://jerryd24.github.io/stack-ready/**
 
 ## Progress tracking
 
