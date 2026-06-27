@@ -1,5 +1,5 @@
 /**
- * Markdown Reader — loads .md/.txt from parent Interview_Prep folder
+ * Markdown Reader — loads guides, TOC navigation, per-section progress
  */
 (function () {
   const params = new URLSearchParams(window.location.search);
@@ -11,17 +11,33 @@
   const readerToolbar = document.getElementById('readerToolbar');
 
   let currentTopic = getAllTopics().find(t => t.file === fileName);
+  let headingRegistry = [];
 
-  // Configure marked
-  marked.setOptions({
-    gfm: true,
-    breaks: false,
-    headerIds: true,
-    mangle: false
-  });
+  /** GitHub-compatible slug for heading anchors */
+  function githubSlug(text) {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  function hashCode(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = ((h << 5) - h) + str.charCodeAt(i);
+    return h;
+  }
 
   marked.use({
     renderer: {
+      heading({ tokens, depth }) {
+        const plain = tokens.map(t => t.text || '').join('');
+        const id = githubSlug(plain) || `section-${hashCode(plain)}`;
+        const html = marked.parser.parseInline(tokens);
+        return `<h${depth} id="${id}">${html}</h${depth}>\n`;
+      },
       code(code, infostring) {
         const lang = (infostring || '').trim();
         let highlighted = code;
@@ -53,65 +69,100 @@
     StackReadyCookies.setChecklistItem(id, checked);
   }
 
-  function slugify(text) {
-    return text.toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim();
+  function isSectionDone(sectionId) {
+    const key = StackReadyCookies.sectionKey(fileName, sectionId);
+    return !!StackReadyCookies.getSections()[key];
+  }
+
+  function setSectionDone(sectionId, done) {
+    const key = StackReadyCookies.sectionKey(fileName, sectionId);
+    StackReadyCookies.setSectionDone(key, done);
+    updateDocProgressFromSections();
   }
 
   function preprocessMarkdown(raw, isTxt) {
-    if (isTxt) {
-      // Wrap plain text study plan in preformatted block sections
-      return '```\n' + raw + '\n```';
-    }
-
-    // Convert markdown checkboxes to interactive HTML placeholders
+    if (isTxt) return '```\n' + raw + '\n```';
     return raw.replace(/^(\s*)- \[([ xX])\] (.+)$/gm, (match, indent, check, text) => {
-      const id = slugify(text).slice(0, 80) + '-' + Math.abs(hashCode(text));
+      const id = githubSlug(text).slice(0, 80) + '-' + Math.abs(hashCode(text));
       const checked = check.toLowerCase() === 'x';
       return `${indent}- <label class="checklist-item" data-check-id="${id}"><input type="checkbox" ${checked ? 'checked' : ''}><span>${text}</span></label>`;
     });
   }
 
-  function hashCode(str) {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) h = ((h << 5) - h) + str.charCodeAt(i);
-    return h;
+  /** Resolve markdown TOC href to actual heading id on page */
+  function resolveAnchor(anchor) {
+    if (!anchor) return null;
+    if (document.getElementById(anchor)) return anchor;
+
+    const norm = (s) => s.replace(/-+/g, '-').replace(/^-|-$/g, '');
+    const match = headingRegistry.find(h =>
+      h.id === anchor ||
+      norm(h.id) === norm(anchor)
+    );
+    if (match) return match.id;
+
+    const num = anchor.match(/^(\d+)/);
+    if (num) {
+      const byNum = headingRegistry.find(h =>
+        h.level === 2 && h.plain.trim().match(new RegExp(`^${num[1]}\\.`))
+      );
+      if (byNum) return byNum.id;
+    }
+    return null;
   }
 
-  function buildToc(html) {
-    const temp = document.createElement('div');
-    temp.innerHTML = html;
-    const headings = temp.querySelectorAll('h2, h3');
-    const items = [];
+  function scrollToSection(id) {
+    const resolved = resolveAnchor(id) || id;
+    const el = document.getElementById(resolved);
+    if (!el) return false;
+    const top = el.getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top, behavior: 'smooth' });
+    history.replaceState(null, '', `#${resolved}`);
+    return true;
+  }
 
-    headings.forEach((h, i) => {
-      if (!h.id) h.id = slugify(h.textContent) + '-' + i;
-      const level = h.tagName.toLowerCase();
-      items.push({ id: h.id, text: h.textContent, level });
-    });
-
-    // Update actual content with ids
-    const contentEl = document.querySelector('.markdown-body');
-    if (contentEl) {
-      const realHeadings = contentEl.querySelectorAll('h2, h3');
-      realHeadings.forEach((h, i) => {
-        if (items[i]) h.id = items[i].id;
+  function fixInternalAnchorLinks() {
+    document.querySelectorAll('.markdown-body a[href^="#"]').forEach(a => {
+      const anchor = decodeURIComponent(a.getAttribute('href').slice(1));
+      const resolved = resolveAnchor(anchor);
+      if (resolved) a.setAttribute('href', `#${resolved}`);
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = decodeURIComponent(a.getAttribute('href').slice(1));
+        scrollToSection(target);
       });
-    }
+    });
+  }
+
+  function buildHeadingRegistry() {
+    headingRegistry = [];
+    document.querySelectorAll('.markdown-body h1, .markdown-body h2, .markdown-body h3').forEach(h => {
+      if (!h.id) h.id = githubSlug(h.textContent);
+      headingRegistry.push({
+        id: h.id,
+        plain: h.textContent,
+        level: parseInt(h.tagName[1], 10),
+        el: h
+      });
+    });
+  }
+
+  function buildToc() {
+    const items = headingRegistry.filter(h => h.level === 2 || h.level === 3);
 
     if (!items.length) {
       tocList.innerHTML = '<li class="toc-item"><span style="color:var(--gray-400);font-size:0.85rem;">No sections</span></li>';
       return;
     }
 
-    tocList.innerHTML = items.map(item => `
-      <li class="toc-item toc-${item.level}">
-        <a href="#${item.id}" data-target="${item.id}">${item.text}</a>
-      </li>
-    `).join('');
+    tocList.innerHTML = items.map(item => {
+      const done = isSectionDone(item.id);
+      const check = item.level === 2 && done ? ' <span class="toc-done">✓</span>' : '';
+      return `
+      <li class="toc-item toc-h${item.level}${done ? ' toc-completed' : ''}">
+        <a href="#${item.id}" data-target="${item.id}">${item.plain}${check}</a>
+      </li>`;
+    }).join('');
 
     setupTocScrollSpy();
   }
@@ -126,16 +177,99 @@
           if (active) active.classList.add('active');
         }
       });
-    }, { rootMargin: '-80px 0px -70% 0px', threshold: 0 });
+    }, { rootMargin: '-90px 0px -70% 0px', threshold: 0 });
 
     document.querySelectorAll('.markdown-body h2, .markdown-body h3').forEach(h => observer.observe(h));
 
     links.forEach(link => {
-      link.addEventListener('click', () => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        scrollToSection(link.getAttribute('data-target'));
         document.getElementById('readerSidebar').classList.remove('open');
         document.getElementById('sidebarOverlay').classList.remove('open');
       });
     });
+  }
+
+  function injectSectionTrackers() {
+    const body = document.querySelector('.markdown-body');
+    const h2s = [...body.querySelectorAll('h2')].filter(h => {
+      const t = h.textContent.trim().toUpperCase();
+      return t !== 'TABLE OF CONTENTS';
+    });
+
+    h2s.forEach((h2, index) => {
+      const sectionId = h2.id;
+      const nextH2 = h2s[index + 1];
+      const tracker = document.createElement('div');
+      tracker.className = 'section-complete-bar';
+      tracker.dataset.sectionId = sectionId;
+
+      const label = document.createElement('span');
+      label.className = 'section-complete-label';
+      label.textContent = `Finished: ${h2.textContent.trim()}`;
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn btn-outline section-done-btn';
+      updateSectionBtn(btn, isSectionDone(sectionId));
+
+      btn.addEventListener('click', () => {
+        const nowDone = !isSectionDone(sectionId);
+        setSectionDone(sectionId, nowDone);
+        updateSectionBtn(btn, nowDone);
+        tracker.classList.toggle('section-is-done', nowDone);
+        refreshTocChecks();
+      });
+
+      if (isSectionDone(sectionId)) tracker.classList.add('section-is-done');
+
+      tracker.appendChild(label);
+      tracker.appendChild(btn);
+
+      if (nextH2) {
+        nextH2.parentNode.insertBefore(tracker, nextH2);
+      } else {
+        body.appendChild(tracker);
+      }
+    });
+  }
+
+  function updateSectionBtn(btn, done) {
+    btn.textContent = done ? '✓ Section Complete' : 'Mark Section Done';
+    btn.style.borderColor = done ? '#10b981' : '';
+    btn.style.color = done ? '#059669' : '';
+  }
+
+  function refreshTocChecks() {
+    tocList.querySelectorAll('a[data-target]').forEach(a => {
+      const id = a.getAttribute('data-target');
+      const li = a.closest('.toc-item');
+      const done = isSectionDone(id);
+      li.classList.toggle('toc-completed', done);
+      const existing = a.querySelector('.toc-done');
+      if (done && !existing) {
+        a.insertAdjacentHTML('beforeend', ' <span class="toc-done">✓</span>');
+      } else if (!done && existing) {
+        existing.remove();
+      }
+    });
+  }
+
+  function updateDocProgressFromSections() {
+    const h2s = [...document.querySelectorAll('.markdown-body h2')].filter(h =>
+      h.textContent.trim().toUpperCase() !== 'TABLE OF CONTENTS'
+    );
+    if (!h2s.length) return;
+    const doneCount = h2s.filter(h => isSectionDone(h.id)).length;
+    const allDone = doneCount === h2s.length;
+    setProgress(fileName, allDone);
+
+    const btn = document.getElementById('markCompleteBtn');
+    if (btn) {
+      btn.textContent = allDone ? '✓ All Sections Complete' : `Mark as Read (${doneCount}/${h2s.length} sections)`;
+      btn.style.borderColor = allDone ? '#10b981' : '';
+    }
   }
 
   function setupChecklists() {
@@ -175,17 +309,22 @@
 
   function setupMarkComplete() {
     const btn = document.getElementById('markCompleteBtn');
-    const progress = getProgress();
-    const isRead = !!progress[fileName];
-
-    btn.textContent = isRead ? '✓ Marked as Read' : 'Mark as Read';
-    if (isRead) btn.style.borderColor = '#10b981';
+    updateDocProgressFromSections();
 
     btn.addEventListener('click', () => {
-      const nowRead = !getProgress()[fileName];
-      setProgress(fileName, nowRead);
-      btn.textContent = nowRead ? '✓ Marked as Read' : 'Mark as Read';
-      btn.style.borderColor = nowRead ? '#10b981' : '';
+      const h2s = [...document.querySelectorAll('.markdown-body h2')].filter(h =>
+        h.textContent.trim().toUpperCase() !== 'TABLE OF CONTENTS'
+      );
+      const allDone = h2s.length > 0 && h2s.every(h => isSectionDone(h.id));
+      const markAll = !allDone;
+
+      h2s.forEach(h => setSectionDone(h.id, markAll));
+      document.querySelectorAll('.section-done-btn').forEach(b => updateSectionBtn(b, markAll));
+      document.querySelectorAll('.section-complete-bar').forEach(bar => {
+        bar.classList.toggle('section-is-done', markAll);
+      });
+      refreshTocChecks();
+      updateDocProgressFromSections();
     });
   }
 
@@ -223,20 +362,26 @@
       readerToolbar.style.display = 'flex';
       docTitle.textContent = currentTopic?.title || fileName.replace(/\.(md|txt)$/, '');
 
-      buildToc(html);
+      buildHeadingRegistry();
+      fixInternalAnchorLinks();
+      buildToc();
+      injectSectionTrackers();
       setupChecklists();
       setupFontSize();
       setupMarkComplete();
       setupMobileToc();
 
-      // Mark as recently viewed
       setProgress(fileName + '_viewed', Date.now());
+
+      if (window.location.hash) {
+        setTimeout(() => scrollToSection(decodeURIComponent(window.location.hash.slice(1))), 300);
+      }
 
     } catch (err) {
       contentArea.innerHTML = `
         <div class="error-state">
           <h2>Could not load content</h2>
-          <p>Make sure you're running the local server: <code>python server.py</code></p>
+          <p>Make sure you're running the local server: <code>node server.js</code></p>
           <p style="margin-top:0.5rem;color:var(--gray-400);font-size:0.85rem;">Error: ${err.message}</p>
           <a href="index.html" class="btn btn-primary" style="margin-top:1.5rem;">← Back to Dashboard</a>
         </div>

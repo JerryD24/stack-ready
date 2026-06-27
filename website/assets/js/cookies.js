@@ -167,6 +167,22 @@ const StackReadyCookies = (function () {
     setString('font', size);
   }
 
+  function getSections() {
+    migrateFromLocalStorage();
+    return getJSON('sections', {});
+  }
+
+  function setSectionDone(sectionKey, value) {
+    const s = getSections();
+    if (value) s[sectionKey] = 1;
+    else delete s[sectionKey];
+    setJSON('sections', s);
+  }
+
+  function sectionKey(fileName, sectionId) {
+    return `${fileName}::${sectionId}`;
+  }
+
   migrateFromLocalStorage();
 
   return {
@@ -175,6 +191,9 @@ const StackReadyCookies = (function () {
     getChecklistMap,
     setChecklistItem,
     getFontSize,
-    setFontSize
+    setFontSize,
+    getSections,
+    setSectionDone,
+    sectionKey
   };
 })();
