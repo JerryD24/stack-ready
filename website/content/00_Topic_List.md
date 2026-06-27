@@ -484,4 +484,28 @@
 
 ---
 
+## SECTION 11 — NODE.JS (in `19_Node_JS_Complete_Guide.md`)
+
+- [ ] What is Node.js, V8, libuv, non-blocking I/O
+- [ ] Event loop phases, microtasks vs macrotasks
+- [ ] Modules — CommonJS vs ES Modules
+- [ ] npm, package.json, semver, lockfile
+- [ ] Callbacks, Promises, async/await, Promise.all
+- [ ] Core modules (fs, path, http, events)
+- [ ] Streams & Buffers, backpressure, pipeline
+- [ ] HTTP server & Express basics
+- [ ] Middleware, routing, async error handling
+- [ ] REST API design with Express (status codes, validation)
+- [ ] Databases — Mongoose, pg pool, parameterized queries
+- [ ] Auth (JWT, bcrypt) & security checklist
+- [ ] Error handling & graceful shutdown
+- [ ] Performance, clustering & worker threads
+- [ ] Testing Node apps (Jest, Supertest)
+- [ ] TypeScript with Node.js
+- [ ] Node production best practices
+- [ ] Node coding problems (promisify, mapLimit, retry, debounce)
+- [ ] Node.js interview Q&A bank
+
+---
+
 > **Next Step**: Open `01_Java_Core_to_Advanced.md` and start reading!

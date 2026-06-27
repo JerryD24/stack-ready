@@ -286,6 +286,28 @@ const ProgressMap = (function () {
       '12-transaction-aop-annotations': ['Transaction & AOP annotations (@Transactional, @Aspect, advice)'],
       '13-testing-annotations': ['Testing annotations (@SpringBootTest, @MockBean, slices)'],
       '14-interview-qa': ['Annotations interview Q&A bank']
+    },
+
+    '19_Node_JS_Complete_Guide.md': {
+      '1-what-is-nodejs': ['What is Node.js, V8, libuv, non-blocking I/O'],
+      '2-the-event-loop': ['Event loop phases, microtasks vs macrotasks'],
+      '3-modules': ['Modules — CommonJS vs ES Modules'],
+      '4-npm-packagejson': ['npm, package.json, semver, lockfile'],
+      '5-async-javascript': ['Callbacks, Promises, async/await, Promise.all'],
+      '6-core-modules': ['Core modules (fs, path, http, events)'],
+      '7-streams-buffers': ['Streams & Buffers, backpressure, pipeline'],
+      '8-express': ['HTTP server & Express basics'],
+      '9-middleware-routing': ['Middleware, routing, async error handling'],
+      '10-rest-api-design': ['REST API design with Express (status codes, validation)'],
+      '11-databases': ['Databases — Mongoose, pg pool, parameterized queries'],
+      '12-auth-security': ['Auth (JWT, bcrypt) & security checklist'],
+      '13-error-handling-process-management': ['Error handling & graceful shutdown'],
+      '14-performance-clustering-worker-threads': ['Performance, clustering & worker threads'],
+      '15-testing': ['Testing Node apps (Jest, Supertest)'],
+      '16-typescript-with-node': ['TypeScript with Node.js'],
+      '17-production-best-practices': ['Node production best practices'],
+      '18-coding-problems': ['Node coding problems (promisify, mapLimit, retry, debounce)'],
+      '19-interview-qa': ['Node.js interview Q&A bank']
     }
   };
 

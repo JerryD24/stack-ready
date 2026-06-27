@@ -4,9 +4,9 @@
  */
 const INTERVIEW_TRACKS = [
   {
-    id: 'java-stack',
-    title: 'Java & Spring',
-    subtitle: 'Core Java → Spring Boot → CP Tricks',
+    id: 'java-core',
+    title: 'Java',
+    subtitle: 'Core → Concurrency → Streams → CP',
     icon: '☕',
     color: '#2563eb',
     gradient: 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%)',
@@ -20,26 +20,6 @@ const INTERVIEW_TRACKS = [
         level: 'Beginner → Advanced',
         priority: 'critical',
         tags: ['Java', 'JVM', 'Multithreading', 'Collections']
-      },
-      {
-        id: 'spring',
-        file: '02_SpringBoot.md',
-        title: 'Spring Boot',
-        description: 'IoC/DI, REST, JPA/Hibernate, Security, JWT, Microservices, Spring Cloud, deep Q&A',
-        sections: 15,
-        level: 'Intermediate → Advanced',
-        priority: 'critical',
-        tags: ['Spring', 'JPA', 'Security', 'Microservices']
-      },
-      {
-        id: 'java-cp',
-        file: '06_CP_Tricks.md',
-        title: 'Java CP Tricks',
-        description: 'Bit manipulation, math shortcuts, template code, competitive programming patterns',
-        sections: 8,
-        level: 'Intermediate',
-        priority: 'high',
-        tags: ['CP', 'Algorithms', 'Java']
       },
       {
         id: 'java-multithreading',
@@ -60,6 +40,36 @@ const INTERVIEW_TRACKS = [
         level: 'Beginner → Expert',
         priority: 'critical',
         tags: ['Streams', 'Functional', 'Collectors', 'Java']
+      },
+      {
+        id: 'java-cp',
+        file: '06_CP_Tricks.md',
+        title: 'Java CP Tricks',
+        description: 'Bit manipulation, math shortcuts, template code, competitive programming patterns',
+        sections: 8,
+        level: 'Intermediate',
+        priority: 'high',
+        tags: ['CP', 'Algorithms', 'Java']
+      }
+    ]
+  },
+  {
+    id: 'spring-stack',
+    title: 'Spring Boot',
+    subtitle: 'IoC/DI → REST → JPA → Security → Microservices',
+    icon: '🍃',
+    color: '#16a34a',
+    gradient: 'linear-gradient(135deg, #15803d 0%, #22c55e 50%, #4ade80 100%)',
+    topics: [
+      {
+        id: 'spring',
+        file: '02_SpringBoot.md',
+        title: 'Spring Boot',
+        description: 'IoC/DI, REST, JPA/Hibernate, Security, JWT, Microservices, Spring Cloud, deep Q&A',
+        sections: 15,
+        level: 'Intermediate → Advanced',
+        priority: 'critical',
+        tags: ['Spring', 'JPA', 'Security', 'Microservices']
       },
       {
         id: 'java-annotations',
@@ -240,6 +250,26 @@ const INTERVIEW_TRACKS = [
         level: 'Beginner → Pro',
         priority: 'critical',
         tags: ['React', 'Hooks', 'Redux', 'Frontend']
+      }
+    ]
+  },
+  {
+    id: 'nodejs',
+    title: 'Backend — Node.js',
+    subtitle: 'Event loop → Express → APIs → production',
+    icon: '🟢',
+    color: '#65a30d',
+    gradient: 'linear-gradient(135deg, #3f6212 0%, #65a30d 50%, #a3e635 100%)',
+    topics: [
+      {
+        id: 'node',
+        file: '19_Node_JS_Complete_Guide.md',
+        title: 'Node.js Complete Guide',
+        description: 'Event loop, modules, async/await, streams, Express, REST APIs, databases, auth/security, clustering, worker threads, testing, TypeScript, coding problems, Q&A',
+        sections: 19,
+        level: 'Beginner → Pro',
+        priority: 'critical',
+        tags: ['Node.js', 'Express', 'Backend', 'JavaScript']
       }
     ]
   },
