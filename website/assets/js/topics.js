@@ -40,6 +40,16 @@ const INTERVIEW_TRACKS = [
         level: 'Intermediate',
         priority: 'high',
         tags: ['CP', 'Algorithms', 'Java']
+      },
+      {
+        id: 'java-multithreading',
+        file: '16_Java_Multithreading_Deep_Dive.md',
+        title: 'Java Multithreading Deep Dive',
+        description: 'Threads, thread pools, ExecutorService, CompletableFuture, locks/atomics, virtual threads, deadlocks, real-world production patterns',
+        sections: 18,
+        level: 'Beginner → Expert',
+        priority: 'critical',
+        tags: ['Multithreading', 'Concurrency', 'Thread Pool', 'Java']
       }
     ]
   },
