@@ -42,6 +42,16 @@ const INTERVIEW_TRACKS = [
         tags: ['Streams', 'Functional', 'Collectors', 'Java']
       },
       {
+        id: 'java-jvm-perf',
+        file: '24_JVM_Performance_Advanced_Concurrency.md',
+        title: 'JVM Performance & Advanced Concurrency',
+        description: 'GC tuning (G1 vs ZGC), GC logs, heap/thread dumps, jstack/jmap/Arthas, leak hunting, ThreadPoolExecutor tuning, CompletableFuture, virtual threads, lock-free/CAS',
+        sections: 15,
+        level: 'Advanced → Expert',
+        priority: 'critical',
+        tags: ['JVM', 'GC', 'Performance', 'Concurrency']
+      },
+      {
         id: 'java-cp',
         file: '06_CP_Tricks.md',
         title: 'Java CP Tricks',
@@ -50,6 +60,76 @@ const INTERVIEW_TRACKS = [
         level: 'Intermediate',
         priority: 'high',
         tags: ['CP', 'Algorithms', 'Java']
+      }
+    ]
+  },
+  {
+    id: 'cloud-native-distributed',
+    title: 'Cloud-Native & Distributed Systems',
+    subtitle: 'Kafka · Kubernetes · Resilience · Observability · Redis · SQL',
+    icon: '🌐',
+    color: '#0d9488',
+    gradient: 'linear-gradient(135deg, #0f766e 0%, #14b8a6 50%, #5eead4 100%)',
+    topics: [
+      {
+        id: 'kafka',
+        file: '20_Kafka_Deep_Dive.md',
+        title: 'Apache Kafka Deep Dive',
+        description: 'Partitions & consumer groups, rebalancing, retry topics + DLQ, exactly-once/idempotence, ordering, outbox pattern, backpressure, lag monitoring, 50k events/sec design',
+        sections: 16,
+        level: 'Intermediate → Expert',
+        priority: 'critical',
+        tags: ['Kafka', 'Event Streaming', 'Messaging', 'Distributed']
+      },
+      {
+        id: 'kubernetes',
+        file: '21_Kubernetes_Docker_CloudNative.md',
+        title: 'Kubernetes, Docker & Cloud-Native',
+        description: 'Dockerfiles, pods/deployments/services, ConfigMaps/Secrets, probes, resource limits, HPA, rolling deploy/rollback, AWS (EKS/ECS/S3/RDS/SQS), CI/CD, pod troubleshooting',
+        sections: 16,
+        level: 'Intermediate → Expert',
+        priority: 'critical',
+        tags: ['Kubernetes', 'Docker', 'AWS', 'DevOps']
+      },
+      {
+        id: 'resilience',
+        file: '22_Resilience_Distributed_Patterns.md',
+        title: 'Resilience & Distributed Patterns',
+        description: 'Timeouts, retries/backoff, circuit breaker, bulkhead, rate limiting, Resilience4j, idempotency keys, distributed locks, Saga, Snowflake IDs, CAP/consistency',
+        sections: 14,
+        level: 'Intermediate → Expert',
+        priority: 'critical',
+        tags: ['Resilience4j', 'Saga', 'Distributed', 'Patterns']
+      },
+      {
+        id: 'observability',
+        file: '23_Observability_Production_Debugging.md',
+        title: 'Observability & Production Debugging',
+        description: 'Metrics (Prometheus/Grafana), structured logs (ELK/Loki), distributed tracing (OpenTelemetry/Jaeger), correlation IDs, RED/USE, SLO/error budgets, "service is slow" debugging',
+        sections: 14,
+        level: 'Intermediate → Expert',
+        priority: 'critical',
+        tags: ['Observability', 'Prometheus', 'Tracing', 'Debugging']
+      },
+      {
+        id: 'redis',
+        file: '25_Redis_Caching_Strategy.md',
+        title: 'Redis & Caching Strategy',
+        description: 'Data structures, cache-aside vs write-through, eviction, TTL design, cache stampede/hot keys, penetration/avalanche, cache consistency, distributed lock & rate limiter, HA/cluster',
+        sections: 15,
+        level: 'Intermediate → Expert',
+        priority: 'high',
+        tags: ['Redis', 'Caching', 'Performance', 'Distributed']
+      },
+      {
+        id: 'sql-scale',
+        file: '26_SQL_at_Scale.md',
+        title: 'SQL at Scale',
+        description: 'Indexing, EXPLAIN plans, N+1 fixes, query optimization, isolation levels, optimistic/pessimistic locking, HikariCP, read replicas, partitioning, sharding, zero-downtime migrations',
+        sections: 14,
+        level: 'Intermediate → Expert',
+        priority: 'critical',
+        tags: ['SQL', 'Database', 'Indexing', 'Sharding']
       }
     ]
   },

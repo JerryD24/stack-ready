@@ -308,6 +308,131 @@ const ProgressMap = (function () {
       '17-production-best-practices': ['Node production best practices'],
       '18-coding-problems': ['Node coding problems (promisify, mapLimit, retry, debounce)'],
       '19-interview-qa': ['Node.js interview Q&A bank']
+    },
+
+    '20_Kafka_Deep_Dive.md': {
+      '1-what-kafka-is': ['What Kafka is — distributed commit log, when to use'],
+      '2-core-architecture': ['Brokers, topics, partitions, replication, ISR, controller'],
+      '3-producers': ['Producers — acks, batching, partitioning, idempotence'],
+      '4-consumers-consumer-groups': ['Consumers & consumer groups, partition assignment'],
+      '5-rebalancing': ['Rebalancing — cooperative, static membership, tuning'],
+      '6-offsets-delivery-semantics': ['Offsets & delivery semantics (at-least-once default)'],
+      '7-exactly-once': ['Exactly-once — idempotent producer & transactions'],
+      '8-ordering-guarantees': ['Ordering guarantees (per partition, keying)'],
+      '9-retry-topics-dlq': ['Retry topics & dead-letter queues'],
+      '10-outbox-pattern': ['Outbox pattern (transactional event publishing)'],
+      '11-backpressure': ['Backpressure & flow control (pull, pause/resume)'],
+      '12-lag-monitoring': ['Consumer lag monitoring & operations'],
+      '13-schema-management': ['Schema registry & compatibility modes'],
+      '14-spring-kafka': ['Spring Kafka in practice'],
+      '15-design-50k-eventssec': ['Design: 50,000 events/sec system'],
+      '16-interview-qa': ['Kafka interview Q&A bank']
+    },
+
+    '21_Kubernetes_Docker_CloudNative.md': {
+      '1-docker-fundamentals': ['Docker fundamentals — images, layers, containers'],
+      '2-production-dockerfiles': ['Production Dockerfiles (multi-stage, non-root)'],
+      '3-docker-networking-volumes': ['Docker networking, volumes, compose'],
+      '4-kubernetes-architecture': ['Kubernetes architecture (control plane, nodes)'],
+      '5-pods-replicasets-deployments': ['Pods, ReplicaSets & Deployments'],
+      '6-services-ingress': ['Services & Ingress'],
+      '7-configmaps-secrets': ['ConfigMaps & Secrets'],
+      '8-probes': ['Liveness, readiness & startup probes'],
+      '9-resource-requests-limits-qos': ['Resource requests, limits & QoS (OOMKilled)'],
+      '10-hpa': ['Horizontal Pod Autoscaler (+ KEDA, Cluster Autoscaler)'],
+      '11-rolling-deploys-rollbacks': ['Rolling deploys & rollbacks'],
+      '12-stateful-workloads-storage': ['StatefulSets & persistent storage (PV/PVC)'],
+      '13-aws': ['AWS for backend (EKS/ECS/S3/RDS/SQS/IAM)'],
+      '14-cicd': ['CI/CD to Kubernetes (GitHub Actions, GitOps)'],
+      '15-troubleshooting-pods': ['Troubleshooting pods (CrashLoopBackOff etc.)'],
+      '16-interview-qa': ['Kubernetes/Docker interview Q&A bank']
+    },
+
+    '22_Resilience_Distributed_Patterns.md': {
+      '1-why-resilience': ['Why resilience — cascading failure, fallacies'],
+      '2-timeouts-deadlines': ['Timeouts & deadline propagation'],
+      '3-retries-backoff': ['Retries & exponential backoff + jitter'],
+      '4-circuit-breaker': ['Circuit breaker (CLOSED/OPEN/HALF_OPEN)'],
+      '5-bulkhead': ['Bulkhead isolation'],
+      '6-rate-limiting': ['Rate limiting (token/leaky/sliding window)'],
+      '7-resilience4j': ['Resilience4j in practice'],
+      '8-idempotency-keys': ['Idempotency keys'],
+      '9-distributed-locks': ['Distributed locks (Redis/Redisson, fencing)'],
+      '10-saga-pattern': ['Saga pattern (choreography vs orchestration)'],
+      '11-snowflake-ids': ['Distributed ID generation (Snowflake)'],
+      '12-consistency-cap-eventual-consistency': ['CAP, strong vs eventual consistency'],
+      '13-graceful-degradation-fallbacks': ['Graceful degradation & fallbacks'],
+      '14-interview-qa': ['Resilience interview Q&A bank']
+    },
+
+    '23_Observability_Production_Debugging.md': {
+      '1-observability-vs-monitoring': ['Observability vs monitoring'],
+      '2-three-pillars': ['Three pillars — metrics, logs, traces'],
+      '3-metrics-with-prometheus': ['Metrics with Prometheus & PromQL'],
+      '4-grafana': ['Dashboards with Grafana'],
+      '5-structured-logging': ['Structured logging (JSON, levels, no PII)'],
+      '6-log-aggregation': ['Log aggregation (ELK & Loki)'],
+      '7-distributed-tracing': ['Distributed tracing (OpenTelemetry & Jaeger)'],
+      '8-correlation-ids': ['Correlation IDs / trace propagation'],
+      '9-red-use-methods': ['RED & USE methods (golden signals)'],
+      '10-sli-slo-sla': ['SLI, SLO, SLA & error budgets'],
+      '11-alerting': ['Alerting on symptoms, actionable alerts'],
+      '12-debugging-slow-service': ['Debugging: a service is slow in prod'],
+      '13-debugging-errors-memory-cpu': ['Debugging: errors, memory, CPU'],
+      '14-interview-qa': ['Observability interview Q&A bank']
+    },
+
+    '24_JVM_Performance_Advanced_Concurrency.md': {
+      '1-jvm-memory-areas': ['JVM memory areas (heap, metaspace, stacks)'],
+      '2-generational-gc': ['Generational GC (young/old, minor/full)'],
+      '3-garbage-collectors': ['Garbage collectors — Serial to ZGC'],
+      '4-g1-vs-zgc': ['G1 vs ZGC — choosing & tuning'],
+      '5-reading-gc-logs': ['Reading GC logs'],
+      '6-jvm-flags': ['Key JVM flags (container-aware sizing)'],
+      '7-heap-dumps-leaks': ['Heap dumps & memory-leak hunting (MAT)'],
+      '8-thread-dumps-cpu-profiling': ['Thread dumps & CPU profiling (flame graphs)'],
+      '9-diagnostic-tooling': ['Diagnostic tooling — jstack, jmap, Arthas'],
+      '10-threadpoolexecutor-tuning': ['ThreadPoolExecutor tuning'],
+      '11-completablefuture': ['CompletableFuture patterns'],
+      '12-virtual-threads': ['Virtual threads — when & pinning pitfalls'],
+      '13-lock-free-atomics': ['Lock-free & atomics (CAS, LongAdder, ABA)'],
+      '14-jit-escape-analysis-warmup': ['JIT, escape analysis & warmup'],
+      '15-interview-qa': ['JVM performance interview Q&A bank']
+    },
+
+    '25_Redis_Caching_Strategy.md': {
+      '1-why-cache': ['Why cache & what Redis is'],
+      '2-data-structures': ['Redis data structures (String/Hash/ZSet/Stream)'],
+      '3-caching-patterns': ['Caching patterns overview'],
+      '4-cache-aside': ['Cache-aside (lazy loading)'],
+      '5-write-through-write-behind': ['Write-through & write-behind'],
+      '6-eviction-policies': ['Eviction policies (LRU/LFU)'],
+      '7-ttl-design': ['TTL & expiration design (jitter)'],
+      '8-cache-stampede-hot-keys': ['Cache stampede & hot keys'],
+      '9-penetration-avalanche': ['Cache penetration & avalanche'],
+      '10-cache-consistency': ['Cache vs DB consistency (invalidate)'],
+      '11-distributed-lock': ['Redis as a distributed lock'],
+      '12-rate-limiter': ['Redis as a rate limiter'],
+      '13-persistence-ha-cluster': ['Persistence, HA & cluster (RDB/AOF/Sentinel)'],
+      '14-spring-cache': ['Spring Cache with Redis'],
+      '15-interview-qa': ['Redis/caching interview Q&A bank']
+    },
+
+    '26_SQL_at_Scale.md': {
+      '1-how-a-query-executes': ['How a query executes (optimizer, stats)'],
+      '2-indexing': ['Indexing deep dive (B-tree, composite, covering)'],
+      '3-explain-plans': ['Reading EXPLAIN plans'],
+      '4-the-n1-problem': ['The N+1 problem & fixes'],
+      '5-query-optimization': ['Query optimization techniques (sargable, keyset)'],
+      '6-transactions-isolation': ['Transactions & isolation levels'],
+      '7-optimistic-vs-pessimistic-locking': ['Optimistic vs pessimistic locking'],
+      '8-connection-pooling-hikaricp': ['Connection pooling & HikariCP sizing'],
+      '9-read-replicas': ['Read replicas & read/write splitting'],
+      '10-partitioning': ['Partitioning (range/hash, pruning)'],
+      '11-sharding': ['Sharding (shard key, hot shards)'],
+      '12-sql-vs-nosql-denormalization': ['SQL vs NoSQL & denormalization'],
+      '13-migrations-at-scale': ['Schema migrations at scale (expand-contract)'],
+      '14-interview-qa': ['SQL at scale interview Q&A bank']
     }
   };
 

@@ -508,4 +508,143 @@
 
 ---
 
+## SECTION 12 — APACHE KAFKA (in `20_Kafka_Deep_Dive.md`)
+
+- [ ] What Kafka is — distributed commit log, when to use
+- [ ] Brokers, topics, partitions, replication, ISR, controller
+- [ ] Producers — acks, batching, partitioning, idempotence
+- [ ] Consumers & consumer groups, partition assignment
+- [ ] Rebalancing — cooperative, static membership, tuning
+- [ ] Offsets & delivery semantics (at-least-once default)
+- [ ] Exactly-once — idempotent producer & transactions
+- [ ] Ordering guarantees (per partition, keying)
+- [ ] Retry topics & dead-letter queues
+- [ ] Outbox pattern (transactional event publishing)
+- [ ] Backpressure & flow control (pull, pause/resume)
+- [ ] Consumer lag monitoring & operations
+- [ ] Schema registry & compatibility modes
+- [ ] Spring Kafka in practice
+- [ ] Design: 50,000 events/sec system
+- [ ] Kafka interview Q&A bank
+
+---
+
+## SECTION 13 — KUBERNETES, DOCKER & CLOUD-NATIVE (in `21_Kubernetes_Docker_CloudNative.md`)
+
+- [ ] Docker fundamentals — images, layers, containers
+- [ ] Production Dockerfiles (multi-stage, non-root)
+- [ ] Docker networking, volumes, compose
+- [ ] Kubernetes architecture (control plane, nodes)
+- [ ] Pods, ReplicaSets & Deployments
+- [ ] Services & Ingress
+- [ ] ConfigMaps & Secrets
+- [ ] Liveness, readiness & startup probes
+- [ ] Resource requests, limits & QoS (OOMKilled)
+- [ ] Horizontal Pod Autoscaler (+ KEDA, Cluster Autoscaler)
+- [ ] Rolling deploys & rollbacks
+- [ ] StatefulSets & persistent storage (PV/PVC)
+- [ ] AWS for backend (EKS/ECS/S3/RDS/SQS/IAM)
+- [ ] CI/CD to Kubernetes (GitHub Actions, GitOps)
+- [ ] Troubleshooting pods (CrashLoopBackOff etc.)
+- [ ] Kubernetes/Docker interview Q&A bank
+
+---
+
+## SECTION 14 — RESILIENCE & DISTRIBUTED PATTERNS (in `22_Resilience_Distributed_Patterns.md`)
+
+- [ ] Why resilience — cascading failure, fallacies
+- [ ] Timeouts & deadline propagation
+- [ ] Retries & exponential backoff + jitter
+- [ ] Circuit breaker (CLOSED/OPEN/HALF_OPEN)
+- [ ] Bulkhead isolation
+- [ ] Rate limiting (token/leaky/sliding window)
+- [ ] Resilience4j in practice
+- [ ] Idempotency keys
+- [ ] Distributed locks (Redis/Redisson, fencing)
+- [ ] Saga pattern (choreography vs orchestration)
+- [ ] Distributed ID generation (Snowflake)
+- [ ] CAP, strong vs eventual consistency
+- [ ] Graceful degradation & fallbacks
+- [ ] Resilience interview Q&A bank
+
+---
+
+## SECTION 15 — OBSERVABILITY & PRODUCTION DEBUGGING (in `23_Observability_Production_Debugging.md`)
+
+- [ ] Observability vs monitoring
+- [ ] Three pillars — metrics, logs, traces
+- [ ] Metrics with Prometheus & PromQL
+- [ ] Dashboards with Grafana
+- [ ] Structured logging (JSON, levels, no PII)
+- [ ] Log aggregation (ELK & Loki)
+- [ ] Distributed tracing (OpenTelemetry & Jaeger)
+- [ ] Correlation IDs / trace propagation
+- [ ] RED & USE methods (golden signals)
+- [ ] SLI, SLO, SLA & error budgets
+- [ ] Alerting on symptoms, actionable alerts
+- [ ] Debugging: a service is slow in prod
+- [ ] Debugging: errors, memory, CPU
+- [ ] Observability interview Q&A bank
+
+---
+
+## SECTION 16 — JVM PERFORMANCE & ADVANCED CONCURRENCY (in `24_JVM_Performance_Advanced_Concurrency.md`)
+
+- [ ] JVM memory areas (heap, metaspace, stacks)
+- [ ] Generational GC (young/old, minor/full)
+- [ ] Garbage collectors — Serial to ZGC
+- [ ] G1 vs ZGC — choosing & tuning
+- [ ] Reading GC logs
+- [ ] Key JVM flags (container-aware sizing)
+- [ ] Heap dumps & memory-leak hunting (MAT)
+- [ ] Thread dumps & CPU profiling (flame graphs)
+- [ ] Diagnostic tooling — jstack, jmap, Arthas
+- [ ] ThreadPoolExecutor tuning
+- [ ] CompletableFuture patterns
+- [ ] Virtual threads — when & pinning pitfalls
+- [ ] Lock-free & atomics (CAS, LongAdder, ABA)
+- [ ] JIT, escape analysis & warmup
+- [ ] JVM performance interview Q&A bank
+
+---
+
+## SECTION 17 — REDIS & CACHING STRATEGY (in `25_Redis_Caching_Strategy.md`)
+
+- [ ] Why cache & what Redis is
+- [ ] Redis data structures (String/Hash/ZSet/Stream)
+- [ ] Caching patterns overview
+- [ ] Cache-aside (lazy loading)
+- [ ] Write-through & write-behind
+- [ ] Eviction policies (LRU/LFU)
+- [ ] TTL & expiration design (jitter)
+- [ ] Cache stampede & hot keys
+- [ ] Cache penetration & avalanche
+- [ ] Cache vs DB consistency (invalidate)
+- [ ] Redis as a distributed lock
+- [ ] Redis as a rate limiter
+- [ ] Persistence, HA & cluster (RDB/AOF/Sentinel)
+- [ ] Spring Cache with Redis
+- [ ] Redis/caching interview Q&A bank
+
+---
+
+## SECTION 18 — SQL AT SCALE (in `26_SQL_at_Scale.md`)
+
+- [ ] How a query executes (optimizer, stats)
+- [ ] Indexing deep dive (B-tree, composite, covering)
+- [ ] Reading EXPLAIN plans
+- [ ] The N+1 problem & fixes
+- [ ] Query optimization techniques (sargable, keyset)
+- [ ] Transactions & isolation levels
+- [ ] Optimistic vs pessimistic locking
+- [ ] Connection pooling & HikariCP sizing
+- [ ] Read replicas & read/write splitting
+- [ ] Partitioning (range/hash, pruning)
+- [ ] Sharding (shard key, hot shards)
+- [ ] SQL vs NoSQL & denormalization
+- [ ] Schema migrations at scale (expand-contract)
+- [ ] SQL at scale interview Q&A bank
+
+---
+
 > **Next Step**: Open `01_Java_Core_to_Advanced.md` and start reading!
