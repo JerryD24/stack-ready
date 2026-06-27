@@ -27,25 +27,46 @@
     return h;
   }
 
+  function renderHeading(src, level) {
+    let depth, plain, html;
+    if (typeof src === 'object' && src !== null && 'depth' in src) {
+      const token = src;
+      depth = token.depth;
+      plain = token.text || '';
+      const inline = token.tokens || [];
+      html = this.parser.parseInline(inline);
+    } else {
+      depth = level;
+      plain = String(src).replace(/<[^>]*>/g, '');
+      html = String(src);
+    }
+    const id = githubSlug(plain) || `section-${hashCode(plain)}`;
+    return `<h${depth} id="${id}">${html}</h${depth}>\n`;
+  }
+
+  function renderCode(src, infostring) {
+    let code, lang;
+    if (typeof src === 'object' && src !== null && 'text' in src) {
+      code = src.text;
+      lang = (src.lang || '').trim();
+    } else {
+      code = String(src);
+      lang = (infostring || '').trim();
+    }
+    let highlighted = code;
+    if (lang && hljs.getLanguage(lang)) {
+      try { highlighted = hljs.highlight(code, { language: lang }).value; }
+      catch (_) { /* fallback */ }
+    } else {
+      highlighted = hljs.highlightAuto(code).value;
+    }
+    return `<pre class="hljs"><code class="language-${lang}">${highlighted}</code></pre>`;
+  }
+
   marked.use({
     renderer: {
-      heading({ tokens, depth }) {
-        const plain = tokens.map(t => t.text || '').join('');
-        const id = githubSlug(plain) || `section-${hashCode(plain)}`;
-        const html = marked.parser.parseInline(tokens);
-        return `<h${depth} id="${id}">${html}</h${depth}>\n`;
-      },
-      code(code, infostring) {
-        const lang = (infostring || '').trim();
-        let highlighted = code;
-        if (lang && hljs.getLanguage(lang)) {
-          try { highlighted = hljs.highlight(code, { language: lang }).value; }
-          catch (_) { /* fallback */ }
-        } else {
-          highlighted = hljs.highlightAuto(code).value;
-        }
-        return `<pre class="hljs"><code class="language-${lang}">${highlighted}</code></pre>`;
-      }
+      heading: renderHeading,
+      code: renderCode
     }
   });
 
