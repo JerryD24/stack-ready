@@ -424,4 +424,64 @@
 
 ---
 
+## SECTION 8 — JAVA MULTITHREADING DEEP DIVE (in `16_Java_Multithreading_Deep_Dive.md`)
+
+- [ ] Process vs Thread — memory sharing model
+- [ ] When to use threads, Amdahl's Law, CPU vs I/O pool sizing
+- [ ] Thread lifecycle & states (sleep vs wait lock behavior)
+- [ ] Creating threads — Thread, Runnable, Callable, ExecutorService
+- [ ] Concurrency models (pool, producer-consumer, fork-join, pipeline, scatter-gather)
+- [ ] Synchronization — synchronized, volatile, Locks, Atomics/CAS
+- [ ] Java Memory Model & happens-before
+- [ ] wait/notify & BlockingQueue producer-consumer
+- [ ] Thread pools & ExecutorService lifecycle
+- [ ] ThreadPoolExecutor internals (core/max/queue/rejection policy)
+- [ ] Callable, Future & CompletableFuture pipelines
+- [ ] Concurrent collections (ConcurrentHashMap, CopyOnWriteArrayList)
+- [ ] ForkJoinPool & parallel streams
+- [ ] Virtual threads (Java 21, Project Loom)
+- [ ] Deadlock, livelock, starvation — prevention & diagnosis
+- [ ] Real-world multithreading patterns (partitioned queues, batching, async callback)
+- [ ] Multithreading best practices & cooperative interruption
+- [ ] Multithreading interview Q&A bank
+
+---
+
+## SECTION 9 — JAVA STREAMS DEEP DIVE (in `17_Java_Streams_Deep_Dive.md`)
+
+- [ ] Stream vs Collection, pipeline anatomy, single-use
+- [ ] Creating streams (of, iterate, generate, IntStream, Files.lines)
+- [ ] Intermediate ops (filter, map, sorted, distinct, limit, takeWhile)
+- [ ] Terminal ops (collect, reduce, count, match, find)
+- [ ] Collectors (groupingBy, partitioningBy, toMap, joining, teeing)
+- [ ] flatMap & nested data flattening
+- [ ] Primitive streams (IntStream/LongStream/DoubleStream)
+- [ ] Optional — map, filter, orElse, orElseGet, ifPresent
+- [ ] Parallel streams — when to use and pitfalls
+- [ ] Lazy evaluation & short-circuiting
+- [ ] Stream common pitfalls
+- [ ] Real-world stream examples (grouping, indexing, top-N)
+- [ ] Streams interview Q&A bank
+
+---
+
+## SECTION 10 — JAVA & SPRING ANNOTATIONS DEEP DIVE (in `18_Annotations_Deep_Dive.md`)
+
+- [ ] What annotations are & how frameworks use them
+- [ ] Built-in Java annotations (@Override, @Deprecated, @FunctionalInterface)
+- [ ] Meta-annotations (@Target, @Retention, @Inherited, @Repeatable)
+- [ ] Creating custom annotations
+- [ ] Retention policies & reading annotations via reflection
+- [ ] Compile-time annotation processing (Lombok, MapStruct)
+- [ ] Core Spring annotations (@Component, @Autowired, @Bean, @Configuration)
+- [ ] Spring Boot annotations (@SpringBootApplication, @ConfigurationProperties, @Async, @Scheduled)
+- [ ] Spring Web/REST annotations (@RestController, @GetMapping, @RequestBody)
+- [ ] Spring Data JPA annotations (@Entity, @Id, relationships, @Query)
+- [ ] Validation annotations (@Valid, @NotNull, @Size, @Email)
+- [ ] Transaction & AOP annotations (@Transactional, @Aspect, advice)
+- [ ] Testing annotations (@SpringBootTest, @MockBean, slices)
+- [ ] Annotations interview Q&A bank
+
+---
+
 > **Next Step**: Open `01_Java_Core_to_Advanced.md` and start reading!

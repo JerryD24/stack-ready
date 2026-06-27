@@ -232,6 +232,60 @@ const ProgressMap = (function () {
       '15-typescript-with-react': ['TypeScript with React'],
       '16-testing-jest-react-testing-library': ['Testing — Jest, React Testing Library'],
       '17-build-tools-vite-cra-nextjs': ['Vite, Next.js, SSR vs SSG vs CSR']
+    },
+
+    '16_Java_Multithreading_Deep_Dive.md': {
+      '1-process-vs-thread': ['Process vs Thread — memory sharing model'],
+      '2-why-multithreading': ["When to use threads, Amdahl's Law, CPU vs I/O pool sizing"],
+      '3-thread-lifecycle': ['Thread lifecycle & states (sleep vs wait lock behavior)'],
+      '4-ways-to-create-threads': ['Creating threads — Thread, Runnable, Callable, ExecutorService'],
+      '5-types-of-multithreading': ['Concurrency models (pool, producer-consumer, fork-join, pipeline, scatter-gather)'],
+      '6-synchronization': ['Synchronization — synchronized, volatile, Locks, Atomics/CAS'],
+      '7-java-memory-model': ['Java Memory Model & happens-before'],
+      '8-wait-notify-producerconsumer': ['wait/notify & BlockingQueue producer-consumer'],
+      '9-thread-pools': ['Thread pools & ExecutorService lifecycle'],
+      '10-threadpoolexecutor-internals': ['ThreadPoolExecutor internals (core/max/queue/rejection policy)'],
+      '11-callable-future-completablefuture': ['Callable, Future & CompletableFuture pipelines'],
+      '12-concurrent-collections': ['Concurrent collections (ConcurrentHashMap, CopyOnWriteArrayList)'],
+      '13-forkjoinpool-parallel-streams': ['ForkJoinPool & parallel streams'],
+      '14-virtual-threads': ['Virtual threads (Java 21, Project Loom)'],
+      '15-deadlock-livelock-starvation': ['Deadlock, livelock, starvation — prevention & diagnosis'],
+      '16-real-world-patterns': ['Real-world multithreading patterns (partitioned queues, batching, async callback)'],
+      '17-best-practices': ['Multithreading best practices & cooperative interruption'],
+      '18-interview-qa': ['Multithreading interview Q&A bank']
+    },
+
+    '17_Java_Streams_Deep_Dive.md': {
+      '1-why-streams': ['Stream vs Collection, pipeline anatomy, single-use'],
+      '2-creating-streams': ['Creating streams (of, iterate, generate, IntStream, Files.lines)'],
+      '3-intermediate-operations': ['Intermediate ops (filter, map, sorted, distinct, limit, takeWhile)'],
+      '4-terminal-operations': ['Terminal ops (collect, reduce, count, match, find)'],
+      '5-collectors-deep-dive': ['Collectors (groupingBy, partitioningBy, toMap, joining, teeing)'],
+      '6-flatmap-nested-data': ['flatMap & nested data flattening'],
+      '7-primitive-streams': ['Primitive streams (IntStream/LongStream/DoubleStream)'],
+      '8-optional': ['Optional — map, filter, orElse, orElseGet, ifPresent'],
+      '9-parallel-streams': ['Parallel streams — when to use and pitfalls'],
+      '10-lazy-evaluation': ['Lazy evaluation & short-circuiting'],
+      '11-common-pitfalls': ['Stream common pitfalls'],
+      '12-real-world-examples': ['Real-world stream examples (grouping, indexing, top-N)'],
+      '13-interview-qa': ['Streams interview Q&A bank']
+    },
+
+    '18_Annotations_Deep_Dive.md': {
+      '1-what-are-annotations': ['What annotations are & how frameworks use them'],
+      '2-built-in-java-annotations': ['Built-in Java annotations (@Override, @Deprecated, @FunctionalInterface)'],
+      '3-meta-annotations': ['Meta-annotations (@Target, @Retention, @Inherited, @Repeatable)'],
+      '4-creating-custom-annotations': ['Creating custom annotations'],
+      '5-retention-reflection': ['Retention policies & reading annotations via reflection'],
+      '6-annotation-processing': ['Compile-time annotation processing (Lombok, MapStruct)'],
+      '7-core-spring-annotations': ['Core Spring annotations (@Component, @Autowired, @Bean, @Configuration)'],
+      '8-spring-boot-annotations': ['Spring Boot annotations (@SpringBootApplication, @ConfigurationProperties, @Async, @Scheduled)'],
+      '9-spring-web-rest-annotations': ['Spring Web/REST annotations (@RestController, @GetMapping, @RequestBody)'],
+      '10-spring-data-jpa-annotations': ['Spring Data JPA annotations (@Entity, @Id, relationships, @Query)'],
+      '11-validation-annotations': ['Validation annotations (@Valid, @NotNull, @Size, @Email)'],
+      '12-transaction-aop-annotations': ['Transaction & AOP annotations (@Transactional, @Aspect, advice)'],
+      '13-testing-annotations': ['Testing annotations (@SpringBootTest, @MockBean, slices)'],
+      '14-interview-qa': ['Annotations interview Q&A bank']
     }
   };
 

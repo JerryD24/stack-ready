@@ -50,6 +50,26 @@ const INTERVIEW_TRACKS = [
         level: 'Beginner → Expert',
         priority: 'critical',
         tags: ['Multithreading', 'Concurrency', 'Thread Pool', 'Java']
+      },
+      {
+        id: 'java-streams',
+        file: '17_Java_Streams_Deep_Dive.md',
+        title: 'Java Streams Deep Dive',
+        description: 'Stream pipeline, intermediate/terminal ops, Collectors, flatMap, primitive streams, Optional, parallel streams, real-world examples',
+        sections: 13,
+        level: 'Beginner → Expert',
+        priority: 'critical',
+        tags: ['Streams', 'Functional', 'Collectors', 'Java']
+      },
+      {
+        id: 'java-annotations',
+        file: '18_Annotations_Deep_Dive.md',
+        title: 'Java & Spring Annotations Deep Dive',
+        description: 'Java annotations, meta-annotations, custom annotations, reflection, Spring/Spring Boot/JPA/validation/testing annotations',
+        sections: 14,
+        level: 'Beginner → Expert',
+        priority: 'high',
+        tags: ['Annotations', 'Spring Boot', 'JPA', 'Java']
       }
     ]
   },
