@@ -27,48 +27,12 @@
     return h;
   }
 
-  function renderHeading(src, level) {
-    let depth, plain, html;
-    if (typeof src === 'object' && src !== null && 'depth' in src) {
-      const token = src;
-      depth = token.depth;
-      plain = token.text || '';
-      const inline = token.tokens || [];
-      html = this.parser.parseInline(inline);
-    } else {
-      depth = level;
-      plain = String(src).replace(/<[^>]*>/g, '');
-      html = String(src);
-    }
-    const id = githubSlug(plain) || `section-${hashCode(plain)}`;
-    return `<h${depth} id="${id}">${html}</h${depth}>\n`;
+  // Highlight code blocks via DOM post-processing (version-agnostic, no custom renderer)
+  function highlightCodeBlocks() {
+    document.querySelectorAll('.markdown-body pre code').forEach(block => {
+      try { hljs.highlightElement(block); } catch (_) { /* ignore */ }
+    });
   }
-
-  function renderCode(src, infostring) {
-    let code, lang;
-    if (typeof src === 'object' && src !== null && 'text' in src) {
-      code = src.text;
-      lang = (src.lang || '').trim();
-    } else {
-      code = String(src);
-      lang = (infostring || '').trim();
-    }
-    let highlighted = code;
-    if (lang && hljs.getLanguage(lang)) {
-      try { highlighted = hljs.highlight(code, { language: lang }).value; }
-      catch (_) { /* fallback */ }
-    } else {
-      highlighted = hljs.highlightAuto(code).value;
-    }
-    return `<pre class="hljs"><code class="language-${lang}">${highlighted}</code></pre>`;
-  }
-
-  marked.use({
-    renderer: {
-      heading: renderHeading,
-      code: renderCode
-    }
-  });
 
   function getChecklist() {
     return StackReadyCookies.getChecklistMap();
@@ -362,6 +326,7 @@
       readerToolbar.style.display = 'flex';
       docTitle.textContent = currentTopic?.title || fileName.replace(/\.(md|txt)$/, '');
 
+      highlightCodeBlocks();
       buildHeadingRegistry();
       fixInternalAnchorLinks();
       buildToc();
