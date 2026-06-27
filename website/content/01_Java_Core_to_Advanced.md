@@ -1298,6 +1298,68 @@ adder.sum();  // read (not exact during concurrent update)
 // Solution: fair locks (ReentrantLock(true)), increase priority
 ```
 
+### 10.12 ForkJoinPool & Parallel Streams
+```java
+// Fork/Join = divide-and-conquer with WORK STEALING (idle threads steal tasks)
+class SumTask extends RecursiveTask<Long> {
+    final long[] arr; final int lo, hi;
+    SumTask(long[] a, int lo, int hi) { this.arr=a; this.lo=lo; this.hi=hi; }
+    protected Long compute() {
+        if (hi - lo <= 1000) {                 // threshold: don't split too small
+            long s = 0; for (int i=lo;i<hi;i++) s += arr[i]; return s;
+        }
+        int mid = (lo + hi) >>> 1;
+        SumTask left = new SumTask(arr, lo, mid);
+        left.fork();                            // run async on the pool
+        long right = new SumTask(arr, mid, hi).compute();
+        return left.join() + right;
+    }
+}
+new ForkJoinPool().invoke(new SumTask(data, 0, data.length));
+
+// Parallel streams ride on the SHARED ForkJoinPool.commonPool() (size = cores-1)
+long sum = list.parallelStream().mapToLong(this::heavy).sum();
+// Use for: large, splittable sources (arrays/ArrayList) + stateless, associative ops, CPU-bound.
+// Avoid for: small data, I/O-bound work, ordered/stateful ops (often slower than sequential).
+// Isolate heavy work in your own pool:
+new ForkJoinPool(8).submit(() -> list.parallelStream().forEach(this::process)).get();
+```
+
+### 10.13 Thread-Safe Collections
+```java
+// Prefer java.util.concurrent collections over synchronizedXxx wrappers (finer-grained, scalable)
+
+// ConcurrentHashMap — concurrent reads + bucket-level writes (no null keys/values)
+ConcurrentHashMap<String,Integer> chm = new ConcurrentHashMap<>();
+chm.computeIfAbsent("k", k -> load(k));   // atomic compound op (avoid check-then-act)
+chm.merge("k", 1, Integer::sum);          // atomic counter
+// (full internals in Section 15)
+
+// CopyOnWriteArrayList — every write copies the array; great for RARE writes / many reads
+//   (e.g., listener lists); fail-safe iterator (snapshot, no ConcurrentModificationException)
+CopyOnWriteArrayList<String> cow = new CopyOnWriteArrayList<>();
+
+// BlockingQueue — producer/consumer with built-in waiting + backpressure (bounded)
+BlockingQueue<Task> q = new LinkedBlockingQueue<>(10_000);
+q.put(task);      // blocks if full
+Task t = q.take(); // blocks if empty
+
+// Others: ConcurrentLinkedQueue, ConcurrentSkipListMap (sorted), CopyOnWriteArraySet
+```
+
+### 10.14 Virtual Threads (Java 21) — Concurrency View
+```java
+// Lightweight threads (~few KB) scheduled by the JVM onto a few carrier (platform) threads.
+// One virtual thread PER task — cheap to create millions; don't pool them.
+try (var ex = Executors.newVirtualThreadPerTaskExecutor()) {
+    requests.forEach(r -> ex.submit(() -> handleBlocking(r)));  // blocking I/O is FINE
+}
+// Blocked virtual thread UNMOUNTS its carrier -> simple blocking code scales massively (I/O-bound).
+// NOT a speedup for CPU-bound work (still limited by cores).
+// PINNING pitfall: blocking inside `synchronized` pins the carrier -> use ReentrantLock instead.
+```
+> For full depth on all of the above, see **`16_Java_Multithreading_Deep_Dive.md`** (thread pools, CompletableFuture, virtual threads, real-world patterns) and **`24_JVM_Performance_Advanced_Concurrency.md`** (GC, profiling, lock-free).
+
 ---
 
 ## 11. JVM Internals & Garbage Collection
