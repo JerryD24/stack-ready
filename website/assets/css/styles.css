@@ -1000,3 +1000,168 @@ a:hover { color: var(--blue-700); }
 .markdown-body.font-sm { font-size: 0.9rem; }
 .markdown-body.font-md { font-size: 1rem; }
 .markdown-body.font-lg { font-size: 1.125rem; }
+
+/* ============================================================
+   Dark mode — remaps surface/text/border tokens (brand blues kept)
+   ============================================================ */
+[data-theme="dark"] {
+  --blue-50:  #0d1b2e;
+  --blue-100: #1c3050;
+  --blue-200: #294b70;
+  --white:    #15263f;
+  --gray-100: #1a2c46;
+  --gray-200: #2a3f5a;
+  --gray-400: #8aa0bd;
+  --gray-600: #aebfd6;
+  --gray-800: #e6edf6;
+  --blue-900: #e3edfb;
+  --blue-800: #cfe0fb;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="dark"] body { background: #0a1422; }
+[data-theme="dark"] body::before {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(6, 182, 212, 0.07), transparent);
+}
+[data-theme="dark"] .site-header {
+  background: rgba(13, 27, 46, 0.85);
+  border-bottom-color: rgba(59, 130, 246, 0.18);
+}
+[data-theme="dark"] .site-footer { background: rgba(13, 27, 46, 0.6); }
+[data-theme="dark"] .search-input { color: var(--gray-800); }
+
+/* keep white text on colored/gradient surfaces */
+[data-theme="dark"] .track-header,
+[data-theme="dark"] .track-header h2,
+[data-theme="dark"] .track-header p,
+[data-theme="dark"] .utility-card,
+[data-theme="dark"] .utility-card h3,
+[data-theme="dark"] .utility-card p,
+[data-theme="dark"] .markdown-body th,
+[data-theme="dark"] .btn-primary,
+[data-theme="dark"] .btn-primary:hover { color: #fff; }
+
+[data-theme="dark"] .utility-card p { color: var(--blue-100); }
+[data-theme="dark"] .priority-critical { background: #3a1414; color: #fca5a5; }
+[data-theme="dark"] .priority-high { background: #3a2410; color: #fdba74; }
+[data-theme="dark"] .markdown-body code { background: #1c3050; color: #bfdbfe; }
+[data-theme="dark"] .markdown-body blockquote { background: #14233a; }
+[data-theme="dark"] .priority-medium { background: #1c3050; color: var(--blue-300); }
+[data-theme="dark"] .tag { color: var(--blue-300); }
+[data-theme="dark"] .hero-badge { color: var(--blue-300); }
+[data-theme="dark"] .nav-link { color: var(--blue-300); }
+[data-theme="dark"] .reader-toolbar .read-time { color: var(--blue-300); }
+
+/* ---- Theme toggle button ---- */
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--blue-200);
+  background: var(--white);
+  cursor: pointer;
+  font-size: 1.05rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--transition), transform var(--transition);
+}
+.theme-toggle:hover { background: var(--blue-100); transform: translateY(-1px); }
+
+/* ---- "Continue where you left off" banner ---- */
+.resume-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.75rem;
+  background: linear-gradient(135deg, var(--blue-700), var(--blue-500));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+.resume-banner .resume-info { display: flex; flex-direction: column; flex: 1; min-width: 200px; }
+.resume-banner .resume-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.8); font-weight: 700; }
+.resume-banner .resume-title { font-size: 1.05rem; font-weight: 700; color: #fff; }
+.resume-banner .resume-sub { font-size: 0.78rem; color: rgba(255,255,255,0.85); }
+.resume-banner .btn-resume {
+  background: #fff;
+  color: var(--blue-700);
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+.resume-banner .btn-resume:hover { transform: translateY(-1px); color: var(--blue-800); }
+
+/* ---- Per-track progress bar ---- */
+.track-progress {
+  position: relative;
+  margin-top: 0.85rem;
+}
+.track-progress-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.92);
+  margin-bottom: 0.3rem;
+}
+.track-progress-wrap {
+  height: 6px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.track-progress-bar {
+  height: 100%;
+  background: #fff;
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+
+/* ---- Reading-time pill ---- */
+.read-time {
+  font-size: 0.7rem;
+  color: var(--gray-400);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.reader-toolbar .read-time {
+  font-size: 0.8rem;
+  color: var(--blue-600);
+  font-weight: 600;
+}
+
+/* ---- Copy-code button ---- */
+.code-block-wrap { position: relative; }
+.code-copy-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition), background var(--transition), color var(--transition);
+}
+.code-block-wrap:hover .code-copy-btn { opacity: 1; }
+.code-copy-btn:hover { background: rgba(255, 255, 255, 0.2); color: #fff; }
+.code-copy-btn.copied { color: #4ade80; border-color: #4ade80; opacity: 1; }
+@media (max-width: 600px) { .code-copy-btn { opacity: 1; } }

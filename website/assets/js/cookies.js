@@ -183,6 +183,22 @@ const StackReadyCookies = (function () {
     return `${fileName}::${sectionId}`;
   }
 
+  function getTheme() {
+    return getString('theme', 'light');
+  }
+
+  function setTheme(theme) {
+    setString('theme', theme);
+  }
+
+  function getLastVisited() {
+    return getJSON('last', null);
+  }
+
+  function setLastVisited(file, title, scrollY) {
+    setJSON('last', { file, title, scrollY: Math.round(scrollY || 0), at: Date.now() });
+  }
+
   migrateFromLocalStorage();
 
   return {
@@ -194,6 +210,10 @@ const StackReadyCookies = (function () {
     setFontSize,
     getSections,
     setSectionDone,
-    sectionKey
+    sectionKey,
+    getTheme,
+    setTheme,
+    getLastVisited,
+    setLastVisited
   };
 })();

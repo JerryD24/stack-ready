@@ -43,6 +43,40 @@
     return StackReadyCookies.getProgress()[file] ? 100 : 0;
   }
 
+  function readTimeLabel(file) {
+    const meta = (window.CONTENT_META || {})[file];
+    if (!meta || !meta.minutes) return '';
+    return `~${meta.minutes} min read`;
+  }
+
+  function getTrackProgress(track) {
+    let total = 0, done = 0;
+    track.topics.forEach(t => {
+      const p = ProgressMap.getGuideProgress(t.file);
+      if (p.total > 0) { total += p.total; done += p.done; }
+    });
+    return total > 0 ? Math.round((done / total) * 100) : 0;
+  }
+
+  function renderResumeBanner() {
+    const host = document.getElementById('resumeBanner');
+    if (!host) return;
+    const last = StackReadyCookies.getLastVisited();
+    if (!last || !last.file) return;
+    const topic = getAllTopics().find(t => t.file === last.file);
+    const title = (topic && topic.title) || last.title || last.file;
+    const track = topic ? topic.trackTitle : '';
+    host.innerHTML = `
+      <div class="resume-banner">
+        <div class="resume-info">
+          <span class="resume-label">Continue where you left off</span>
+          <span class="resume-title">${title}</span>
+          ${track ? `<span class="resume-sub">${track}</span>` : ''}
+        </div>
+        <a class="btn-resume" href="${siteUrl('reader.html?file=' + encodeURIComponent(last.file))}">Resume →</a>
+      </div>`;
+  }
+
   function renderUtilityStrip() {
     const strip = document.getElementById('utilityStrip');
     strip.innerHTML = UTILITY_DOCS.map(doc => `
@@ -70,6 +104,7 @@
           ${(topic.tags || []).slice(0, 3).map(t => `<span class="tag">${t}</span>`).join('')}
           <span class="topic-level">${topic.level || ''}</span>
         </div>
+        ${readTimeLabel(topic.file) ? `<div style="margin-top:0.5rem;"><span class="read-time">⏱ ${readTimeLabel(topic.file)}</span></div>` : ''}
         <div class="progress-bar-wrap">
           <div class="progress-bar" style="width:${pct}%"></div>
         </div>
@@ -79,18 +114,24 @@
 
   function renderTracks() {
     const grid = document.getElementById('tracksGrid');
-    grid.innerHTML = INTERVIEW_TRACKS.map(track => `
+    grid.innerHTML = INTERVIEW_TRACKS.map(track => {
+      const tp = getTrackProgress(track);
+      return `
       <div class="track-column" data-track="${track.id}">
         <div class="track-header" style="background:${track.gradient}">
           <div class="track-icon">${track.icon}</div>
           <h2>${track.title}</h2>
           <p>${track.subtitle}</p>
+          <div class="track-progress">
+            <div class="track-progress-top"><span>Progress</span><span>${tp}%</span></div>
+            <div class="track-progress-wrap"><div class="track-progress-bar" style="width:${tp}%"></div></div>
+          </div>
         </div>
         <div class="track-body">
           ${track.topics.map(t => renderTopicCard(t, track.color)).join('')}
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   }
 
   function renderStats() {
@@ -147,6 +188,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    renderResumeBanner();
     renderUtilityStrip();
     renderTracks();
     renderStats();

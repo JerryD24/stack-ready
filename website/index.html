@@ -15,6 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css">
+  <script>(function(){try{var m=document.cookie.match(/(?:^|;\s*)sr_theme=([^;]+)/);if(m&&decodeURIComponent(m[1])==='dark'){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}})();</script>
 </head>
 <body>
   <div class="app-shell">
@@ -35,6 +36,7 @@
           <a href="#tracks" class="nav-link active">Topics</a>
           <a href="https://neetcode.io/practice/practice/neetcode150" class="nav-link nav-external" target="_blank" rel="noopener noreferrer">NeetCode 150</a>
           <a href="https://takeuforward.org/interviews/strivers-sde-sheet-top-coding-interview-problems/" class="nav-link nav-external" target="_blank" rel="noopener noreferrer">Striver SDE</a>
+          <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
         </nav>
       </div>
     </header>
@@ -74,6 +76,7 @@
       </section>
 
       <section class="container">
+        <div id="resumeBanner"></div>
         <div class="utility-strip" id="utilityStrip"></div>
       </section>
 
@@ -92,6 +95,8 @@
   <script src="config.js"></script>
   <script src="assets/js/site.js"></script>
   <script src="assets/js/cookies.js"></script>
+  <script src="assets/js/theme.js"></script>
+  <script src="assets/js/content-meta.js"></script>
   <script src="assets/js/progress-map.js"></script>
   <script src="assets/js/topics.js"></script>
   <script src="assets/js/app.js"></script>

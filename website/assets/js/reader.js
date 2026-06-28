@@ -34,6 +34,85 @@
     });
   }
 
+  // Add a copy button to every code block
+  function addCopyButtons() {
+    document.querySelectorAll('.markdown-body pre').forEach(pre => {
+      if (pre.parentElement.classList.contains('code-block-wrap')) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'code-block-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'code-copy-btn';
+      btn.textContent = 'Copy';
+      btn.addEventListener('click', () => {
+        const code = pre.querySelector('code');
+        const text = code ? code.innerText : pre.innerText;
+        const done = () => {
+          btn.textContent = 'Copied!';
+          btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1600);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+        } else {
+          fallbackCopy(text, done);
+        }
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function fallbackCopy(text, done) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); done(); } catch (_) { /* ignore */ }
+    document.body.removeChild(ta);
+  }
+
+  // Estimate reading time from rendered content (~200 wpm)
+  function updateReadTime() {
+    const el = document.getElementById('readTime');
+    if (!el) return;
+    const body = document.querySelector('.markdown-body');
+    if (!body) return;
+    const words = (body.innerText.trim().match(/\S+/g) || []).length;
+    if (!words) { el.textContent = ''; return; }
+    const minutes = Math.max(1, Math.round(words / 200));
+    el.textContent = `⏱ ~${minutes} min read`;
+  }
+
+  // Remember last-opened guide + scroll position for "Continue where you left off"
+  function setupResumeTracking() {
+    const title = currentTopic?.title || fileName.replace(/\.(md|txt)$/, '');
+    StackReadyCookies.setLastVisited(fileName, title, window.scrollY);
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      setTimeout(() => {
+        StackReadyCookies.setLastVisited(fileName, title, window.scrollY);
+        ticking = false;
+      }, 600);
+    }, { passive: true });
+  }
+
+  function restoreScrollPosition() {
+    if (window.location.hash) return false;
+    const last = StackReadyCookies.getLastVisited();
+    if (last && last.file === fileName && last.scrollY > 100) {
+      window.scrollTo({ top: last.scrollY });
+      return true;
+    }
+    return false;
+  }
+
   function getChecklist() {
     return StackReadyCookies.getChecklistMap();
   }
@@ -327,6 +406,8 @@
       docTitle.textContent = currentTopic?.title || fileName.replace(/\.(md|txt)$/, '');
 
       highlightCodeBlocks();
+      addCopyButtons();
+      updateReadTime();
       buildHeadingRegistry();
       fixInternalAnchorLinks();
       buildToc();
@@ -335,9 +416,12 @@
       setupFontSize();
       updateGuideProgressBadge();
       setupMobileToc();
+      setupResumeTracking();
 
       if (window.location.hash) {
         setTimeout(() => scrollToSection(decodeURIComponent(window.location.hash.slice(1))), 300);
+      } else {
+        setTimeout(restoreScrollPosition, 200);
       }
     } catch (err) {
       contentArea.innerHTML = `
