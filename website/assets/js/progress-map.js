@@ -450,25 +450,63 @@ const ProgressMap = (function () {
     return [...new Set(all)];
   }
 
+  // Stable checklist id for a section that isn't explicitly mapped to the roadmap
+  function sectionUnitId(file, sectionId) {
+    return checklistId(`\u00a7section\u00a7${file}\u00a7${sectionId}`);
+  }
+
+  // Trackable units for one section: mapped roadmap topics, or a single generic unit
+  function getSectionUnits(file, sectionId) {
+    const mapped = getTopicsForSection(file, sectionId);
+    if (mapped.length) {
+      return mapped.map(t => ({ label: t, id: checklistId(t), mapped: true }));
+    }
+    return [{ label: 'Mark this section as complete', id: sectionUnitId(file, sectionId), mapped: false }];
+  }
+
+  // All top-level (h2) sections of a guide from the generated study data
+  function h2SectionsForGuide(file) {
+    const data = (typeof window !== 'undefined' && window.STUDY_DATA) || null;
+    if (!data || !data[file] || !data[file].sections) return null;
+    return data[file].sections.filter(s =>
+      s.level === 2 && s.heading.trim().toUpperCase() !== 'TABLE OF CONTENTS'
+    );
+  }
+
+  // Every trackable unit id for a guide (mapped topics + generic sections)
+  function getGuideUnits(file) {
+    const secs = h2SectionsForGuide(file);
+    if (!secs) {
+      // Fallback when study data isn't loaded: mapped topics only
+      return getAllTopicsForGuide(file).map(t => checklistId(t));
+    }
+    const ids = [];
+    secs.forEach(s => getSectionUnits(file, s.id).forEach(u => ids.push(u.id)));
+    return [...new Set(ids)];
+  }
+
   function getGuideProgress(file) {
-    const topics = getAllTopicsForGuide(file);
-    if (!topics.length) return { done: 0, total: 0, percent: 0 };
+    const units = getGuideUnits(file);
+    if (!units.length) return { done: 0, total: 0, percent: 0 };
     const checklist = StackReadyCookies.getChecklistMap();
-    const done = topics.filter(t => checklist[checklistId(t)]).length;
-    return { done, total: topics.length, percent: Math.round((done / topics.length) * 100) };
+    const done = units.filter(id => checklist[id]).length;
+    return { done, total: units.length, percent: Math.round((done / units.length) * 100) };
   }
 
   function isSectionComplete(file, sectionId) {
-    const topics = getTopicsForSection(file, sectionId);
-    if (!topics.length) return false;
+    const units = getSectionUnits(file, sectionId);
+    if (!units.length) return false;
     const checklist = StackReadyCookies.getChecklistMap();
-    return topics.every(t => checklist[checklistId(t)]);
+    return units.every(u => checklist[u.id]);
   }
 
   return {
     checklistId,
     getTopicsForSection,
     getAllTopicsForGuide,
+    getSectionUnits,
+    sectionUnitId,
+    getGuideUnits,
     getGuideProgress,
     isSectionComplete
   };

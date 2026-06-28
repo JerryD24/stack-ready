@@ -353,8 +353,10 @@
 
     h2s.forEach((h2, index) => {
       const sectionId = h2.id;
-      const topics = ProgressMap.getTopicsForSection(fileName, sectionId);
-      if (!topics.length) return;
+      if (!sectionId) return;
+      const units = ProgressMap.getSectionUnits(fileName, sectionId);
+      if (!units.length) return;
+      const isMapped = units[0].mapped;
 
       const nextH2 = h2s[index + 1];
       const tracker = document.createElement('div');
@@ -363,13 +365,15 @@
 
       const header = document.createElement('div');
       header.className = 'section-topics-header';
-      header.innerHTML = `<strong>Track progress</strong> <span class="section-sync-note">— syncs with Master Roadmap</span>`;
+      header.innerHTML = isMapped
+        ? `<strong>Track progress</strong> <span class="section-sync-note">— syncs with Master Roadmap</span>`
+        : `<strong>Track progress</strong>`;
 
       const list = document.createElement('ul');
       list.className = 'section-topic-list';
 
-      topics.forEach(topicText => {
-        const id = ProgressMap.checklistId(topicText);
+      units.forEach(unit => {
+        const id = unit.id;
         const li = document.createElement('li');
         const label = document.createElement('label');
         label.className = 'section-topic-item';
@@ -377,7 +381,7 @@
         cb.type = 'checkbox';
         cb.checked = !!getChecklist()[id];
         const span = document.createElement('span');
-        span.textContent = topicText;
+        span.textContent = unit.label;
         label.appendChild(cb);
         label.appendChild(span);
         if (cb.checked) label.classList.add('done');
@@ -390,33 +394,34 @@
         list.appendChild(li);
       });
 
-      const actions = document.createElement('div');
-      actions.className = 'section-topic-actions';
-      const markAllBtn = document.createElement('button');
-      markAllBtn.type = 'button';
-      markAllBtn.className = 'btn btn-outline section-mark-all-btn';
-      const refreshMarkAll = () => {
-        const allDone = ProgressMap.isSectionComplete(fileName, sectionId);
-        markAllBtn.textContent = allDone ? 'Uncheck all in section' : 'Mark all in section done';
-        tracker.classList.toggle('section-is-done', allDone);
-      };
-      refreshMarkAll();
-      markAllBtn.addEventListener('click', () => {
-        const markDone = !ProgressMap.isSectionComplete(fileName, sectionId);
-        topics.forEach(topicText => {
-          setChecklistItem(ProgressMap.checklistId(topicText), markDone);
-        });
-        list.querySelectorAll('input').forEach((cb, i) => {
-          cb.checked = markDone;
-          cb.closest('.section-topic-item').classList.toggle('done', markDone);
-        });
-        refreshMarkAll();
-      });
-
-      actions.appendChild(markAllBtn);
       tracker.appendChild(header);
       tracker.appendChild(list);
-      tracker.appendChild(actions);
+
+      // "Mark all" only makes sense when a section has multiple topics
+      if (units.length > 1) {
+        const actions = document.createElement('div');
+        actions.className = 'section-topic-actions';
+        const markAllBtn = document.createElement('button');
+        markAllBtn.type = 'button';
+        markAllBtn.className = 'btn btn-outline section-mark-all-btn';
+        const refreshMarkAll = () => {
+          const allDone = ProgressMap.isSectionComplete(fileName, sectionId);
+          markAllBtn.textContent = allDone ? 'Uncheck all in section' : 'Mark all in section done';
+          tracker.classList.toggle('section-is-done', allDone);
+        };
+        refreshMarkAll();
+        markAllBtn.addEventListener('click', () => {
+          const markDone = !ProgressMap.isSectionComplete(fileName, sectionId);
+          units.forEach(u => setChecklistItem(u.id, markDone));
+          list.querySelectorAll('input').forEach(cb => {
+            cb.checked = markDone;
+            cb.closest('.section-topic-item').classList.toggle('done', markDone);
+          });
+          refreshMarkAll();
+        });
+        actions.appendChild(markAllBtn);
+        tracker.appendChild(actions);
+      }
 
       if (ProgressMap.isSectionComplete(fileName, sectionId)) {
         tracker.classList.add('section-is-done');
