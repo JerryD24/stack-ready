@@ -20,6 +20,66 @@
     return html;
   }
 
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  }
+
+  // Plain-text version of a markdown answer, for use as an MCQ option label
+  function plainText(md) {
+    return md
+      .replace(/```[\s\S]*?```/g, ' ')
+      .replace(/`[^`]*`/g, ' ')
+      .replace(/\|/g, ' ')
+      .replace(/[*_>#]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  // Build 4 MCQ options: the correct answer + up to 3 distractors (same track first)
+  function makeOptions(card, pool) {
+    const sameTrack = pool.filter(c => c.trackTitle === card.trackTitle && c.a !== card.a);
+    const source = sameTrack.length >= 3 ? sameTrack : pool.filter(c => c.a !== card.a);
+    const used = new Set([plainText(card.a)]);
+    const distractors = [];
+    for (const c of shuffle(source)) {
+      if (distractors.length >= 3) break;
+      const p = plainText(c.a);
+      if (!p || used.has(p)) continue;
+      used.add(p);
+      distractors.push(c);
+    }
+    const opts = [{ full: card.a, correct: true }].concat(distractors.map(c => ({ full: c.a, correct: false })));
+    return shuffle(opts).map(o => {
+      const txt = plainText(o.full);
+      return { text: txt.length > 180 ? txt.slice(0, 180) + '…' : txt, full: o.full, correct: o.correct };
+    });
+  }
+
+  // Render an MCQ option list into a container; calls onPick(index, option) on first choice
+  function renderOptions(container, card, onPick) {
+    container.innerHTML = '';
+    card._opts.forEach((o, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'mcq-option';
+      btn.innerHTML = `<span class="mcq-letter">${String.fromCharCode(65 + i)}</span><span class="mcq-text">${escapeHtml(o.text)}</span>`;
+      if (card._answered) {
+        btn.disabled = true;
+        if (o.correct) btn.classList.add('correct');
+        if (card._picked === i && !o.correct) btn.classList.add('wrong');
+        if (card._picked === i) btn.classList.add('picked');
+      }
+      btn.addEventListener('click', () => {
+        if (card._answered) return;
+        card._answered = true;
+        card._picked = i;
+        card._correct = o.correct;
+        onPick(i, o);
+      });
+      container.appendChild(btn);
+    });
+  }
+
   function highlightWithin(el) {
     el.querySelectorAll('pre code').forEach(b => { try { hljs.highlightElement(b); } catch (_) {} });
   }
@@ -91,7 +151,7 @@
 
   // ============ FLASHCARDS ============
   function initFlashcards() {
-    let pool = [], idx = 0, revealed = false, selectedIds = new Set();
+    let pool = [], idx = 0, selectedIds = new Set();
     const setup = document.getElementById('flashSetup');
     const stage = document.getElementById('flashStage');
     const hint = document.getElementById('flashHint');
@@ -105,39 +165,47 @@
     function render() {
       const card = pool[idx];
       if (!card) return;
+      if (!card._opts) card._opts = makeOptions(card, pool);
       document.getElementById('flashCardTrack').textContent = `${card.trackTitle} · ${card.guideTitle}`;
       document.getElementById('flashCardQ').textContent = card.q;
+
       const ans = document.getElementById('flashCardA');
-      ans.innerHTML = renderMarkdown(card.a);
-      highlightWithin(ans);
-      ans.style.display = revealed ? 'block' : 'none';
-      document.getElementById('flashReveal').style.display = revealed ? 'none' : 'inline-flex';
+      renderOptions(document.getElementById('flashOptions'), card, () => render());
+
+      if (card._answered) {
+        ans.innerHTML = `<div class="mcq-verdict ${card._correct ? 'ok' : 'no'}">${card._correct ? '✓ Correct' : '✗ Not quite'}</div>` + renderMarkdown(card.a);
+        highlightWithin(ans);
+        ans.style.display = 'block';
+      } else {
+        ans.style.display = 'none';
+      }
+
       document.getElementById('flashCounter').textContent = `${idx + 1} / ${pool.length}`;
-      const src = document.getElementById('flashSource');
-      src.href = siteUrl('reader.html?file=' + encodeURIComponent(card.file) + card.anchor);
+      document.getElementById('flashSource').href = siteUrl('reader.html?file=' + encodeURIComponent(card.file) + card.anchor);
     }
 
     function start() {
       pool = shuffle(buildPool(selectedIds));
       if (!pool.length) { hint.textContent = 'No questions found for that selection.'; return; }
-      idx = 0; revealed = false;
+      idx = 0;
       setup.style.display = 'none';
       stage.style.display = 'block';
       render();
     }
 
     document.getElementById('flashStart').addEventListener('click', start);
-    document.getElementById('flashShuffle').addEventListener('click', () => { pool = shuffle(pool); idx = 0; revealed = false; render(); });
+    document.getElementById('flashShuffle').addEventListener('click', () => {
+      pool.forEach(c => { c._opts = null; c._answered = false; c._picked = undefined; });
+      pool = shuffle(pool); idx = 0; render();
+    });
     document.getElementById('flashExit').addEventListener('click', () => { stage.style.display = 'none'; setup.style.display = 'block'; });
-    document.getElementById('flashReveal').addEventListener('click', () => { revealed = true; render(); });
-    document.getElementById('flashCardQ').addEventListener('click', () => { revealed = !revealed; render(); });
-    document.getElementById('flashNext').addEventListener('click', () => { idx = (idx + 1) % pool.length; revealed = false; render(); });
-    document.getElementById('flashPrev').addEventListener('click', () => { idx = (idx - 1 + pool.length) % pool.length; revealed = false; render(); });
+    document.getElementById('flashNext').addEventListener('click', () => { idx = (idx + 1) % pool.length; render(); });
+    document.getElementById('flashPrev').addEventListener('click', () => { idx = (idx - 1 + pool.length) % pool.length; render(); });
   }
 
   // ============ MOCK INTERVIEW ============
   function initMock() {
-    let pool = [], idx = 0, revealed = false, selectedIds = new Set();
+    let pool = [], idx = 0, selectedIds = new Set();
     let timerId = null, seconds = 0;
     const setup = document.getElementById('mockSetup');
     const stage = document.getElementById('mockStage');
@@ -158,13 +226,21 @@
 
     function render() {
       const card = pool[idx];
+      if (!card._opts) card._opts = makeOptions(card, pool);
       document.getElementById('mockCardTrack').textContent = `${card.trackTitle} · ${card.guideTitle}`;
       document.getElementById('mockCardQ').textContent = `Q${idx + 1}. ${card.q}`;
+
       const ans = document.getElementById('mockCardA');
-      ans.innerHTML = renderMarkdown(card.a);
-      highlightWithin(ans);
-      ans.style.display = revealed ? 'block' : 'none';
-      document.getElementById('mockReveal').style.display = revealed ? 'none' : 'inline-flex';
+      renderOptions(document.getElementById('mockOptions'), card, () => render());
+
+      if (card._answered) {
+        ans.innerHTML = `<div class="mcq-verdict ${card._correct ? 'ok' : 'no'}">${card._correct ? '✓ Correct' : '✗ Not quite'}</div>` + renderMarkdown(card.a);
+        highlightWithin(ans);
+        ans.style.display = 'block';
+      } else {
+        ans.style.display = 'none';
+      }
+
       document.getElementById('mockCounter').textContent = `${idx + 1} / ${pool.length}`;
       document.getElementById('mockNext').textContent = idx === pool.length - 1 ? 'Finish ✓' : 'Next →';
       document.getElementById('mockSource').href = siteUrl('reader.html?file=' + encodeURIComponent(card.file) + card.anchor);
@@ -174,7 +250,7 @@
       const count = parseInt(document.getElementById('mockCount').value, 10);
       pool = shuffle(buildPool(selectedIds)).slice(0, count);
       if (!pool.length) { hint.textContent = 'No questions found for that selection.'; return; }
-      idx = 0; revealed = false; seconds = 0;
+      idx = 0; seconds = 0;
       setup.style.display = 'none';
       summary.style.display = 'none';
       stage.style.display = 'block';
@@ -188,11 +264,15 @@
       clearInterval(timerId);
       stage.style.display = 'none';
       summary.style.display = 'block';
+      const correct = pool.filter(c => c._correct).length;
+      const answered = pool.filter(c => c._answered).length;
+      const pct = pool.length ? Math.round((correct / pool.length) * 100) : 0;
       summary.innerHTML = `
         <div class="summary-card">
-          <h2>🎉 Mock complete</h2>
+          <h2>${pct >= 70 ? '🎉' : '📊'} Mock complete</h2>
+          <div class="summary-score">${correct} / ${pool.length} correct · ${pct}%</div>
           <div class="summary-stats">
-            <div><span class="summary-num">${pool.length}</span><span>questions</span></div>
+            <div><span class="summary-num">${answered}</span><span>answered</span></div>
             <div><span class="summary-num">${fmt(seconds)}</span><span>time taken</span></div>
             <div><span class="summary-num">${pool.length ? Math.round(seconds / pool.length) : 0}s</span><span>avg / question</span></div>
           </div>
@@ -204,11 +284,9 @@
     }
 
     document.getElementById('mockStart').addEventListener('click', start);
-    document.getElementById('mockReveal').addEventListener('click', () => { revealed = true; render(); });
-    document.getElementById('mockCardQ').addEventListener('click', () => { revealed = !revealed; render(); });
     document.getElementById('mockNext').addEventListener('click', () => {
       if (idx === pool.length - 1) { finish(); return; }
-      idx++; revealed = false; render();
+      idx++; render();
     });
     document.getElementById('mockExit').addEventListener('click', () => {
       clearInterval(timerId); stage.style.display = 'none'; setup.style.display = 'block';
