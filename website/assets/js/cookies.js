@@ -199,6 +199,51 @@ const StackReadyCookies = (function () {
     setJSON('last', { file, title, scrollY: Math.round(scrollY || 0), at: Date.now() });
   }
 
+  // --- Bookmarks (starred sections / Q&As) ---
+  function getBookmarks() {
+    const list = getJSON('bookmarks', []);
+    return Array.isArray(list) ? list : [];
+  }
+
+  function bookmarkKey(file, id) {
+    return `${file}::${id}`;
+  }
+
+  function isBookmarked(file, id) {
+    const key = bookmarkKey(file, id);
+    return getBookmarks().some(b => bookmarkKey(b.file, b.id) === key);
+  }
+
+  function toggleBookmark(item) {
+    const key = bookmarkKey(item.file, item.id);
+    const list = getBookmarks().filter(b => bookmarkKey(b.file, b.id) !== key);
+    const wasThere = list.length !== getBookmarks().length;
+    if (!wasThere) list.push({ ...item, at: Date.now() });
+    setJSON('bookmarks', list);
+    return !wasThere;
+  }
+
+  function removeBookmark(file, id) {
+    const key = bookmarkKey(file, id);
+    setJSON('bookmarks', getBookmarks().filter(b => bookmarkKey(b.file, b.id) !== key));
+  }
+
+  // --- Per-guide difficulty (easy / medium / hard) ---
+  function getDifficultyMap() {
+    return getJSON('difficulty', {});
+  }
+
+  function getDifficulty(file) {
+    return getDifficultyMap()[file] || '';
+  }
+
+  function setDifficulty(file, level) {
+    const m = getDifficultyMap();
+    if (level) m[file] = level;
+    else delete m[file];
+    setJSON('difficulty', m);
+  }
+
   migrateFromLocalStorage();
 
   return {
@@ -214,6 +259,13 @@ const StackReadyCookies = (function () {
     getTheme,
     setTheme,
     getLastVisited,
-    setLastVisited
+    setLastVisited,
+    getBookmarks,
+    isBookmarked,
+    toggleBookmark,
+    removeBookmark,
+    getDifficulty,
+    getDifficultyMap,
+    setDifficulty
   };
 })();

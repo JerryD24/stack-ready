@@ -171,6 +171,34 @@
     });
   }
 
+  function addBookmarkStars() {
+    const guideTitle = currentTopic?.title || fileName.replace(/\.(md|txt)$/, '');
+    document.querySelectorAll('.markdown-body h2, .markdown-body h3').forEach(h => {
+      if (h.querySelector('.bookmark-star')) return;
+      if (h.textContent.trim().toUpperCase() === 'TABLE OF CONTENTS') return;
+      const id = h.id || githubSlug(h.textContent);
+      h.id = id;
+      const heading = h.textContent.trim();
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'bookmark-star';
+      const sync = () => {
+        const on = StackReadyCookies.isBookmarked(fileName, id);
+        btn.textContent = on ? '★' : '☆';
+        btn.classList.toggle('on', on);
+        btn.title = on ? 'Remove bookmark' : 'Bookmark this section';
+      };
+      sync();
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        StackReadyCookies.toggleBookmark({ file: fileName, id, heading, guideTitle, kind: 'section' });
+        sync();
+      });
+      h.appendChild(btn);
+    });
+  }
+
   function buildHeadingRegistry() {
     headingRegistry = [];
     document.querySelectorAll('.markdown-body h1, .markdown-body h2, .markdown-body h3').forEach(h => {
@@ -409,6 +437,7 @@
       addCopyButtons();
       updateReadTime();
       buildHeadingRegistry();
+      addBookmarkStars();
       fixInternalAnchorLinks();
       buildToc();
       injectTopicTrackers();

@@ -34,8 +34,9 @@
 
         <nav class="header-nav">
           <a href="#tracks" class="nav-link active">Topics</a>
+          <a href="practice.html" class="nav-link">🎴 Practice</a>
+          <a href="practice.html#bookmarks" class="nav-link">⭐ Bookmarks</a>
           <a href="https://neetcode.io/practice/practice/neetcode150" class="nav-link nav-external" target="_blank" rel="noopener noreferrer">NeetCode 150</a>
-          <a href="https://takeuforward.org/interviews/strivers-sde-sheet-top-coding-interview-problems/" class="nav-link nav-external" target="_blank" rel="noopener noreferrer">Striver SDE</a>
           <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
         </nav>
       </div>
@@ -81,6 +82,14 @@
       </section>
 
       <section class="container" id="tracks">
+        <div class="filter-bar" id="filterBar">
+          <span class="filter-bar-label">Show:</span>
+          <button class="filter-chip active" data-filter="all">All</button>
+          <button class="filter-chip" data-filter="unchecked">◷ In progress</button>
+          <button class="filter-chip" data-filter="hard">🔴 Hard</button>
+          <button class="filter-chip" data-filter="bookmarked">⭐ Bookmarked</button>
+          <span class="filter-bar-hint" id="filterHint"></span>
+        </div>
         <div class="tracks-grid" id="tracksGrid"></div>
       </section>
     </main>
@@ -97,6 +106,7 @@
   <script src="assets/js/cookies.js"></script>
   <script src="assets/js/theme.js"></script>
   <script src="assets/js/content-meta.js"></script>
+  <script src="assets/js/study-data.js" defer></script>
   <script src="assets/js/progress-map.js"></script>
   <script src="assets/js/topics.js"></script>
   <script src="assets/js/app.js"></script>
