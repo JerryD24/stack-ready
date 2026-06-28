@@ -124,9 +124,11 @@
     const grid = document.getElementById('tracksGrid');
     grid.innerHTML = INTERVIEW_TRACKS.map(track => {
       const tp = getTrackProgress(track);
+      const badge = tp === 100 ? '<span class="track-complete-badge">✅ Complete</span>' : '';
       return `
       <div class="track-column" data-track="${track.id}">
         <div class="track-header" style="background:${track.gradient}">
+          ${badge}
           <div class="track-icon">${track.icon}</div>
           <h2>${track.title}</h2>
           <p>${track.subtitle}</p>
@@ -310,7 +312,76 @@
     });
   }
 
+  function renderStreak() {
+    const chip = document.getElementById('streakChip');
+    if (!chip) return;
+    const s = StackReadyCookies.recordActivity();
+    if (s.count > 0) {
+      chip.style.display = 'inline-flex';
+      const best = s.best && s.best > s.count ? ` · best ${s.best}` : '';
+      chip.innerHTML = `🔥 <strong>${s.count}-day streak</strong>${best}`;
+    }
+  }
+
+  function celebrateIfComplete() {
+    if (calcOverallProgress() === 100 && window.Confetti) {
+      const seen = sessionStorage.getItem('sr_celebrated_all');
+      if (!seen) { sessionStorage.setItem('sr_celebrated_all', '1'); setTimeout(() => Confetti.burst(), 400); }
+    }
+  }
+
+  function setupDataActions() {
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const importFile = document.getElementById('importFile');
+    if (exportBtn) exportBtn.addEventListener('click', () => {
+      const data = StackReadyCookies.exportAll();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `stackready-progress-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+    if (importBtn && importFile) {
+      importBtn.addEventListener('click', () => importFile.click());
+      importFile.addEventListener('change', () => {
+        const file = importFile.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const data = JSON.parse(reader.result);
+            if (data._app && data._app !== 'StackReady') {
+              if (!confirm('This file was not exported from StackReady. Import anyway?')) return;
+            }
+            StackReadyCookies.importAll(data);
+            alert('Progress imported! Reloading…');
+            location.reload();
+          } catch (e) {
+            alert('Could not read that file — make sure it is a StackReady export.');
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+  }
+
+  function setupKeyboard() {
+    document.addEventListener('keydown', (e) => {
+      const tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === '/') {
+        e.preventDefault();
+        const input = document.getElementById('globalSearch');
+        if (input) input.focus();
+      }
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
+    renderStreak();
     renderResumeBanner();
     renderUtilityStrip();
     renderTracks();
@@ -318,6 +389,9 @@
     setupFilterBar();
     renderStats();
     setupSearch();
+    setupDataActions();
+    setupKeyboard();
+    celebrateIfComplete();
   });
 })();
 

@@ -119,7 +119,7 @@
 
   function setChecklistItem(id, checked) {
     StackReadyCookies.setChecklistItem(id, checked);
-    updateGuideProgressBadge();
+    updateGuideProgressBadge(true);
     refreshTocChecks();
     syncRoadmapCheckboxes();
   }
@@ -276,7 +276,8 @@
     });
   }
 
-  function updateGuideProgressBadge() {
+  let guideCelebrated = false;
+  function updateGuideProgressBadge(celebrate) {
     const badge = document.getElementById('guideProgressBadge');
     if (!badge) return;
     const p = ProgressMap.getGuideProgress(fileName);
@@ -286,6 +287,61 @@
     }
     badge.textContent = `${p.done}/${p.total} topics done`;
     badge.style.color = p.percent === 100 ? '#059669' : 'var(--blue-600)';
+    if (p.percent === 100 && celebrate && !guideCelebrated) {
+      guideCelebrated = true;
+      if (window.Confetti) Confetti.burst();
+      showSwipeHint('🎉 Guide complete!');
+    }
+    if (p.percent < 100) guideCelebrated = false;
+  }
+
+  function injectNotes() {
+    const body = document.querySelector('.markdown-body');
+    const h2s = [...body.querySelectorAll('h2')].filter(h => h.textContent.trim().toUpperCase() !== 'TABLE OF CONTENTS');
+    h2s.forEach((h2, index) => {
+      const id = h2.id;
+      if (!id) return;
+      const nextH2 = h2s[index + 1];
+      const existing = StackReadyCookies.getNote(fileName, id);
+
+      const box = document.createElement('details');
+      box.className = 'note-box no-print';
+      const summary = document.createElement('summary');
+      const setDot = (has) => { summary.innerHTML = `📝 Your notes${has ? ' <span class="note-has">●</span>' : ''}`; };
+      setDot(!!existing.trim());
+
+      const ta = document.createElement('textarea');
+      ta.className = 'note-input';
+      ta.placeholder = 'Your observations, gotchas, "asked at <company>"…';
+      ta.value = existing;
+      let t;
+      ta.addEventListener('input', () => {
+        clearTimeout(t);
+        t = setTimeout(() => {
+          StackReadyCookies.setNote(fileName, id, ta.value);
+          setDot(!!ta.value.trim());
+        }, 500);
+      });
+
+      box.appendChild(summary);
+      box.appendChild(ta);
+      if (nextH2) nextH2.parentNode.insertBefore(box, nextH2);
+      else body.appendChild(box);
+    });
+  }
+
+  function setupPrint() {
+    const btn = document.getElementById('printBtn');
+    if (btn) btn.addEventListener('click', () => window.print());
+  }
+
+  function setupReaderKeyboard() {
+    document.addEventListener('keydown', (e) => {
+      const tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === 'j') { e.preventDefault(); gotoSection(1); }
+      else if (e.key === 'k') { e.preventDefault(); gotoSection(-1); }
+    });
   }
 
   function injectTopicTrackers() {
@@ -501,12 +557,16 @@
       fixInternalAnchorLinks();
       buildToc();
       injectTopicTrackers();
+      injectNotes();
       setupChecklists();
       setupFontSize();
-      updateGuideProgressBadge();
+      updateGuideProgressBadge(false);
       setupMobileToc();
       setupSwipeNavigation();
+      setupReaderKeyboard();
+      setupPrint();
       setupResumeTracking();
+      StackReadyCookies.recordActivity();
 
       if (window.location.hash) {
         setTimeout(() => scrollToSection(decodeURIComponent(window.location.hash.slice(1))), 300);

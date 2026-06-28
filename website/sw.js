@@ -3,7 +3,7 @@
  * App shell is precached; guides and CDN assets are cached at runtime
  * so everything you've opened once is readable offline.
  */
-const CACHE = 'stackready-v1';
+const CACHE = 'stackready-v2';
 
 // Same-origin app shell (relative to the SW scope, so basePath-safe)
 const PRECACHE = [
@@ -22,6 +22,7 @@ const PRECACHE = [
   'assets/js/progress-map.js',
   'assets/js/content-meta.js',
   'assets/js/study-data.js',
+  'assets/js/confetti.js',
   'assets/js/app.js',
   'assets/js/reader.js',
   'assets/js/practice.js'

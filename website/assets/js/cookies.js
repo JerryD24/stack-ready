@@ -244,6 +244,78 @@ const StackReadyCookies = (function () {
     setJSON('difficulty', m);
   }
 
+  // --- Per-section notes ---
+  function noteKey(file, id) {
+    return `${file}::${id}`;
+  }
+
+  function getNotesMap() {
+    return getJSON('notes', {});
+  }
+
+  function getNote(file, id) {
+    return getNotesMap()[noteKey(file, id)] || '';
+  }
+
+  function setNote(file, id, text) {
+    const m = getNotesMap();
+    const key = noteKey(file, id);
+    if (text && text.trim()) m[key] = text;
+    else delete m[key];
+    setJSON('notes', m);
+  }
+
+  // --- Study streak (consecutive days of activity) ---
+  function todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  }
+
+  function getStreak() {
+    return getJSON('streak', { count: 0, best: 0, last: null });
+  }
+
+  function recordActivity() {
+    const s = getStreak();
+    const today = todayStr();
+    if (s.last === today) return s;
+    const y = new Date();
+    y.setDate(y.getDate() - 1);
+    const yesterday = `${y.getFullYear()}-${y.getMonth() + 1}-${y.getDate()}`;
+    s.count = (s.last === yesterday) ? (s.count || 0) + 1 : 1;
+    s.best = Math.max(s.best || 0, s.count);
+    s.last = today;
+    setJSON('streak', s);
+    return s;
+  }
+
+  // --- Export / import all progress (backend-free laptop ↔ phone sync) ---
+  const EXPORT_KEYS = ['progress', 'checklist', 'sections', 'difficulty', 'bookmarks', 'notes', 'streak', 'font', 'theme', 'last'];
+
+  function exportAll() {
+    const data = { _app: 'StackReady', _version: 1, _exportedAt: new Date().toISOString() };
+    EXPORT_KEYS.forEach(k => {
+      if (k === 'font' || k === 'theme') {
+        const v = getString(k, null);
+        if (v !== null) data[k] = v;
+      } else {
+        const v = getJSON(k, null);
+        if (v !== null) data[k] = v;
+      }
+    });
+    return data;
+  }
+
+  function importAll(data) {
+    if (!data || typeof data !== 'object') return false;
+    EXPORT_KEYS.forEach(k => {
+      if (!(k in data)) return;
+      if (k === 'font' || k === 'theme') setString(k, data[k]);
+      else setJSON(k, data[k]);
+    });
+    return true;
+  }
+
   migrateFromLocalStorage();
 
   return {
@@ -266,6 +338,13 @@ const StackReadyCookies = (function () {
     removeBookmark,
     getDifficulty,
     getDifficultyMap,
-    setDifficulty
+    setDifficulty,
+    getNote,
+    setNote,
+    getNotesMap,
+    getStreak,
+    recordActivity,
+    exportAll,
+    importAll
   };
 })();

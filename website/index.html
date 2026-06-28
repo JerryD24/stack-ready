@@ -50,6 +50,7 @@
             <span>🎯</span>
             <span>Java Backend → Senior Role | 3+ YOE</span>
           </div>
+          <div class="streak-chip" id="streakChip" style="display:none;"></div>
           <h1>StackReady — Interview Preparation Hub</h1>
           <p>
             Structured guides from beginner to advanced — Java, Spring Boot, System Design,
@@ -97,6 +98,11 @@
 
     <footer class="site-footer">
       <div class="container">
+        <div class="data-actions">
+          <button class="btn-link-sm" id="exportBtn" title="Download your progress as a file">⬆ Export progress</button>
+          <button class="btn-link-sm" id="importBtn" title="Restore progress from a file">⬇ Import progress</button>
+          <input type="file" id="importFile" accept="application/json,.json" style="display:none;">
+        </div>
         <p style="font-size:0.85rem;color:var(--gray-400);">Progress saved in your browser cookies · Created by <strong>Prabhat Singh Rajput</strong></p>
       </div>
     </footer>
@@ -108,6 +114,7 @@
   <script src="assets/js/theme.js"></script>
   <script src="assets/js/content-meta.js"></script>
   <script src="assets/js/study-data.js" defer></script>
+  <script src="assets/js/confetti.js"></script>
   <script src="assets/js/progress-map.js"></script>
   <script src="assets/js/topics.js"></script>
   <script src="assets/js/app.js"></script>
