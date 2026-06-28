@@ -12,3 +12,38 @@ function siteUrl(relativePath) {
 function contentUrl(fileName) {
   return siteUrl(`content/${fileName}`);
 }
+
+/* ---- PWA: service worker registration + install prompt ---- */
+(function () {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => { /* offline support unavailable */ });
+    });
+  }
+
+  let deferredPrompt = null;
+
+  function showInstallButton() {
+    const btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'inline-flex';
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallButton();
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    const btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'none';
+  });
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('#installBtn');
+    if (!btn || !deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.finally(() => { deferredPrompt = null; btn.style.display = 'none'; });
+  });
+})();

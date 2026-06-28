@@ -404,14 +404,74 @@
   }
 
   function setupMobileToc() {
-    document.getElementById('tocToggle').addEventListener('click', () => {
+    const openToc = () => {
+      document.getElementById('readerSidebar').classList.add('open');
+      document.getElementById('sidebarOverlay').classList.add('open');
+    };
+    const toggleToc = () => {
       document.getElementById('readerSidebar').classList.toggle('open');
       document.getElementById('sidebarOverlay').classList.toggle('open');
-    });
+    };
+    document.getElementById('tocToggle').addEventListener('click', toggleToc);
+    const fab = document.getElementById('tocFab');
+    if (fab) fab.addEventListener('click', openToc);
     document.getElementById('sidebarOverlay').addEventListener('click', () => {
       document.getElementById('readerSidebar').classList.remove('open');
       document.getElementById('sidebarOverlay').classList.remove('open');
     });
+  }
+
+  function showSwipeHint(text) {
+    const hint = document.getElementById('swipeHint');
+    if (!hint) return;
+    hint.textContent = text;
+    hint.classList.add('show');
+    clearTimeout(hint._t);
+    hint._t = setTimeout(() => hint.classList.remove('show'), 1100);
+  }
+
+  // Swipe left/right to jump between top-level (h2) sections on touch devices
+  function setupSwipeNavigation() {
+    const main = document.querySelector('.reader-main');
+    if (!main) return;
+    let startX = 0, startY = 0, startedInScrollable = false;
+
+    main.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) { startedInScrollable = true; return; }
+      const t = e.touches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+      // ignore swipes that begin inside horizontally scrollable code blocks
+      startedInScrollable = !!e.target.closest('pre, table');
+    }, { passive: true });
+
+    main.addEventListener('touchend', (e) => {
+      if (startedInScrollable) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      if (dx < 0) gotoSection(1);
+      else gotoSection(-1);
+    }, { passive: true });
+  }
+
+  function gotoSection(dir) {
+    const h2s = headingRegistry.filter(h => h.level === 2 && h.el.offsetParent !== null);
+    if (!h2s.length) return;
+    const marker = window.scrollY + 90;
+    let currentIdx = 0;
+    for (let i = 0; i < h2s.length; i++) {
+      if (h2s[i].el.getBoundingClientRect().top + window.scrollY <= marker) currentIdx = i;
+    }
+    const nextIdx = Math.min(h2s.length - 1, Math.max(0, currentIdx + dir));
+    if (nextIdx === currentIdx && !(dir < 0 && window.scrollY > 120)) {
+      showSwipeHint(dir > 0 ? 'Last section' : 'First section');
+      return;
+    }
+    const target = h2s[nextIdx];
+    scrollToSection(target.id);
+    showSwipeHint(`${nextIdx + 1}/${h2s.length} · ${target.plain.replace(/\s+/g, ' ').slice(0, 28)}`);
   }
 
   async function loadContent() {
@@ -445,6 +505,7 @@
       setupFontSize();
       updateGuideProgressBadge();
       setupMobileToc();
+      setupSwipeNavigation();
       setupResumeTracking();
 
       if (window.location.hash) {

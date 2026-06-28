@@ -1,17 +1,26 @@
 {
-  "name": "StackReady",
+  "name": "StackReady — Interview Prep",
   "short_name": "StackReady",
-  "description": "Interview preparation platform",
+  "description": "Java, Spring, System Design, DSA & more — read guides, track progress, and revise with flashcards. Works offline.",
   "icons": [
     {
       "src": "favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
+    },
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ],
   "theme_color": "#2563eb",
   "background_color": "#eff6ff",
   "display": "standalone",
-  "start_url": "./index.html"
+  "orientation": "portrait-primary",
+  "scope": "./",
+  "start_url": "./index.html",
+  "categories": ["education", "productivity"]
 }
