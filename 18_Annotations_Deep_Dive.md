@@ -146,6 +146,8 @@ Compile-time processing is faster and safer than reflection (errors caught at bu
 
 ## 7. Core Spring Annotations
 
+**Theory.** Spring's whole model is an **IoC (Inversion of Control) container**: instead of you calling `new` and wiring objects together, you *declare* what you need and Spring constructs, connects, and manages the objects — called **beans** — for you. Annotations are how you make those declarations. **Stereotype** annotations mark a class so component scanning auto-registers it as a bean; **dependency-injection** annotations then tell the container how to satisfy each bean's collaborators. Prefer **constructor injection** over field injection: it keeps beans immutable, makes their dependencies explicit, fails fast if a dependency is missing, and lets you unit-test the class without starting the container.
+
 **Stereotypes (component scanning registers these as beans):**
 | Annotation | Meaning |
 |------------|---------|
@@ -190,6 +192,8 @@ public class AppConfig {
 
 ## 8. Spring Boot Annotations
 
+**Theory.** Spring Boot exists to remove the manual configuration that plain Spring demanded. The headline annotation `@SpringBootApplication` bundles three behaviors — configuration, component scanning, and **auto-configuration** — and auto-configuration is the magic: Boot inspects your classpath and properties and conditionally creates sensible default beans (a `DataSource` when a JDBC driver is present, a JSON mapper for Jackson, etc.) using `@ConditionalOn...` annotations. The annotations below either feed that mechanism (`@ConfigurationProperties` binds external config to typed objects) or **opt in** to production features — scheduling, async execution, caching — so you get capabilities with a single line instead of XML or boilerplate.
+
 ```java
 @SpringBootApplication      // = @Configuration + @EnableAutoConfiguration + @ComponentScan
 public class App {
@@ -225,6 +229,8 @@ public User findUser(Long id) { ... }
 ---
 
 ## 9. Spring Web / REST Annotations
+
+**Theory.** These annotations map incoming **HTTP requests to Java methods** and turn return values back into HTTP responses, so you never parse a request or serialize JSON by hand. `@RestController` marks a class as a web handler whose return values become the response body (it's `@Controller` + `@ResponseBody`); the `@***Mapping` family binds a URL path + HTTP verb to a method; and the parameter annotations declaratively extract pieces of the request and convert them to the right Java types — `@PathVariable` from the URL template, `@RequestParam` from the query string, `@RequestBody` from the JSON payload, `@RequestHeader`/`@CookieValue` from headers/cookies. Keep controllers focused on the happy path and centralize error handling in a `@ControllerAdvice`/`@RestControllerAdvice` class.
 
 ```java
 @RestController
@@ -264,6 +270,8 @@ public class UserController {
 ---
 
 ## 10. Spring Data JPA Annotations
+
+**Theory.** JPA (with Hibernate as the usual implementation) is **Object-Relational Mapping**: it maps Java classes to database tables so you work with objects and let the framework generate SQL. These annotations *declare* that mapping — which class is a table (`@Entity`/`@Table`), which field is the primary key and how it's generated (`@Id`/`@GeneratedValue`), how columns and **relationships** (`@OneToMany`, `@ManyToOne`, `@ManyToMany`) are wired, and whether associated data is fetched eagerly or lazily. The single biggest performance pitfall is the **N+1 query problem** (looping over a parent and triggering one query per child), which `@EntityGraph` or fetch joins solve. Two more must-knows: persist enums with `@Enumerated(STRING)` (never `ORDINAL`, which breaks if you reorder the enum), and use `@Version` for **optimistic locking** to detect concurrent updates.
 
 ```java
 @Entity
@@ -328,6 +336,8 @@ Common: `@NotNull`, `@NotEmpty`, `@NotBlank`, `@Size`, `@Min`/`@Max`, `@Positive
 
 ## 12. Transaction & AOP Annotations
 
+**Theory.** A **transaction** groups several database operations so they either all succeed or all roll back together (the ACID guarantee), keeping data consistent even when something fails midway. `@Transactional` lets you declare that boundary on a method instead of hand-writing commit/rollback logic — Spring wraps the bean in a **proxy** that opens a transaction before the method runs and commits (or rolls back on error) when it returns. That proxy is an example of **AOP (Aspect-Oriented Programming)**: weaving cross-cutting concerns — transactions, logging, security, metrics — *around* your business methods without cluttering them. Understanding the proxy explains the classic gotchas below: a **self-invocation** (`this.method()`) and **non-public** methods bypass the proxy entirely, and by default only *unchecked* exceptions trigger a rollback.
+
 ```java
 @Service
 public class TransferService {
@@ -365,6 +375,8 @@ public class TimingAspect {
 ---
 
 ## 13. Testing Annotations
+
+**Theory.** Spring offers a spectrum of test types that trade speed for fidelity. A full `@SpringBootTest` boots the entire application context — most realistic but slowest — while **slice** annotations (`@WebMvcTest`, `@DataJpaTest`, `@RestClientTest`) load only one layer, so tests run fast and stay focused on what they verify. Inside the context, `@MockBean`/`@SpyBean` swap a real collaborator (say, a payment gateway or external client) for a Mockito mock/spy, whereas plain `@Mock`/`@InjectMocks` are for pure, context-free unit tests. The rule of thumb: choose the **narrowest** test that still proves the behavior you care about.
 
 ```java
 @SpringBootTest                       // full application context

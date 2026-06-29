@@ -36,8 +36,8 @@ window.CONTENT_META = {
     "minutes": 8
   },
   "08_FastAPI_and_Falcon.md": {
-    "words": 768,
-    "minutes": 4
+    "words": 1357,
+    "minutes": 7
   },
   "09_GoLang.md": {
     "words": 977,
@@ -76,8 +76,8 @@ window.CONTENT_META = {
     "minutes": 4
   },
   "18_Annotations_Deep_Dive.md": {
-    "words": 1049,
-    "minutes": 5
+    "words": 1706,
+    "minutes": 9
   },
   "19_Node_JS_Complete_Guide.md": {
     "words": 1393,

@@ -58,6 +58,8 @@ Performance (requests/second, approximate):
 
 ## 2. FastAPI — Core Concepts
 
+**Theory.** FastAPI's central idea is that your **Python type hints are the single source of truth**. You write a path-operation function with typed parameters and a Pydantic model for the body, and the framework derives *everything* from those types: request parsing, validation (returning a clean `422` on bad input), serialization of the response, and the interactive OpenAPI/Swagger docs — with no separate schema to keep in sync. **Pydantic models** are the foundation: a class of typed fields that validates and coerces incoming data into real Python objects, so your business logic always receives clean, well-typed values. Because FastAPI is built on **ASGI** (via Starlette), `async def` endpoints run cooperatively on an event loop, which is what makes it fast for I/O-bound APIs.
+
 ### Installation & Basic App
 ```python
 pip install fastapi uvicorn[standard] pydantic
@@ -376,6 +378,8 @@ app.add_middleware(LoggingMiddleware)
 
 ## 4. FastAPI — Dependency Injection
 
+**Theory.** Dependency Injection is FastAPI's mechanism for supplying a route with the things it needs — a DB session, the current user, pagination parameters — without the route having to create them itself. You write a function (or class) that produces the value and reference it with `Depends()`; FastAPI calls it, resolves any **sub-dependencies** it in turn requires, and injects the result into your handler. Dependencies that `yield` double as setup/teardown (open a DB session, `yield` it, close it after the response). Within a single request the same dependency is **cached** by default (called once), and dependencies can be attached at the route, router, or whole-app level. The payoff: cross-cutting concerns (auth, DB, config) become reusable, composable, and trivially **overridable in tests** via `app.dependency_overrides`.
+
 ```python
 from fastapi import FastAPI, Depends, HTTPException, status
 from typing import Annotated
@@ -467,6 +471,8 @@ router = APIRouter(
 ---
 
 ## 5. FastAPI — Authentication & Security
+
+**Theory.** Authentication answers "who are you?" and authorization "what are you allowed to do?". The dominant pattern for modern APIs is **stateless JWT**: the user logs in once with credentials, the server verifies them and returns a **signed token** containing claims (such as the username and an expiry time); the client then sends that token on every subsequent request, and the server simply validates the signature and expiry rather than looking up a server-side session — which scales horizontally with no shared session store. Passwords are never stored in plaintext; they're **hashed** with a deliberately slow algorithm like bcrypt. FastAPI expresses all of this through its DI system: a `get_current_user` dependency decodes and validates the token, and you attach it to protected routes so security stays declarative and testable.
 
 ### OAuth2 + JWT
 ```python
@@ -585,6 +591,8 @@ async def secure(api_key: str = Depends(get_api_key)):
 ---
 
 ## 6. FastAPI — Database Integration
+
+**Theory.** FastAPI is database-agnostic — you bring your own toolkit, most commonly **SQLAlchemy** (the ORM that maps classes to tables) plus **Alembic** (which versions and migrates your schema). In an async app you use SQLAlchemy's async engine and session so database calls `await` instead of blocking the event loop. The crucial pattern is managing the **session lifecycle per request** through a `yield` dependency: create a session, hand it to the route, and guarantee it's committed and closed afterward — never share one session across requests. To cut latency on hot lookups, put a read-through **cache** (typically Redis) in front of the DB: check the cache first, fall back to the database on a miss, then store the result with a TTL so it expires.
 
 ### SQLAlchemy Async
 ```python
@@ -1104,6 +1112,8 @@ app.add_error_handler(Exception, custom_error_handler)
 ---
 
 ## 12. Falcon — Middleware & Hooks
+
+**Theory.** Falcon separates cross-cutting logic into two complementary tools. **Middleware** are classes with `process_request` / `process_resource` / `process_response` methods that run for *every* request in a defined order (and in reverse order on the way out) — ideal for app-wide concerns like authentication, CORS, logging, and timing. **Hooks** (`@falcon.before` / `@falcon.after`) are decorators attached to a *specific* responder, for targeted concerns such as validating one endpoint's input or enforcing a content type. The mental split is simple: **middleware = global pipeline**, **hooks = per-endpoint guards**.
 
 ### Middleware
 ```python
