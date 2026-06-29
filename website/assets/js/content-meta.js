@@ -40,8 +40,8 @@ window.CONTENT_META = {
     "minutes": 7
   },
   "09_GoLang.md": {
-    "words": 977,
-    "minutes": 5
+    "words": 1460,
+    "minutes": 7
   },
   "10_Python_System_Design_HLD.md": {
     "words": 600,

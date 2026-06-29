@@ -397,6 +397,8 @@ s := fmt.Sprintf("Name: %s, Age: %d, GPA: %.2f", "Alice", 30, 3.95)
 
 ## 4. Functions & Methods
 
+**Theory.** Functions are first-class values in Go (you can assign, pass, and return them), but the standout feature is **multiple return values** — idiomatically `(result, error)` — which is how Go reports failures without exceptions. **Methods** are just functions with a *receiver*, which attaches behavior to a type. The key decision is **value vs pointer receiver**: a value receiver operates on a copy (safe, but can't mutate the original), while a pointer receiver can modify the struct and avoids copying large values. The rule of thumb: be consistent per type, and prefer a pointer receiver when the method mutates state or the struct is large. `defer` (which runs at function return in LIFO order) and **closures** round out the toolkit for reliable cleanup and stateful callbacks.
+
 ```go
 // Basic function
 func add(x, y int) int {
@@ -477,6 +479,8 @@ func safeDiv(a, b int) (result int, err error) {
 ---
 
 ## 5. Structs, Interfaces & OOP in Go
+
+**Theory.** Go deliberately has **no classes and no inheritance**. Its OOP is three simpler pieces: **structs** (group related data), **methods** (attach behavior to a type), and **interfaces** (declare required behavior). Reuse comes from **composition** via struct *embedding* — embedding one struct inside another "promotes" its fields and methods — instead of an inheritance hierarchy. The defining feature is that interfaces are satisfied **implicitly (structural typing)**: any type that has the required methods automatically implements the interface, with no `implements` keyword. This keeps code loosely coupled — you define a small interface describing exactly what you need and accept any type that fits — which is why idiomatic Go favors many tiny interfaces (`io.Reader`, `fmt.Stringer`) over a few large ones.
 
 ### Structs
 ```go
@@ -668,6 +672,8 @@ func (s *Stack[T]) Pop() (T, bool) {
 
 ## 6. Error Handling
 
+**Theory.** Go treats **errors as ordinary values**, not exceptions. Any function that can fail returns an `error` as its last result, and the caller is expected to check it explicitly (`if err != nil`). This makes every failure path visible right at the call site — more verbose than try/catch, but errors can't be silently swallowed or invisibly propagate. Add context while preserving the original by wrapping with `%w`, then inspect the chain with `errors.Is` (does it match a known **sentinel** value?) or `errors.As` (extract a specific concrete error type). `panic`/`recover` exist too, but they're reserved for truly unexpected, programmer-level bugs — not for normal, expected error conditions.
+
 ```go
 // Go's philosophy: errors are values, not exceptions
 // Always check errors explicitly
@@ -745,6 +751,8 @@ func safeOperation() (err error) {
 ---
 
 ## 7. Goroutines & Channels — Concurrency
+
+**Theory.** Concurrency is Go's signature strength. A **goroutine** is an extremely cheap unit of concurrent execution (~2 KB initial stack) that the Go runtime multiplexes onto a small pool of OS threads (an **M:N scheduler**), so a single program can run *millions* of them. Goroutines coordinate through **channels** — typed pipes that pass values between them — embodying Go's motto: *"don't communicate by sharing memory; share memory by communicating."* Unbuffered channels synchronize sender and receiver (a rendezvous); buffered ones decouple them up to a capacity; and `select` waits on several channel operations at once, which is how you build timeouts and cancellation. When shared mutable state is unavoidable, fall back to the `sync` package (`Mutex`, `RWMutex`, `WaitGroup`, `Once`), and use the `context` package to propagate deadlines and cancellation across goroutine boundaries.
 
 ### Goroutines
 ```go
