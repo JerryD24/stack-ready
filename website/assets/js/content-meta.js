@@ -32,8 +32,8 @@ window.CONTENT_META = {
     "minutes": 3
   },
   "07_Python_Core_to_Advanced.md": {
-    "words": 729,
-    "minutes": 4
+    "words": 1553,
+    "minutes": 8
   },
   "08_FastAPI_and_Falcon.md": {
     "words": 768,

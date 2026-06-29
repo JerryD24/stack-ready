@@ -360,6 +360,8 @@ bisect.insort(a, 5)          # insert in sorted order
 
 ## 3. Functions & Functional Programming
 
+**Theory.** Functions in Python are **first-class objects** — you can pass them as arguments, return them from other functions, and store them in variables or data structures. That single fact is what makes decorators, callbacks, and the functional tools below possible. Python's calling model is **"pass by object reference"**: the function gets a reference to the *same* object the caller holds, so rebinding a parameter (`x = ...`) doesn't affect the caller, but *mutating* a mutable argument (`lst.append(...)`) does — the root cause of the infamous mutable-default-argument bug. Python also lets you shape a function's calling convention precisely: `*args`/`**kwargs` for variadic functions, and the `/` and `*` markers to force positional-only or keyword-only arguments for clearer, more stable APIs. **Closures** (inner functions that capture variables from their enclosing scope) and helpers like `functools.partial` and `lru_cache` let you build and specialize behavior without writing classes.
+
 ### Function Fundamentals
 ```python
 def greet(name: str, greeting: str = "Hello") -> str:
@@ -492,6 +494,8 @@ c2()  # 11  — independent from c1
 ---
 
 ## 4. Object-Oriented Programming
+
+**Theory.** Python is multi-paradigm but fully object-oriented — even classes are objects. Several things differ from Java and trip people up: instance attributes live in a per-instance `__dict__`, so they're dynamic (you can add them at runtime) unless you opt into `__slots__`; there is **no real `private`** — a leading underscore is a convention and a double underscore only triggers name-mangling; and operator/built-in behavior is customized through **dunder ("magic") methods** (`__init__`, `__repr__`, `__eq__`, `__len__`, `__iter__`, `__enter__`, …) that hook your objects into the language. Python supports **multiple inheritance**, resolved deterministically by the **MRO** (Method Resolution Order via C3 linearization); `super()` walks the MRO, not merely the literal parent class. In practice, prefer composition and small **mixins** over deep hierarchies, expose computed/validated state with `@property`, provide alternative constructors with `@classmethod`, and use `@dataclass` to remove boilerplate (`__init__`/`__repr__`/`__eq__`) for data-holding classes.
 
 ### Classes & Objects
 ```python
@@ -816,6 +820,8 @@ results = [clean for x in data if (clean := process(x)) is not None]
 
 ## 6. Decorators & Context Managers
 
+**Theory.** A **decorator** is simply a function that takes a function (or class) and returns a replacement; the `@d` syntax above `def f` is sugar for `f = d(f)`. Because functions are first-class, decorators let you wrap **cross-cutting behavior** — logging, timing, caching, retries, access control — around existing code without editing it (the Wrapper/Proxy pattern). Always apply `@functools.wraps` to the inner wrapper so the original `__name__`/`__doc__` survive. A decorator that takes arguments is a *decorator factory* — a function that returns a decorator, i.e. one more level of nesting. A **context manager** (the `with` statement) guarantees that paired setup/teardown runs even when an exception is thrown: implement `__enter__`/`__exit__`, or more simply write a generator decorated with `@contextmanager` that `yield`s exactly once. Use context managers for anything that must be reliably released — files, locks, DB connections/transactions, timers, or temporary global state.
+
 ### Decorators
 ```python
 from functools import wraps
@@ -978,6 +984,8 @@ cls = getattr(module, "MyClass")
 
 ## 8. Error Handling & Exceptions
 
+**Theory.** Python favors **EAFP** — "easier to ask forgiveness than permission": attempt the operation and handle the exception if it fails, rather than checking every precondition first (LBYL). Exceptions are objects in a class hierarchy rooted at `BaseException`; you catch by type and order handlers **most-specific first**, catching the *narrowest* exception you can genuinely handle instead of a bare `except`. `else` runs only when the `try` block raised nothing, and `finally` always runs (use it for cleanup). Define **custom exception classes** (subclassing a project-level base) so callers can react to domain-specific failures, and use **exception chaining** — `raise NewError(...) from original` — to keep the underlying cause visible in the traceback. Never silently swallow exceptions; if you catch only to re-raise, a bare `raise` preserves the original stack trace.
+
 ```python
 # Exception hierarchy (Python)
 BaseException
@@ -1047,6 +1055,8 @@ with suppress(FileNotFoundError, PermissionError):
 ---
 
 ## 9. Concurrency & Parallelism
+
+**Theory.** Picking the right concurrency model in Python hinges on the **GIL** (Global Interpreter Lock): in CPython only one thread executes Python bytecode at a time, so **threads do not speed up CPU-bound work** — but because the GIL is released during I/O, threads *do* help **I/O-bound** work. That leads to three tools for three situations: **`threading`** for a modest number of blocking I/O tasks; **`asyncio`** — a single-threaded cooperative event loop driven by `async/await` — for *massive* I/O concurrency (thousands of connections); and **`multiprocessing`** — separate processes, each with its own interpreter and GIL — for true parallelism on **CPU-bound** work. `concurrent.futures` provides one uniform `Executor` API over both thread and process pools. Two rules to remember: never run a blocking call inside an asyncio event loop (it freezes everything), and protect shared mutable state in threads with locks or hand work off through queues.
 
 ### Threading
 ```python
@@ -1306,6 +1316,8 @@ dis.dis(func)  # shows Python bytecode instructions
 ---
 
 ## 11. Python Type System & Annotations
+
+**Theory.** Python remains **dynamically typed at runtime** — type annotations are *hints*, not enforced by the interpreter. Their value comes from **static checkers** (mypy, pyright) that read them to catch type bugs *before* you run, and from IDEs that use them for autocomplete and safe refactoring. Hints turn a large codebase into self-documenting, safer code without giving up Python's flexibility. Beyond basic types you'll reach for `Optional[X]` / `X | None` for nullable values, `Union` / `X | Y` for alternatives, generics via `TypeVar` and `Generic` for reusable containers, `Protocol` for **structural typing** (duck typing made checkable — "anything with these methods"), `Literal` for a fixed set of allowed values, and `TypedDict`/`dataclass`/Pydantic for structured records. Note that runtime validation (as in Pydantic/FastAPI) is a *separate* concern layered on top of the same annotations.
 
 ```python
 from typing import (
