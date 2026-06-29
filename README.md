@@ -12,12 +12,16 @@
 
 | Track | Guides |
 |-------|--------|
-| Java & Spring | Core Java, Spring Boot, CP Tricks |
+| Java | Core Java, Multithreading, Streams, JVM Performance, CP Tricks |
+| Spring Boot | Spring Boot, Annotations deep dive |
+| Cloud-Native & Distributed | Kafka, Kubernetes & Docker, Resilience patterns, Observability, Redis, SQL at scale |
+| Design Patterns | Java patterns, Python patterns |
+| System Design | HLD, LLD (Java & Python) |
+| DSA | Algorithms & patterns, Python CP |
+| Python | Core, FastAPI, Python interview questions |
 | Frontend | React.js complete guide |
-| System Design | HLD, LLD |
-| DSA | Algorithms & patterns |
-| Python | Core, FastAPI |
-| Cloud | AWS, Go |
+| Backend | Node.js complete guide |
+| Cloud & Languages | AWS, Go |
 | AI | Agents & MCP |
 
 ---
