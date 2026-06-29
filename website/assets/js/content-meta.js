@@ -128,7 +128,7 @@ window.CONTENT_META = {
     "minutes": 16
   },
   "README.md": {
-    "words": 167,
+    "words": 209,
     "minutes": 1
   },
   "RESUME_STACKREADY.md": {

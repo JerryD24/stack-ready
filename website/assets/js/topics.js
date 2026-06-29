@@ -6,7 +6,7 @@ const INTERVIEW_TRACKS = [
   {
     id: 'java-core',
     title: 'Java',
-    subtitle: 'Core → Concurrency → Streams → CP',
+    subtitle: 'Core → Concurrency → Streams → JVM',
     icon: '☕',
     color: '#2563eb',
     gradient: 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%)',
@@ -50,16 +50,6 @@ const INTERVIEW_TRACKS = [
         level: 'Advanced → Expert',
         priority: 'critical',
         tags: ['JVM', 'GC', 'Performance', 'Concurrency']
-      },
-      {
-        id: 'java-cp',
-        file: '06_CP_Tricks.md',
-        title: 'Java CP Tricks',
-        description: 'Bit manipulation, math shortcuts, template code, competitive programming patterns',
-        sections: 8,
-        level: 'Intermediate',
-        priority: 'high',
-        tags: ['CP', 'Algorithms', 'Java']
       }
     ]
   },
@@ -270,6 +260,16 @@ const INTERVIEW_TRACKS = [
         level: 'Beginner → Advanced',
         priority: 'critical',
         tags: ['DSA', 'DP', 'Graphs', 'Trees']
+      },
+      {
+        id: 'java-cp',
+        file: '06_CP_Tricks.md',
+        title: 'Java CP Tricks',
+        description: 'Bit manipulation, math shortcuts, template code, competitive programming patterns',
+        sections: 8,
+        level: 'Intermediate',
+        priority: 'high',
+        tags: ['CP', 'Algorithms', 'Java']
       },
       {
         id: 'py-cp',
