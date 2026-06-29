@@ -514,6 +514,26 @@ const ProgressMap = (function () {
       '14-testing-tooling': ['Python testing & tooling (pytest, ruff, uv, mypy)'],
       '15-tricky-output-gotchas': ['Python tricky output & gotchas (floats, list refs, closures)'],
       '16-coding-problems-pythonic': ['Pythonic coding problems (Counter, dedupe, group, LRU)']
+    },
+
+    '30_Git_and_GitHub.md': {
+      '1-what-is-git-github': ['What Git & GitHub are (distributed VCS vs hosting)'],
+      '2-how-git-works-internally': ['Git internals — blobs/trees/commits, DAG, staging area, HEAD/refs'],
+      '3-the-core-workflow': ['Core workflow — add, commit, status, log, diff'],
+      '4-branching-merging': ['Branching & merging (fast-forward vs three-way)'],
+      '5-merge-vs-rebase': ['Merge vs rebase (golden rule, interactive rebase)'],
+      '6-working-with-remotes': ['Remotes — push, pull vs fetch, force-with-lease'],
+      '7-undoing-changes': ['Undoing changes — restore, reset, revert, reflog'],
+      '8-stash-cherry-pick-tags': ['Stash, cherry-pick & tags'],
+      '9-resolving-merge-conflicts': ['Resolving merge conflicts'],
+      '10-gitignore-tracking-files': ['.gitignore, untracking files, secrets, Git LFS'],
+      '11-github-essentials': ['GitHub essentials — clone vs fork, auth (PAT/SSH)'],
+      '12-pull-requests-code-review': ['Pull requests & code review (squash/merge/rebase)'],
+      '13-branching-strategies': ['Branching strategies (Git Flow, trunk-based, GitHub Flow)'],
+      '14-github-actions-cicd': ['GitHub Actions CI/CD (workflows, jobs, steps, secrets)'],
+      '15-collaboration-project-management': ['Collaboration — issues, branch protection, CODEOWNERS, releases'],
+      '16-best-practices-common-mistakes': ['Git best practices & common mistakes'],
+      '17-interview-qa': ['Git & GitHub interview Q&A bank']
     }
   };
 

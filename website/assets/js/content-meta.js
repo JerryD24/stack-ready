@@ -123,6 +123,10 @@ window.CONTENT_META = {
     "words": 3657,
     "minutes": 18
   },
+  "30_Git_and_GitHub.md": {
+    "words": 5388,
+    "minutes": 27
+  },
   "Complete_PeerReview_Report.md": {
     "words": 3202,
     "minutes": 16

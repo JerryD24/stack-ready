@@ -394,6 +394,26 @@ const INTERVIEW_TRACKS = [
     ]
   },
   {
+    id: 'git-github',
+    title: 'Git & GitHub',
+    subtitle: 'Version control internals → branching → PRs → CI/CD',
+    icon: '🔀',
+    color: '#475569',
+    gradient: 'linear-gradient(135deg, #334155 0%, #64748b 50%, #94a3b8 100%)',
+    topics: [
+      {
+        id: 'git-github',
+        file: '30_Git_and_GitHub.md',
+        title: 'Git & GitHub Complete Guide',
+        description: 'Git internals (objects, DAG, staging), branching & merging, merge vs rebase, remotes, undoing changes, stash/cherry-pick/tags, conflicts, PRs & code review, branching strategies, GitHub Actions CI/CD, best practices, Q&A',
+        sections: 17,
+        level: 'Beginner → Advanced',
+        priority: 'critical',
+        tags: ['Git', 'GitHub', 'CI/CD', 'Version Control']
+      }
+    ]
+  },
+  {
     id: 'ai-mcp',
     title: 'AI & MCP',
     subtitle: 'Agents, MCP servers, RAG, production AI',
