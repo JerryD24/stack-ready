@@ -714,6 +714,8 @@ def precompute_factorials(n: int, mod: int):
 
 ## 9. Bit Manipulation in Python
 
+**Theory.** Bit manipulation treats an integer as a row of bits and uses the bitwise operators (`&`, `|`, `^`, `~`, `<<`, `>>`) to compute things faster and more compactly than arithmetic. It's worth knowing for **speed**, for **packing flags** (a bitmask stores up to N booleans in one int — the basis of bitmask DP and subset enumeration), and for the **classic identities** interviewers expect: XOR to cancel duplicates, `n & (n-1)` to clear the lowest set bit, `n & -n` to isolate it. One important Python twist: integers have **arbitrary precision** (no 32/64-bit overflow), which is convenient but means you can't rely on overflow wraparound — and use `int.bit_count()` / `bin(n).count('1')` to count set bits.
+
 ```python
 # Python integers have arbitrary precision — no overflow!
 n = 1 << 100   # works! (Java would need BigInteger)
@@ -961,6 +963,8 @@ class UnionFind:
 ---
 
 ## 11. Dynamic Programming Templates
+
+**Theory.** Every dynamic-programming solution reduces to three decisions: define the **state** (what does each parameter mean?), write the **transition** (how is a state built from smaller ones?), and set the **base cases**. The templates below show the two ways to implement that. **Top-down** memoization is especially clean in Python thanks to `@functools.lru_cache` (or `@cache`), which turns a plain recursive function into a memoized one with a single decorator. **Bottom-up** tabulation fills a table from the base cases upward and lets you shrink memory to one or two rows. Choose top-down when the recurrence reads naturally; choose bottom-up when you need to avoid Python's recursion-depth limit or save memory.
 
 ### Memoization (Top-Down)
 ```python

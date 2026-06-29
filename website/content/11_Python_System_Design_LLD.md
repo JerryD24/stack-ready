@@ -16,6 +16,8 @@
 
 ## 1. SOLID Principles in Python
 
+**Theory.** SOLID is five object-oriented design principles that make code easy to change, test, and extend — the backbone of good Low-Level Design. The principles are language-agnostic, but Python expresses them with lighter machinery than Java: structural typing via `typing.Protocol` (no explicit `implements`), `@dataclass` to cut entity boilerplate, and duck typing that often removes the need for formal interfaces. Treat them as a review checklist — a violation almost always appears as code that's hard to modify without breaking something else. The mnemonic spells **SOLID**: **S**ingle Responsibility (one reason to change), **O**pen/Closed (extend without modifying), **L**iskov Substitution (subtypes are drop-in replacements), **I**nterface Segregation (small, focused interfaces), and **D**ependency Inversion (depend on abstractions, inject concretions).
+
 ### S — Single Responsibility Principle
 ```python
 # BAD: One class doing too much
@@ -251,6 +253,8 @@ user.pay(price)  # User.pay() internally handles wallet/balance
 ---
 
 ## 3. Design Patterns in Python
+
+**Theory.** Design patterns are **named, reusable solutions to recurring design problems** — a shared vocabulary that conveys an entire structure in a word. The classic Gang-of-Four catalog splits into **Creational** (how objects are made — Singleton, Factory, Builder), **Structural** (how objects are composed — Decorator, Proxy, Adapter, Facade), and **Behavioral** (how objects interact — Strategy, Observer, State, Template Method, Chain of Responsibility). What's distinctive in Python is that the language already *gives* you several patterns for free: a **module is a natural Singleton**, **first-class functions and decorators** replace many Strategy/Decorator class hierarchies, and **duck typing/Protocols** make the "program to an interface" advice almost effortless. So apply patterns where they clarify intent — but reach for Python's built-in idioms first rather than porting verbose Java structures.
 
 ### Creational Patterns
 

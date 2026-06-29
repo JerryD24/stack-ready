@@ -48,12 +48,12 @@ window.CONTENT_META = {
     "minutes": 3
   },
   "11_Python_System_Design_LLD.md": {
-    "words": 410,
-    "minutes": 2
+    "words": 662,
+    "minutes": 3
   },
   "12_Python_CP_Tricks.md": {
-    "words": 319,
-    "minutes": 2
+    "words": 544,
+    "minutes": 3
   },
   "13_AWS_Complete_Guide.md": {
     "words": 1359,
