@@ -26,6 +26,8 @@
 
 ## 1. Complexity Analysis
 
+**Theory — why we measure with Big-O.** We can't compare algorithms by stopwatch (hardware differs), so we count how the number of operations **grows as input size n grows**. Big-O describes the *worst-case upper bound* on that growth — it ignores constants and lower-order terms because they stop mattering as n gets large (O(2n+5) is just O(n)). The goal in interviews is to pick the algorithm whose curve grows slowest for the expected input size: O(log n) and O(n) scale to millions; O(n²) collapses past a few thousand; O(2ⁿ)/O(n!) only work for tiny n. Always state **both time and space** complexity — a fast algorithm that needs O(n) extra memory may be the wrong trade-off. Also know **amortized** cost (e.g., `ArrayList.add` is O(1) on average even though an occasional resize is O(n)).
+
 ### Big-O Reference Table
 | Algorithm | Best | Average | Worst | Space |
 |-----------|------|---------|-------|-------|
@@ -52,6 +54,11 @@ O(n!)      → Factorial: Permutations
 ---
 
 ## 2. Arrays & Strings
+
+**Theory.** An array is a **contiguous block of memory**, so element *i* is found by simple address arithmetic (`base + i × size`) — that's why indexing is O(1) and arrays are cache-friendly (neighbours are physically adjacent). The cost is that inserting/deleting in the middle is O(n) because everything after must shift. Most array interview problems are really about **avoiding the naive O(n²) double loop** by exploiting structure. The three patterns below cover the majority:
+- **Two pointers** — when data is sorted (or you compare from both ends), move two indices toward/with each other to get O(n) instead of checking all pairs.
+- **Sliding window** — for "best/longest/shortest contiguous subarray/substring", grow and shrink a window so each element is visited at most twice → O(n).
+- **Prefix sum** — precompute cumulative sums once so any range-sum query is O(1).
 
 ### Key Patterns
 
@@ -241,6 +248,8 @@ void nextPermutation(int[] nums) {
 
 ## 3. Linked List
 
+**Theory.** A linked list stores elements as **nodes**, each holding a value plus a pointer to the next node (and `prev` too in a doubly-linked list). Because nodes are scattered in memory, there's no index arithmetic: reaching the *i*-th element is O(n), but once you hold a node, inserting or deleting is O(1) (just relink pointers). Prefer a linked list over an array when you do many insertions/removals at known positions and rarely need random access. Two techniques solve most interview questions: the **dummy head** node (so you don't special-case the first element when inserting/deleting), and **slow/fast pointers** — advancing one pointer twice as fast as the other to find the middle, detect a cycle (Floyd's algorithm), or locate the *n*-th node from the end in a single pass.
+
 ```java
 class ListNode {
     int val;
@@ -336,6 +345,8 @@ boolean isPalindrome(ListNode head) {
 
 ## 4. Stack & Queue
 
+**Theory.** A **stack** is LIFO (last-in, first-out) — like a stack of plates; you only touch the top. A **queue** is FIFO (first-in, first-out) — like a line at a counter. Both give O(1) push/pop. Use a stack whenever the problem has **nesting or "undo/most-recent"** semantics: matching brackets, expression evaluation, function call frames, backtracking, and DFS. Use a queue for **level-by-level / first-come processing**: BFS, scheduling, buffering. The **monotonic stack** (keeping elements in increasing or decreasing order) is the key trick for "next greater/smaller element" and histogram problems — it turns an O(n²) scan into O(n) because each index is pushed and popped at most once. In Java use `ArrayDeque` for both (faster than `Stack`/`LinkedList`).
+
 ```java
 // Monotonic Stack Pattern — key for next greater/smaller element problems
 
@@ -398,6 +409,8 @@ class MinStack {
 ---
 
 ## 5. Trees & BST
+
+**Theory.** A tree is a hierarchical structure of nodes with one **root** and no cycles; each node points to its children. A **binary tree** has at most two children per node. A **Binary Search Tree (BST)** adds an ordering invariant: everything in the left subtree is smaller, everything in the right is larger — which makes search/insert/delete O(h) where h is the height (O(log n) when balanced, but O(n) if it degenerates into a linked list, which is why self-balancing trees like Red-Black/AVL exist). Master the **four traversals**: *inorder* (left-root-right — gives sorted order in a BST), *preorder* (root first — good for copying/serializing), *postorder* (children before parent — good for deleting/computing sizes), and *level-order* (BFS with a queue). Most tree problems are solved with **recursion**: solve for the children, then combine — the trick is identifying what each call should return up to its parent (e.g., height, whether it's balanced, the LCA).
 
 ```java
 class TreeNode {
@@ -522,6 +535,8 @@ TreeNode build(int[] pre, int preL, int preR, int inL, int inR, Map<Integer,Inte
 
 ## 6. Heaps
 
+**Theory.** A heap is a **complete binary tree** (filled left-to-right) kept as a flat array, satisfying the heap property: in a **min-heap** every parent ≤ its children (so the minimum is always at the root); a max-heap is the mirror. It gives O(1) peek of the min/max and O(log n) insert/extract — but it is *not* fully sorted, only the root is guaranteed. Reach for a heap whenever you repeatedly need the "best" element so far: **top-K** problems (keep a min-heap of size k → O(n log k)), merging k sorted lists, scheduling by priority, or running medians (two heaps). Java's `PriorityQueue` is a min-heap by default; pass `Comparator.reverseOrder()` for a max-heap. Building a heap from an existing array is O(n) (`heapify`), cheaper than n inserts.
+
 ```java
 // Java's PriorityQueue is a min-heap
 PriorityQueue<Integer> minHeap = new PriorityQueue<>();
@@ -593,6 +608,8 @@ class MedianFinder {
 ---
 
 ## 7. Graphs
+
+**Theory.** A graph is a set of **vertices** connected by **edges**; it generalizes trees (a tree is just an acyclic connected graph). Edges may be *directed* or *undirected*, *weighted* or not. Representation matters: an **adjacency list** (`Map<node, neighbors>`) is the default — O(V+E) space, efficient for sparse graphs; an adjacency matrix is O(V²) but gives O(1) edge lookup. The two core traversals are **BFS** (queue, explores level by level → gives the shortest path in *unweighted* graphs) and **DFS** (stack/recursion → natural for cycle detection, topological sort, connected components). Build up from there: **Dijkstra** (BFS + a priority queue) for shortest paths with non-negative weights; **topological sort** (Kahn's indegree method or DFS) for ordering dependencies in a DAG; **Union-Find** for connectivity/cycle questions in undirected graphs. Recognising "this is a graph problem" (grid cells, dependencies, networks) is half the battle.
 
 ```java
 // Adjacency List representation
@@ -747,6 +764,8 @@ int minimumSpanningTree(int n, int[][] edges) {
 
 ## 8. Hashing
 
+**Theory.** A hash table stores key→value pairs in an array, using a **hash function** to convert each key into an array index. This gives **O(1) average** insert/lookup/delete — the single most useful trick in interviews for trading space to save time. Collisions (two keys hashing to the same bucket) are handled by chaining (a list per bucket) or open addressing; Java 8+ converts long chains into balanced trees, so worst case is O(log n). The mental pattern: whenever a brute-force solution does "for each element, search the rest" (O(n²)), ask **"can I remember what I've seen in a HashMap/HashSet?"** — that usually collapses it to O(n) (e.g., Two Sum, longest consecutive sequence, anagram grouping, frequency counts). Caveat: a custom key class must override **both** `equals()` and `hashCode()` consistently, and keys must be immutable.
+
 ```java
 // Common patterns
 
@@ -792,6 +811,8 @@ int longestConsecutive(int[] nums) {
 ---
 
 ## 9. Sorting Algorithms
+
+**Theory.** Sorting is the warm-up step for countless problems (it enables two pointers, binary search, greedy, and dedup). Comparison-based sorts cannot beat **O(n log n)** in the worst case. Know the trade-offs: **Merge sort** is always O(n log n) and **stable** (keeps equal elements in original order) but needs O(n) extra memory — it's how Java sorts objects (`Arrays.sort` on `Object[]`/`Collections.sort`). **Quick sort** is O(n log n) average, in-place, and cache-friendly, but degrades to O(n²) on bad pivots — it's how Java sorts primitives (a dual-pivot variant). **Heap sort** is O(n log n) in-place but not stable. When the input is special — small integer range — a non-comparison **counting/radix sort** achieves O(n). In interviews, you rarely write a sort from scratch; you call the library sort and a **custom `Comparator`**, then reason about stability and complexity.
 
 ```java
 // Merge Sort — O(n log n), stable
@@ -853,6 +874,8 @@ int[] countingSort(int[] arr, int maxVal) {
 ---
 
 ## 10. Binary Search
+
+**Theory.** Binary search repeatedly halves a **sorted** search space, giving O(log n) — 30 steps suffice for a billion elements. The classic form finds a target in a sorted array, but the powerful interview idea is **"binary search on the answer"**: when the answer is a number in a known range and there's a *monotonic* check (`canDo(x)` is false for small x and becomes true past some threshold), you binary-search that threshold even though there's no array to search (e.g., minimum ship capacity, minimum eating speed, smallest feasible time). Two implementation hazards to recite: compute mid as `left + (right - left) / 2` to **avoid integer overflow**, and be deliberate about boundaries (`<` vs `<=`, whether to move to `mid` or `mid ± 1`) to avoid infinite loops — the "first/last occurrence" variants below show the standard templates.
 
 ```java
 // Standard Binary Search
@@ -948,6 +971,8 @@ int mySqrt(int x) {
 ---
 
 ## 11. Dynamic Programming
+
+**Theory.** Dynamic Programming (DP) solves a big problem by combining solutions to **overlapping subproblems**, storing each subproblem's answer so it's computed only once. Two conditions must hold: **optimal substructure** (the optimal answer is built from optimal answers of smaller pieces) and **overlapping subproblems** (the same smaller pieces recur). There are two equivalent styles: **top-down memoization** (write the natural recursion, then cache results) and **bottom-up tabulation** (fill a table from base cases upward). The hard part is always **defining the state** — what do the indices of your `dp` array mean, and what's the **transition** (recurrence) from smaller states? A reliable recipe: (1) write the brute-force recursion, (2) notice repeated calls, (3) add a cache, (4) optionally convert to a table and shrink the dimensions (many 2D DPs only need the previous row → 1D). The patterns below (1D, knapsack, subsequence, grid, interval) cover most interview DP.
 
 ### Patterns
 
@@ -1109,6 +1134,8 @@ int maxCoins(int[] nums) {
 
 ## 12. Greedy Algorithms
 
+**Theory.** A greedy algorithm builds the answer by always taking the **locally best choice** at each step, never reconsidering. It's simple and fast (often just a sort + single pass), but it's only *correct* when the problem has the **greedy-choice property**: a local optimum provably leads to the global optimum. That proof is the catch — greedy gives wrong answers when future consequences matter (that's when you need DP instead). The usual tell is a sort by the right key followed by a sweep: sort intervals by **end time** for maximum non-overlapping selection, sort by start time + a heap for "minimum meeting rooms", track a running reach for "jump game". In an interview, after proposing greedy, briefly justify *why* the local choice is safe (an exchange argument) or give a counterexample and switch to DP.
+
 ```java
 // Activity Selection (maximum non-overlapping intervals)
 int eraseOverlapIntervals(int[][] intervals) {
@@ -1160,6 +1187,8 @@ int canCompleteCircuit(int[] gas, int[] cost) {
 ---
 
 ## 13. Backtracking
+
+**Theory.** Backtracking is **systematic brute force**: it explores the tree of all possible choices via DFS, and as soon as a partial solution can't possibly work, it **prunes** that branch and backs up to try the next option. The universal shape is *choose → explore (recurse) → un-choose* — you mutate the state, recurse, then undo the mutation so the next sibling starts clean. Use it for problems asking to **generate all** combinations/permutations/subsets, or to find *a* valid configuration under constraints (N-Queens, Sudoku, word search). It's inherently exponential (there are exponentially many candidates), so good **pruning** (skipping invalid choices early) is what makes it fast enough. If the question instead asks for a *count* or an *optimal* value rather than enumerating everything, consider DP.
 
 ```java
 // Template for backtracking
@@ -1240,6 +1269,8 @@ boolean isValid(char[][] board, int row, int col) {
 
 ## 14. Trie
 
+**Theory.** A trie (prefix tree) stores strings by **sharing common prefixes** along a tree path — each edge is a character, and a flag marks where a complete word ends. Lookups, inserts, and prefix checks cost **O(L)** where L is the word length, *independent of how many words are stored* — that's why it beats a HashMap for **prefix queries** like autocomplete, spell-check, and "does any stored word start with X". The trade-off is memory (a child array/map per node). Reach for a trie whenever a problem is about prefixes, dictionaries, or matching many strings at once (e.g., word-search boards, IP routing, replacing words by roots).
+
 ```java
 class TrieNode {
     TrieNode[] children = new TrieNode[26];
@@ -1284,6 +1315,8 @@ class Trie {
 ---
 
 ## 15. Union-Find (DSU)
+
+**Theory.** Union-Find (Disjoint Set Union) tracks a collection of elements partitioned into **disjoint groups**, supporting two operations: `find(x)` (which group is x in?) and `union(x, y)` (merge two groups). With the two standard optimizations — **path compression** (flatten the tree during `find`) and **union by rank/size** (always attach the smaller tree under the larger) — each operation is *almost* O(1) (inverse-Ackermann, effectively constant). It's the go-to for **connectivity** questions on undirected graphs: counting connected components, detecting a cycle (a `union` whose endpoints already share a root closes a cycle), Kruskal's MST, and "are these two nodes connected?" queries that arrive online. Choose Union-Find over BFS/DFS when edges are added incrementally or you only care about grouping, not paths.
 
 ```java
 class UnionFind {

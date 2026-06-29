@@ -24,8 +24,8 @@ window.CONTENT_META = {
     "minutes": 4
   },
   "05_DSA.md": {
-    "words": 603,
-    "minutes": 3
+    "words": 2623,
+    "minutes": 13
   },
   "06_CP_Tricks.md": {
     "words": 586,
