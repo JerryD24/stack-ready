@@ -164,6 +164,36 @@ const INTERVIEW_TRACKS = [
     ]
   },
   {
+    id: 'design-patterns',
+    title: 'Design Patterns',
+    subtitle: 'GoF + enterprise patterns — Java & Python',
+    icon: '🧩',
+    color: '#9333ea',
+    gradient: 'linear-gradient(135deg, #6d28d9 0%, #9333ea 50%, #c084fc 100%)',
+    topics: [
+      {
+        id: 'dp-java',
+        file: '27_Design_Patterns_Java.md',
+        title: 'Design Patterns in Java',
+        description: 'All 23 GoF patterns + enterprise/Spring patterns with real corporate examples (payments, provisioning, notifications), SOLID, anti-patterns, deep theory & Q&A',
+        sections: 29,
+        level: 'Intermediate → Expert',
+        priority: 'critical',
+        tags: ['Design Patterns', 'GoF', 'SOLID', 'Java']
+      },
+      {
+        id: 'dp-python',
+        file: '28_Design_Patterns_Python.md',
+        title: 'Design Patterns in Python',
+        description: 'Patterns the Pythonic way — functions/closures, generators, singledispatch, decorators; which patterns disappear and which still matter, advanced examples & Q&A',
+        sections: 27,
+        level: 'Intermediate → Expert',
+        priority: 'high',
+        tags: ['Design Patterns', 'Python', 'Pythonic', 'GoF']
+      }
+    ]
+  },
+  {
     id: 'system-design',
     title: 'System Design',
     subtitle: 'HLD + LLD + Real-world scenarios',
@@ -280,6 +310,16 @@ const INTERVIEW_TRACKS = [
         level: 'Intermediate',
         priority: 'high',
         tags: ['FastAPI', 'REST', 'API']
+      },
+      {
+        id: 'python-questions',
+        file: '29_Python_Interview_Questions.md',
+        title: 'Python Interview Questions (2026)',
+        description: '75+ latest questions with deep answers — data model, GIL & concurrency, asyncio, memory/GC, decorators, generators, type hints, modern Python 3.10–3.13, gotchas, Pythonic coding',
+        sections: 16,
+        level: 'Beginner → Expert',
+        priority: 'critical',
+        tags: ['Python', 'Interview', 'GIL', 'Async']
       }
     ]
   },

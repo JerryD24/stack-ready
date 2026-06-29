@@ -4,8 +4,8 @@
  */
 window.CONTENT_META = {
   "00_Topic_List.md": {
-    "words": 3736,
-    "minutes": 19
+    "words": 4373,
+    "minutes": 22
   },
   "01_Java_Core_to_Advanced.md": {
     "words": 3876,
@@ -110,6 +110,18 @@ window.CONTENT_META = {
   "26_SQL_at_Scale.md": {
     "words": 1477,
     "minutes": 7
+  },
+  "27_Design_Patterns_Java.md": {
+    "words": 3054,
+    "minutes": 15
+  },
+  "28_Design_Patterns_Python.md": {
+    "words": 2110,
+    "minutes": 11
+  },
+  "29_Python_Interview_Questions.md": {
+    "words": 3657,
+    "minutes": 18
   },
   "Complete_PeerReview_Report.md": {
     "words": 3202,

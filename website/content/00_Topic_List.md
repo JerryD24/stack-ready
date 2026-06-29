@@ -647,4 +647,91 @@
 
 ---
 
+## SECTION 19 — DESIGN PATTERNS IN JAVA (in `27_Design_Patterns_Java.md`)
+
+- [ ] Why design patterns matter — vocabulary, decoupling, trade-offs
+- [ ] SOLID principles recap (SRP, OCP, LSP, ISP, DIP)
+- [ ] Pattern categories & how to choose (creational/structural/behavioral)
+- [ ] Singleton — variants & thread safety (Java)
+- [ ] Factory Method (Java)
+- [ ] Abstract Factory — product families (Java)
+- [ ] Builder — fluent, immutable objects (Java)
+- [ ] Prototype — cloning & deep copy (Java)
+- [ ] Adapter — wrap incompatible APIs (Java)
+- [ ] Bridge — abstraction vs implementation (Java)
+- [ ] Composite — tree structures (Java)
+- [ ] Decorator — stackable responsibilities (Java)
+- [ ] Facade — simplify a subsystem (Java)
+- [ ] Flyweight — share immutable state (Java)
+- [ ] Proxy — control access (lazy/security/AOP) (Java)
+- [ ] Chain of Responsibility — handler pipeline (Java)
+- [ ] Command — encapsulate requests, queue/undo (Java)
+- [ ] Iterator — traverse without exposing internals (Java)
+- [ ] Mediator — centralize interactions (Java)
+- [ ] Memento — snapshot & restore state (Java)
+- [ ] Observer — publish/subscribe (Java)
+- [ ] State — behaviour by lifecycle state (Java)
+- [ ] Strategy — interchangeable algorithms (Java)
+- [ ] Template Method — algorithm skeleton (Java)
+- [ ] Visitor — operations over a type hierarchy (Java)
+- [ ] Interpreter — small grammar/DSL (Java)
+- [ ] Enterprise & Spring patterns (DI, Repository, DTO, Proxy/AOP)
+- [ ] Anti-patterns to avoid (God object, singleton abuse, patternitis)
+- [ ] Java design patterns interview Q&A bank
+
+---
+
+## SECTION 20 — DESIGN PATTERNS IN PYTHON (in `28_Design_Patterns_Python.md`)
+
+- [ ] Design patterns the Pythonic way
+- [ ] Python idioms that replace patterns
+- [ ] Creational patterns overview (Python)
+- [ ] Singleton — module/metaclass (Python)
+- [ ] Factory Method — dict dispatch / classmethod (Python)
+- [ ] Abstract Factory — Protocol-based families (Python)
+- [ ] Builder — kwargs/dataclasses/fluent (Python)
+- [ ] Prototype — copy/deepcopy (Python)
+- [ ] Adapter — duck typing wrapper (Python)
+- [ ] Bridge — composition with Protocol (Python)
+- [ ] Composite — recursive trees (Python)
+- [ ] Decorator — @decorator vs structural (Python)
+- [ ] Facade — module/class entry point (Python)
+- [ ] Flyweight — __slots__ + lru_cache (Python)
+- [ ] Proxy — __getattr__ / cached_property (Python)
+- [ ] Chain of Responsibility — middleware list (Python)
+- [ ] Command — closures / functools.partial (Python)
+- [ ] Iterator — generators & yield (Python)
+- [ ] Mediator — coordinator (Python)
+- [ ] Memento — deepcopy / pickle state (Python)
+- [ ] Observer — callbacks / signals (Python)
+- [ ] State — state machine objects (Python)
+- [ ] Strategy — pass a Callable (Python)
+- [ ] Template Method — ABC or HOF (Python)
+- [ ] Visitor — functools.singledispatch (Python)
+- [ ] Interpreter — expression tree / DSL (Python)
+- [ ] Python design patterns interview Q&A bank
+
+---
+
+## SECTION 21 — PYTHON INTERVIEW QUESTIONS (in `29_Python_Interview_Questions.md`)
+
+- [ ] Python core language & data model (is vs ==, mutability, args, mutable defaults)
+- [ ] Python data structures & time complexity
+- [ ] Python OOP, MRO/C3, super, dunder methods, metaclasses, descriptors
+- [ ] Python decorators (wraps, retry/backoff, stateful, lru_cache)
+- [ ] Python generators & iterators (yield, yield from, lazy)
+- [ ] The GIL & concurrency (threading vs multiprocessing vs asyncio)
+- [ ] Async/await with asyncio (gather, tasks, blocking, timeouts)
+- [ ] Python memory management & GC (refcount, cyclic GC, __del__, __slots__)
+- [ ] Python performance & optimization (profiling, comprehensions)
+- [ ] Type hints, dataclasses & Pydantic, Protocol
+- [ ] Standard library idioms (collections, itertools, functools)
+- [ ] Modern Python 3.10–3.13 (match, walrus, free-threaded)
+- [ ] Exceptions & context managers (with, async, exception groups, EAFP)
+- [ ] Python testing & tooling (pytest, ruff, uv, mypy)
+- [ ] Python tricky output & gotchas (floats, list refs, closures)
+- [ ] Pythonic coding problems (Counter, dedupe, group, LRU)
+
+---
+
 > **Next Step**: Open `01_Java_Core_to_Advanced.md` and start reading!
