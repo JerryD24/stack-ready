@@ -17,6 +17,8 @@
 
 ## 1. SOLID Principles
 
+**Theory.** SOLID is five object-oriented design principles (popularized by Robert C. Martin) that together produce code which is easy to change, test, and extend — the foundation of good Low-Level Design. Most design-pattern choices and "is this a good design?" judgments trace back to one of these principles, so treat them as a review checklist: a violation almost always shows up as code that's hard to modify without breaking something elsewhere. The mnemonic spells **SOLID** — **S**ingle Responsibility (a class has one reason to change), **O**pen/Closed (extend without modifying), **L**iskov Substitution (subtypes are drop-in replacements), **I**nterface Segregation (many small interfaces over one fat one), and **D**ependency Inversion (depend on abstractions, not concretions).
+
 ### S — Single Responsibility Principle
 > A class should have only ONE reason to change.
 
@@ -180,6 +182,8 @@ Composition over Inheritance:
 ---
 
 ## 3. Design Patterns
+
+**Theory.** Design patterns are **named, reusable solutions to recurring design problems** — a shared vocabulary so that saying "use a Strategy here" instantly conveys a whole structure to another engineer. They aren't code to copy blindly but templates you adapt to your context; reaching for patterns you don't need is itself an anti-pattern (remember YAGNI). The classic 23 Gang-of-Four patterns split into three families based on what problem they solve: **Creational** patterns control *how objects are created* (Singleton, Factory Method, Abstract Factory, Builder, Prototype); **Structural** patterns control *how objects are composed* into larger structures (Adapter, Decorator, Facade, Proxy, Composite, Flyweight, Bridge); and **Behavioral** patterns control *how objects interact and distribute responsibility* (Strategy, Observer, Command, State, Template Method, Chain of Responsibility, Iterator, Mediator, and more). The real skill is recognizing *which* problem you have, then picking the pattern that fits.
 
 ### Creational Patterns
 

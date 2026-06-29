@@ -20,16 +20,16 @@ window.CONTENT_META = {
     "minutes": 10
   },
   "04_System_Design_LLD.md": {
-    "words": 753,
-    "minutes": 4
+    "words": 1016,
+    "minutes": 5
   },
   "05_DSA.md": {
     "words": 2623,
     "minutes": 13
   },
   "06_CP_Tricks.md": {
-    "words": 586,
-    "minutes": 3
+    "words": 818,
+    "minutes": 4
   },
   "07_Python_Core_to_Advanced.md": {
     "words": 1553,

@@ -71,6 +71,8 @@ public class Main {
 
 ## 2. Bit Manipulation
 
+**Theory.** Bit manipulation treats an integer as a fixed array of 32 (or 64) bits and uses the bitwise operators (`&`, `|`, `^`, `~`, `<<`, `>>`) to compute things far faster than arithmetic or loops. It matters in interviews and contests for three reasons: **speed** (each operation is a single CPU instruction), **space** (a bitmask packs up to 32 boolean flags into one int — the basis of bitmask DP and subset enumeration), and a family of **classic identities** you'll be expected to recognize — XOR to cancel duplicate values, `n & (n-1)` to drop the lowest set bit, and `n & -n` to isolate it. Also know the JDK built-ins so you don't reinvent them: `Integer.bitCount`, `highestOneBit`, `numberOfTrailingZeros`.
+
 ### The Essential Bit Tricks
 ```java
 // Check if bit i is set
@@ -621,6 +623,8 @@ int binarySearchOnAnswerMax(int lo, int hi) {
 ---
 
 ## 8. Dynamic Programming Templates
+
+**Theory.** Every dynamic-programming solution comes down to the same three decisions: define the **state** (what does each index/parameter represent?), write the **transition** (how is a state built from smaller states?), and set the **base cases**. The templates below are the two ways to fill that in. **Top-down** (recursion + a memo cache) is written in the natural order of the problem and is usually easier to reason about. **Bottom-up** (a table filled from the base cases upward) avoids recursion-depth limits and often allows a **space optimization** down to one or two rows. Choose top-down when the recurrence is clearer; choose bottom-up when you need to save memory or stack space.
 
 ### Top-Down (Memoization)
 ```java
