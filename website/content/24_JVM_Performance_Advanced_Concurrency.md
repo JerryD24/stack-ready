@@ -24,6 +24,18 @@
 
 ## 1. JVM Memory Areas
 
+**Theory.** When debugging OOM or leaks, you need to know **where** memory lives. The heap holds your objects; stacks hold method call context; Metaspace holds class definitions. A "Java heap OOM" and "Metaspace OOM" have different causes and fixes.
+
+**How it works.**
+- **Heap:** All objects from `new`. GC manages this. `-Xmx` caps it. Two generations: Young (Eden + Survivors) for new objects, Old for long-lived.
+- **Stack (per thread):** Each method call = one **frame** with local variables and references. Default ~1MB per platform thread (`-Xss`). Deep recursion → `StackOverflowError`. References point to heap objects; primitives live directly on the stack.
+- **Metaspace:** Class metadata, method bytecode, static fields. Grows in **native** memory (outside `-Xmx`). Classloader leaks (redeploy without GC) fill Metaspace.
+- **Code Cache:** JIT-compiled native code. Rarely tuned unless "CodeCache is full" errors appear.
+
+**Example.** `User user = new User()` — the `User` object is on the heap; the reference variable `user` is in the current stack frame. When the method returns, the frame is popped; if nothing else references that `User`, it becomes GC-eligible.
+
+**Pitfall.** Container OOMKilled with "heap only 60% used" → total process memory (heap + Metaspace + thread stacks × count + direct buffers) exceeded the cgroup limit.
+
 ```
 Per JVM (shared):
   Heap          → all objects (Young + Old gen)
@@ -42,7 +54,19 @@ Per thread:
 
 ## 2. Generational GC
 
+**Theory.** Allocating and collecting every object in one big heap would be slow. **Generational hypothesis:** most objects die within milliseconds (temp strings, request wrappers). Collect the young area often (cheap); touch old area rarely (expensive).
+
 The **weak generational hypothesis**: most objects die young. So the heap is split:
+
+**How it works — Minor GC step by step:**
+1. Application allocates in **Eden** until full.
+2. **Minor GC** (Stop-The-World, but short): GC roots (stack refs, static fields) mark reachable objects in Eden + active Survivor.
+3. Live objects copied to the **other** Survivor space; age incremented. Dead objects in Eden discarded — no compaction needed in Eden (copying collector).
+4. Survivors that exceed **MaxTenuringThreshold** (default 15) move to **Old Gen**.
+5. When Old Gen fills → **Full GC** — marks entire heap, compacts, long pause.
+
+**Example.** A REST handler creates 50 short-lived objects per request. After the response, all 50 are unreachable. Minor GC reclaims them without touching Old Gen — pause might be 5–20ms vs 500ms+ for Full GC.
+
 ```
 Young Gen:  [ Eden | Survivor S0 | Survivor S1 ]   → Minor GC (frequent, fast)
 Old Gen:    [ long-lived objects ]                 → Major/Full GC (rarer, costly)
@@ -55,6 +79,8 @@ Old Gen:    [ long-lived objects ]                 → Major/Full GC (rarer, cos
 
 ## 3. Garbage Collectors
 
+**Theory.** A GC **collector** decides when and how to reclaim unreachable objects. Trade-off: **throughput** (total work done) vs **latency** (pause length). Batch jobs want throughput; payment APIs want low tail latency.
+
 | GC | Best for | Trait |
 |----|----------|-------|
 | **Serial** | Tiny heaps, single core | One thread, STW |
@@ -66,9 +92,31 @@ Old Gen:    [ long-lived objects ]                 → Major/Full GC (rarer, cos
 
 Modern default = **G1**. For latency-critical / large-heap services, **ZGC** (`-XX:+UseZGC`, generational ZGC in Java 21+).
 
+**Interview angle.** Serial = one GC thread, small heaps. Parallel = multiple GC threads, longer pauses acceptable. G1 = region-based, targets pause time. ZGC/Shenandoah = concurrent relocation, sub-ms pauses at cost of some throughput overhead.
+
 ---
 
 ## 4. G1 vs ZGC
+
+**Theory.** **G1** is the balanced default — good for most Spring services with 2–16GB heaps. **ZGC** is for when p99/p999 latency SLAs matter or heaps are huge (100GB+), because it keeps pauses under ~1ms regardless of heap size.
+
+**G1 (Garbage First):**
+- Divides heap into equal **regions** (1–32MB each); regions can be Eden, Survivor, or Old dynamically.
+- Maintains a **remembered set** of cross-region references so it doesn't scan the entire heap.
+- Collects regions with the most garbage first (Garbage First) to meet `-XX:MaxGCPauseMillis` target.
+- Pauses typically **10–200ms** depending on heap and live set.
+
+**ZGC:**
+- Uses **colored pointers** (metadata bits in address) and **load barriers** — when your code reads a reference, the barrier may fix it if the object was moved.
+- **Concurrent relocation:** moves objects while application threads run; only brief pauses for root scanning.
+- Pauses **< 1ms** even on terabyte heaps. Trade-off: ~15% throughput overhead vs G1 on some workloads.
+
+**How to choose:**
+| Scenario | Pick |
+|----------|------|
+| Typical microservice, 4GB heap, p99 < 500ms OK | G1 (default) |
+| Large heap (64GB+), strict p99 < 50ms | ZGC |
+| Batch ETL, maximize throughput | Parallel GC |
 
 **G1 (Garbage First):**
 - Divides heap into equal **regions**; collects regions with the most garbage first.
@@ -91,9 +139,24 @@ Rule: don't tune blindly — measure pauses/throughput first, change one thing, 
 
 ## 5. Reading GC Logs
 
+**Theory.** GC logs tell you whether performance problems are **allocation pressure** (too many short-lived objects), **undersized heap** (frequent Full GC), or **leaks** (heap after GC keeps growing). Without logs you're guessing.
+
 ```bash
 -Xlog:gc*:file=gc.log:time,uptime,level,tags    # Java 9+ unified logging
 ```
+
+**How to read a typical G1 line:**
+```
+[2026-06-29T10:15:32.123+0000][info][gc] GC(42) Pause Young (Normal) 512M->128M(2048M) 12.345ms
+```
+- `GC(42)` — 42nd GC event
+- `Pause Young` — Minor GC (Young gen only)
+- `512M->128M` — heap used before → after (512M live before, 128M after — 384M reclaimed)
+- `(2048M)` — current heap capacity
+- `12.345ms` — pause duration (application threads stopped)
+
+**Example — leak signature:** Over 24 hours, `heap after Full GC` goes 1.2GB → 1.5GB → 1.8GB → 2.1GB while traffic is flat. GC can't reclaim — something is retaining objects.
+
 What to look for:
 - **Pause times** — are they within your latency budget? Spikes?
 - **Frequency** — frequent Full GCs = heap too small or a leak.
@@ -106,6 +169,8 @@ What to look for:
 ---
 
 ## 6. JVM Flags
+
+**Theory.** JVM flags control heap size, GC algorithm, and diagnostic behavior. Wrong flags cause resize pauses (`-Xms` ≠ `-Xmx`), OOM in containers (fixed `-Xmx` ignoring cgroup limits), or missing artifacts when debugging production incidents.
 
 ```bash
 -Xms2g -Xmx2g                 # set min=max to avoid resize pauses
@@ -123,7 +188,20 @@ What to look for:
 
 ## 7. Heap Dumps & Leaks
 
+**Theory.** A heap dump is a **photograph** of every object in memory at one instant — who references whom. It's the primary artifact for answering "why is my heap 8GB?" Leak hunting compares dumps over time or analyzes dominators after OOM.
+
 A heap dump is a snapshot of all objects — the primary leak-hunting artifact.
+
+**How it works — dominator tree:** Object A **dominates** B if every path from GC roots to B goes through A. The dominator tree shows the **retention hierarchy** — the biggest retained set at the top is usually your leak (e.g., a `static HashMap` cache holding millions of entries).
+
+**Worked example — ThreadLocal leak:**
+```java
+// Each request sets context; pool thread never clears it
+ThreadLocal<byte[]> buffer = ThreadLocal.withInitial(() -> new byte[1_000_000]);
+// After 200 requests on a 200-thread pool → 200MB retained forever
+// Fix: buffer.remove() in finally block
+```
+
 ```bash
 jmap -dump:live,format=b,file=heap.hprof <pid>     # on demand
 # or automatic via -XX:+HeapDumpOnOutOfMemoryError
@@ -143,7 +221,27 @@ Analyze in **Eclipse MAT**:
 
 ## 8. Thread Dumps & CPU Profiling
 
+**Theory.** When a service is **slow but not crashed**, thread dumps show what every thread is doing right now. Multiple dumps seconds apart distinguish transient waits from permanent bottlenecks. CPU profiling shows **where** time is spent, not just that threads are busy.
+
 A thread dump shows every thread's stack + state — for hangs, deadlocks, high CPU.
+
+**How to read a thread entry:**
+```
+"http-nio-8080-exec-5" #23 daemon prio=5 os_prio=0 cpu=1234.56ms elapsed=5678.90s
+   java.lang.Thread.State: BLOCKED (on object monitor)
+   at com.example.Service.process(Service.java:42)
+   - waiting to lock <0x00000000abc12345> (a java.lang.Object)
+   owned by "http-nio-8080-exec-3" Id=21
+```
+- **BLOCKED** waiting for a lock held by exec-3 → lock contention at `Service.process:42`
+- Same method in many RUNNABLE threads across 3 dumps → CPU hotspot (tight loop or heavy computation)
+
+**Example workflow for "CPU at 100%":**
+1. Take 3 thread dumps 5 seconds apart.
+2. Find threads with high `cpu=` time stuck in the same method.
+3. Run async-profiler on that method for a flame graph.
+4. Check GC logs — sometimes high CPU is GC thrashing, not application code.
+
 ```bash
 jstack <pid> > threads.txt      # take 3-4 a few seconds apart
 jcmd <pid> Thread.print
@@ -158,6 +256,8 @@ Read it:
 ---
 
 ## 9. Diagnostic Tooling
+
+**Theory.** Production JVM problems fall into three buckets: **memory** (heap/Metaspace), **threads** (deadlock/contention), and **CPU** (hot methods). Different tools attach to each without redeploying — critical when you can't restart prod to add debug logging.
 
 | Tool | Use |
 |------|-----|
@@ -176,6 +276,8 @@ Arthas is a senior favorite: `watch`, `trace`, `stack`, `profiler` on a live pro
 ---
 
 ## 10. ThreadPoolExecutor Tuning
+
+**Theory.** Thread pool tuning is **backpressure design**: how does your system behave when overloaded? A bounded queue + rejection policy answers that — grow threads, block the caller, or fail fast — instead of silently consuming all memory.
 
 ```java
 new ThreadPoolExecutor(
@@ -212,7 +314,14 @@ var result = combine(a.join(), b.join());
 
 ## 12. Virtual Threads
 
+**Theory.** Virtual threads let you scale I/O-bound services without reactive programming complexity. The JVM multiplexes many virtual threads onto few OS threads, unmounting on blocking I/O.
+
 Java 21 (Loom) — millions of cheap threads mounted onto a few carrier threads.
+
+**How it works.** Carrier threads (≈ `#cores`) run virtual thread code. On blocking I/O, the virtual thread yields its carrier. **Pinning** happens when code holds a `synchronized` monitor during blocking — the carrier can't switch. `ReentrantLock` doesn't pin.
+
+**Interview angle.** "Should I replace my thread pool with virtual threads?" → For I/O-bound request handling, yes (one virtual thread per task). For CPU-bound work or strict pool sizing for backpressure, keep bounded platform pools.
+
 ```java
 try (var ex = Executors.newVirtualThreadPerTaskExecutor()) {
     requests.forEach(r -> ex.submit(() -> handleBlocking(r)));  // blocking I/O is fine
@@ -226,6 +335,25 @@ try (var ex = Executors.newVirtualThreadPerTaskExecutor()) {
 ---
 
 ## 13. Lock-Free & Atomics
+
+**Theory.** Locks block threads — context switches and priority inversion under contention. **Lock-free** algorithms use CAS to retry until success, so at least one thread always makes progress. You trade lock overhead for **retry loops** under heavy contention.
+
+**How it works — CAS at the CPU level:**
+```
+// Pseudocode for incrementAndGet on AtomicInteger
+int current;
+do {
+    current = value;           // read
+} while (!CAS(value, current, current + 1));  // atomic: set if still current
+return current + 1;
+```
+If another thread changed `value` between read and CAS, the CAS fails and the loop retries with the fresh value.
+
+**Example — why LongAdder beats AtomicLong under contention:**
+`AtomicLong` — all threads CAS the same memory word → cache line bouncing.
+`LongAdder` — each thread updates its own **cell**, summed on read → spreads contention.
+
+**ABA problem:** Thread A reads A, Thread B changes A→B→A, Thread A's CAS(A, new) succeeds even though the structure changed. Fix: `AtomicStampedReference` with a version counter.
 
 ```java
 AtomicInteger counter = new AtomicInteger();
@@ -241,6 +369,29 @@ LongAdder hot = new LongAdder();           // better than AtomicLong under high 
 ---
 
 ## 14. JIT, Escape Analysis & Warmup
+
+**Theory.** Java starts **interpreted** (slow, fast startup) and gets faster as the **JIT** compiles hot methods to native machine code. This is why the first 1000 requests in a service are slower than the next 10,000 — and why micro-benchmarks without warmup lie.
+
+**How it works — tiered compilation:**
+1. **Interpreter** runs everything initially.
+2. **C1 (client) compiler** — quick, less optimized native code for warm methods.
+3. **C2 (server) compiler** — aggressive optimizations (inlining, loop unrolling) for the hottest methods.
+4. Methods that aren't hot stay interpreted — cold code paths don't pay compilation cost.
+
+**Escape analysis:** If the JIT proves an object **never escapes** a method (no return, no store to field, no pass to other threads), it may:
+- **Stack-allocate** instead of heap-allocating (eliminates GC pressure).
+- **Scalar-replace** — break object fields into separate local variables.
+- **Lock elision** — remove `synchronized` on objects that can't be shared.
+
+**Example:**
+```java
+void compute() {
+    Point p = new Point(1, 2);  // may never hit heap if JIT proves p doesn't escape
+    return p.x + p.y;
+}
+```
+
+**Pitfall.** Benchmarking with `-Xint` (interpret only) or before warmup gives misleading numbers. Use **JMH** with warmup iterations. For serverless/cold start, consider **CDS/AppCDS** (class data sharing) or GraalVM native image.
 
 - The JVM **interprets** bytecode first, then the **JIT** compiles hot methods to native code (C1/C2 tiered compilation) → why Java gets faster after **warmup**.
 - **Escape analysis** can stack-allocate or scalar-replace objects that don't escape a method, eliminating heap allocation/locks (lock elision).

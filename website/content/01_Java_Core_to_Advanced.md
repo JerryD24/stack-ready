@@ -63,6 +63,14 @@ Native Machine Code
 
 **Platform Independence**: Java is WORA (Write Once Run Anywhere) because `.class` bytecode is platform-independent. The JVM is platform-specific.
 
+**Theory.** Think of Java as a two-stage translation: your source code becomes **bytecode** (a portable instruction set, like a recipe written in a universal language), and each platform's JVM translates that bytecode into **native machine code** for that CPU/OS. You ship one `.jar`; Windows, Linux, and macOS each run it through their own JVM. Python and Node.js are often described similarly, but Java's bytecode + verified class loading is stricter and more portable across vendors.
+
+**How it works.** `javac` compiles `.java` → `.class` files containing opcodes (e.g., `iload`, `invokevirtual`). The **ClassLoader** reads `.class` bytes, verifies them (no buffer overflows, valid references), and places class metadata in **Metaspace** while creating **Class** objects on the heap. The **Execution Engine** starts in **interpreter** mode (slow but instant startup), profiles which methods run hot, and the **JIT compiler** (C1/C2) recompiles those hot paths to native code — this is why Java gets faster after warmup.
+
+**Example.** A `main()` method in `App.class` is loaded once; every call to a hot loop inside it may eventually run as native x86/ARM instructions, not interpreted bytecode.
+
+**Interview angle.** "Is Java compiled or interpreted?" → **Both**: compiled to bytecode, then interpreted + JIT-compiled at runtime. "Difference between JDK and JRE?" → JDK = develop + run; JRE = run only (largely superseded — modern JDK bundles everything).
+
 ---
 
 ## 2. Data Types & Memory
@@ -97,6 +105,22 @@ System.out.println(c.equals(d)); // true
 > **Interview Trap**: Integer cache is -128 to 127. Beyond that, `==` returns false.
 
 ### Pass by Value
+
+**Theory.** Java is **always pass-by-value**. For primitives, the value itself is copied. For objects, the **reference value** (memory address) is copied — like handing someone a copy of a house key. They can use their copy to enter and rearrange furniture (mutate the object), but if they get a new key to a different house (`s = "new"`), your original key still points to the old house.
+
+**How it works.** When you call `change(arr)`, the stack frame gets a **copy** of the reference. Both caller and callee point to the same heap object. Reassigning the parameter (`arr = new int[5]`) only changes the callee's copy — the caller's reference is untouched. Mutating through the reference (`arr[0] = 10`) affects the shared object.
+
+**Example.**
+```java
+int[] data = {1, 2, 3};
+change(data);        // data[0] is now 10 — same object, mutated
+reassign(data);      // data still {10,2,3} — reassign() changed only its local copy of the ref
+
+void reassign(int[] arr) { arr = new int[]{99}; }  // caller unaffected
+```
+
+**Pitfall.** Interviewers love: "Java is pass-by-reference for objects" — **wrong**. It's pass-by-value of the reference. Confusing this leads to bugs when you expect reassignment inside a method to affect the caller.
+
 ```java
 // Java is ALWAYS pass by value
 void change(int x) { x = 10; }      // primitive: original unchanged
@@ -292,6 +316,11 @@ class Outer {
 ## 4. String Deep Dive
 
 ### String Immutability
+
+**Theory.** Once created, a String's character sequence cannot change. `s.toUpperCase()` returns a **new** String; the original `"hello"` is untouched. This is why concatenation in a loop creates many throwaway objects.
+
+**How it works.** Strings store a `final byte[]` (or `char[]` in older JDKs) and `hash` cache. The JVM maintains a **String Pool** (in heap since Java 7) for string literals — `"Hello"` in code is interned. `==` compares references; `equals()` compares content.
+
 ```java
 String s = "Hello";       // stored in String Pool
 String s2 = "Hello";      // same reference from pool
@@ -404,7 +433,16 @@ LinkedList<Integer> ll = new LinkedList<>();
 
 ### 5.2 HashMap Internal Working (CRITICAL INTERVIEW TOPIC)
 
+**Theory.** A HashMap is an array of **buckets**. Given a key, you compute a hash, map it to a bucket index, and look up the value in O(1) average time. Collisions (two keys, same bucket) are handled by a linked list (Java 7) or linked list → Red-Black Tree (Java 8+). The trade-off: no ordering, and you must implement `equals()` + `hashCode()` correctly for custom keys.
+
 > **For full depth** — Java 7 vs 8 differences, resize mechanics, custom key puzzles, RB tree conditions → see [Section 13](#13-deep-dive-hashmap-internals-java-7-vs-8) and [Section 14](#14-deep-dive-red-black-tree-in-hashmap).
+
+**Example — bucket index with capacity 16:**
+```
+key = "Alice", hashCode() = 96354
+scrambled hash = 96354 ^ (96354 >>> 16) = 96354
+index = 96354 & (16 - 1) = 96354 & 15 = 2  → bucket[2]
+```
 
 ```
 HashMap internals:
@@ -467,6 +505,13 @@ Key differences from synchronized HashMap:
 ```
 
 ### 5.4 Fail-Fast vs Fail-Safe
+
+**Theory.** **Fail-fast** iterators detect that the collection was **structurally modified** (add/remove outside the iterator) during iteration and throw `ConcurrentModificationException` immediately — better than silent corruption. **Fail-safe** iterators work on a **snapshot** or weakly consistent view — no exception, but you may miss concurrent updates or see stale data.
+
+**How it works.** `ArrayList` tracks `modCount` (incremented on add/remove). The iterator remembers `expectedModCount`; if they differ → exception. `CopyOnWriteArrayList` copies the entire array on every write; the iterator holds a reference to the old array — reads are fast, writes are expensive.
+
+**Interview angle.** Enhanced for-loop uses an iterator under the hood — that's why `list.remove()` inside `for (String s : list)` fails but `iterator.remove()` works.
+
 ```java
 // Fail-Fast: throws ConcurrentModificationException
 // Uses modCount to detect structural changes during iteration
@@ -557,12 +602,31 @@ List<? extends Number> // Number or child (Integer, Double, etc.)
 ```
 
 ### Wildcards — PECS Rule
+
+**Theory.** Generics are **invariant** in Java: `List<Dog>` is NOT a `List<Animal>`, even though Dog extends Animal. If it were, you could put a Cat into a `List<Dog>` through the Animal view — type safety would break. Wildcards (`? extends`, `? super`) let you write flexible APIs without losing safety.
+
+**How it works — PECS (Producer Extends, Consumer Super):**
 ```
 Producer Extends, Consumer Super
 
 If a collection PRODUCES (you read from it) → use ? extends
 If a collection CONSUMES (you write to it) → use ? super
 ```
+
+- `? extends Number` — you can **read** as Number (producer), but cannot `add` (except null) because you don't know if the list is `List<Integer>` or `List<Double>`.
+- `? super Integer` — you can **write** Integers (consumer), but reads return `Object` (only safe common type).
+
+**Example.** Copy numbers from a source list into a destination list:
+```java
+void copyAll(List<? extends Number> src, List<? super Integer> dest) {
+    for (Number n : src) {          // src is a producer → extends
+        dest.add(n.intValue());      // dest is a consumer → super
+    }
+}
+// copyAll(List.of(1, 2), new ArrayList<Integer>()) compiles and works
+```
+
+**Interview angle.** `List<Object>` is NOT a supertype of `List<String>`. Use `List<?>` or PECS wildcards for polymorphic collection parameters.
 
 ```java
 // Read from list (producer)
@@ -578,6 +642,12 @@ void addNumbers(List<? super Integer> list) {
 ```
 
 ### Type Erasure
+
+**Theory.** Java generics were added in Java 5 for **backward compatibility** with pre-generics bytecode. The compiler checks types at compile time, then **erases** type parameters to their bounds (or `Object`) in the `.class` file. At runtime, `List<String>` and `List<Integer>` are both just `List` — the JVM never sees `String` vs `Integer`.
+
+**How it works.** The compiler inserts **casts** where needed (`(String) list.get(0)`) and may generate **bridge methods** for overriding with generics. Type info survives only in metadata used by reflection (`getGenericType()`), not in raw bytecode.
+
+**Example.**
 ```java
 // At runtime, all generic type info is erased
 List<String> ls = new ArrayList<>();
@@ -587,9 +657,20 @@ System.out.println(ls.getClass() == li.getClass());  // true! Both are just Arra
 // This is why you can't do: new T(), T.class, instanceof T
 ```
 
+**Pitfall.** Erasure is why you get `ClassCastException` at **runtime** if you bypass generics with raw types:
+```java
+List raw = new ArrayList();
+raw.add(42);
+String s = (String) raw.get(0);  // compiles with warnings, fails at runtime
+```
+
+**Interview angle.** "Why can't I do `new T()`?" → No `T.class` at runtime after erasure. Reified generics (Kotlin, C#) keep type info at runtime; Java chose erasure for migration cost.
+
 ---
 
 ## 7. Exception Handling
+
+**Theory.** Java separates **recoverable failures** (checked exceptions — caller must handle) from **programming bugs** (unchecked `RuntimeException`). **Errors** (`OutOfMemoryError`) indicate the JVM itself is in trouble — don't catch and swallow them.
 
 ### Hierarchy
 ```
@@ -712,6 +793,21 @@ BinaryOperator<Integer> add = Integer::sum;
 ```
 
 ### 8.3 Stream API (MOST IMPORTANT)
+
+**Theory.** A **Stream** is not a data structure — it's a **lazy pipeline** of operations over a source (collection, array, I/O). Think of it like an assembly line: intermediate steps (filter, map) don't run until a terminal operation (collect, count) pulls the trigger. This enables fusion (fewer passes) and short-circuiting (`findFirst` stops early).
+
+**How it works.** Intermediate ops return a new Stream and are **lazy**. The source is traversed once when a terminal op runs. `map` transforms each element; `flatMap` maps then flattens (Stream of Streams → Stream). `collect` uses a **Collector** with a supplier, accumulator, and combiner (for parallel).
+
+**Example — mental trace:**
+```java
+List.of("Alice", "Bob", "Alex").stream()
+    .filter(n -> n.startsWith("A"))   // Alice, Alex
+    .map(String::length)              // 5, 4
+    .reduce(0, Integer::sum);         // 9
+```
+
+**Pitfall.** Never put side effects in streams (`list.add(x)` inside `forEach`) — order is undefined in parallel, and it's hard to debug. Don't use parallel streams for small lists or I/O — overhead dominates.
+
 ```java
 List<String> names = List.of("Alice", "Bob", "Charlie", "David", "Alex");
 
@@ -770,6 +866,13 @@ long count = names.parallelStream()
 ```
 
 ### 8.4 Optional
+
+**Theory.** `Optional<T>` is a container that may or may not hold a value — it pushes **null handling to the type system** so callers explicitly handle absence. It's not meant for fields or method parameters in domain models (overuse adds ceremony); it's ideal for **return types** where "no result" is valid.
+
+**How it works.** `Optional.of(x)` throws if x is null; `ofNullable(x)` wraps null as empty. Terminal methods like `orElse`, `orElseGet`, `orElseThrow` extract the value or substitute. `map`/`flatMap` chain without null checks — if empty, the chain short-circuits to empty.
+
+**Pitfall.** Never do `optional.get()` without checking — use `orElseThrow()` with a meaningful message. Don't use Optional in serialized APIs or JPA entities.
+
 ```java
 // Avoid NullPointerException
 Optional<String> opt = Optional.of("Hello");       // non-null
@@ -1017,6 +1120,13 @@ public non-sealed class Rectangle extends Shape {
 ```
 
 ### Java 21 — Virtual Threads (Project Loom)
+
+**Theory.** Platform threads map 1:1 to OS threads (~1MB stack each) — creating 10,000 for 10,000 concurrent HTTP requests exhausts memory. **Virtual threads** are JVM-managed, lightweight (~few KB), scheduled onto a small pool of **carrier** (platform) threads. When a virtual thread blocks on I/O, it **unmounts** from its carrier so another virtual thread can run — you write simple blocking code but get event-loop-like scalability.
+
+**How it works.** The JVM continuation mechanism saves the virtual thread's stack at blocking points (`socket.read`, `Thread.sleep`). The carrier thread runs another ready virtual thread. On I/O completion, the virtual thread is rescheduled. **Pinning** occurs when blocking inside `synchronized` — the carrier can't be released; use `ReentrantLock` instead.
+
+**Example.** 1 million virtual threads each sleeping 1 second — feasible. 1 million platform threads — `OutOfMemoryError: unable to create new native thread`.
+
 ```java
 // Platform threads: mapped 1-to-1 to OS threads (limited, heavy ~1MB stack)
 // Virtual threads: managed by JVM, lightweight (~few KB), millions possible
@@ -1088,6 +1198,15 @@ Integer result = future.get();  // blocking
 ```
 
 ### 10.3 synchronized
+
+**Theory.** Every Java object has an **intrinsic monitor lock** (sometimes called a "mutex"). `synchronized` ensures **mutual exclusion** (only one thread in the critical section) and **visibility** (writes inside the block are visible to the next thread that acquires the same lock). It's reentrant — a thread holding the lock can enter another synchronized block on the same object without deadlocking itself.
+
+**How it works.** `count++` compiles to roughly: `LOAD count → ADD 1 → STORE count`. Without synchronization, two threads can both LOAD the same value (e.g., 5), both ADD 1, both STORE 6 — one increment is **lost**. `synchronized` makes the read-modify-write atomic relative to other threads on that lock.
+
+**Example.** Two threads each call `increment()` 1000 times on an unsynchronized counter → result is often **less than 2000**. With `synchronized`, you get exactly 2000.
+
+**Interview angle.** `synchronized` on an instance method locks `this`; on a static method locks the `Class` object. Prefer **smaller lock scopes** (synchronized block on a dedicated lock object) over locking entire methods.
+
 ```java
 class Counter {
     private int count = 0;
@@ -1152,6 +1271,13 @@ class ProducerConsumer {
 ```
 
 ### 10.6 ExecutorService & Thread Pools
+
+**Theory.** Creating a platform thread costs ~1MB stack and an OS scheduler slot. A **thread pool** reuses a fixed set of workers, queuing excess work — the standard pattern for server-side concurrency. Unbounded thread creation under load leads to `OutOfMemoryError: unable to create new native thread`.
+
+**How it works.** Submit a task → pool assigns an idle worker or queues the task. Workers loop: pull task from queue → execute → pull next. `shutdown()` stops accepting new tasks; `awaitTermination()` waits for the queue to drain.
+
+**Pitfall.** `Executors.newFixedThreadPool(n)` uses an **unbounded queue** — under sustained overload, the queue grows until heap OOM. Production code should use explicit `ThreadPoolExecutor` with bounded queue + rejection policy.
+
 ```java
 // Don't create threads manually in production — use pools
 
@@ -1190,6 +1316,13 @@ executor.shutdownNow();  // interrupt running tasks
 ```
 
 ### 10.7 CompletableFuture
+
+**Theory.** `Future.get()` blocks and offers no composition. `CompletableFuture` is a **promise** you can chain: transform results, combine independent calls, handle errors, and set timeouts — all without blocking the calling thread until you explicitly `join()`/`get()`.
+
+**How it works.** `supplyAsync` runs a task on an executor (default: shared `ForkJoinPool.commonPool()` — **avoid for blocking I/O**). `thenApply` runs synchronously on the completing thread; `thenApplyAsync` dispatches to another pool. `thenCompose` is flatMap — when the next step is itself async. `allOf` waits for all; `anyOf` returns when the first completes.
+
+**Example — scatter-gather latency:** Three downstream calls each take 200ms. Sequential = 600ms. Parallel with `allOf` ≈ 200ms (slowest call).
+
 ```java
 // Asynchronous, non-blocking composition
 
@@ -1365,6 +1498,14 @@ try (var ex = Executors.newVirtualThreadPerTaskExecutor()) {
 ## 11. JVM Internals & Garbage Collection
 
 ### 11.1 JVM Memory Areas
+
+**Theory.** The JVM splits memory into **thread-private** areas (each thread has its own stack — like a personal notepad for method calls) and **shared** areas (heap — the warehouse where all objects live). Understanding this explains `StackOverflowError` (too many nested calls), `OutOfMemoryError: Java heap space` (too many objects), and why local variables are thread-safe by default.
+
+**How it works.**
+- **Stack (per thread):** Each method call pushes a **stack frame** containing local primitives, references to heap objects, and operand stack for bytecode. When `foo()` calls `bar()`, a new frame is pushed; when `bar()` returns, it's popped. References on the stack point to heap objects; the objects themselves are on the heap.
+- **Heap (shared):** All `new` objects and arrays. Young Gen (Eden + Survivors) for short-lived objects; Old Gen for long-lived. This is where GC runs.
+- **Metaspace (shared, native):** Class metadata, static variables (since Java 8, replaced PermGen). Grows in native memory, not the Java heap.
+
 ```
 Heap (shared across all threads)
   ├── Young Generation
@@ -1380,6 +1521,18 @@ Non-Heap
 ```
 
 ### 11.2 Object Lifecycle in Heap
+
+**Theory.** Generational GC exploits the observation that **most objects die young** (temporary strings, request DTOs, iterator objects). Splitting the heap into Young and Old lets the JVM run cheap, frequent collections on the Young gen and expensive, rare collections on Old.
+
+**How it works — worked example.** Suppose Eden is full and two Minor GCs have already happened:
+1. `new Order()` → allocated in **Eden**.
+2. Eden fills → **Minor GC**: live objects copied to **Survivor S0**, age = 1; dead objects reclaimed.
+3. More allocations in Eden → another Minor GC: S0 survivors with age 1 move to **S1** (age 2); new Eden survivors go to S0.
+4. After **15** survivor cycles (default `MaxTenuringThreshold`), object is **promoted** to Old Gen.
+5. Old Gen full → **Full GC** (Stop-The-World) — all application threads pause while GC marks and compacts.
+
+**Pitfall.** Promoting too many objects too fast (e.g., massive caching) causes frequent Full GCs and multi-second pauses. Tune `-Xmn` / `-XX:NewRatio` or fix object lifetime in code.
+
 ```
 1. New object → Eden space
 2. Eden full → Minor GC (Young GC)
@@ -1917,6 +2070,16 @@ put(key, value):
 
 ### 15.4 CAS (Compare-And-Swap) Explained
 
+**Theory.** CAS is a **hardware atomic instruction**: "If memory at location X equals expected, set it to newValue; else fail." No lock, no kernel call — threads **spin-retry** on contention. This is the foundation of lock-free counters and ConcurrentHashMap's empty-bucket inserts.
+
+**How it works.** On x86 this maps to `CMPXCHG`. The CPU guarantees the read-compare-write is atomic for that memory word. Under high contention, many threads retry → **CAS spin storms**. `LongAdder` mitigates by spreading updates across cells.
+
+**Example — lost update vs CAS:**
+```
+Thread A: read count=5, CAS(5,6) → success, count=6
+Thread B: read count=5, CAS(5,6) → FAIL (count already 6), retry CAS(6,7) → success
+```
+
 ```java
 // Hardware-level atomic instruction (pseudocode)
 boolean compareAndSet(location, expected, newValue) {
@@ -1963,7 +2126,25 @@ Multiple threads can **help resize** simultaneously. Uses `sizeCtl` field as coo
 
 ### 16.1 The Java Memory Model (JMM)
 
-Without synchronization, CPU caches and compiler optimizations mean Thread B may never see Thread A's writes. JMM defines **happens-before** rules that guarantee visibility.
+**Theory.** Modern CPUs and compilers **reorder and cache** memory accesses for speed. Without rules, Thread B might never see Thread A's write, or see a **partially constructed** object. The JMM defines **happens-before** — a partial ordering guarantee. If action A happens-before B, then B is guaranteed to see all of A's effects.
+
+**How it works.** Each thread may keep values in CPU cache or registers. A **memory barrier** (inserted by `volatile`, lock acquire/release, or `Atomic*`) forces flush/invalidate so other threads see fresh values. The compiler cannot reorder instructions across a happens-before edge.
+
+**Key happens-before rules:**
+- Program order within one thread.
+- `unlock(monitor)` happens-before the next `lock(monitor)` on the same monitor.
+- Write to `volatile` happens-before every subsequent read of that variable.
+- `Thread.start()` happens-before any action in the started thread.
+- All actions in thread T happen-before `T.join()` returns successfully.
+
+**Example — visibility bug without sync:**
+```java
+// Thread 1                    // Thread 2
+running = true;               while (!running) { /* spin forever */ }
+// Without volatile or sync, Thread 2 may cache running=false forever
+```
+
+**Interview angle.** "volatile vs synchronized?" → volatile = visibility + ordering, no mutual exclusion. synchronized = visibility + mutual exclusion. Neither makes `i++` safe alone — use `AtomicInteger` or a lock.
 
 ### 16.2 volatile — Visibility, NOT Atomicity
 
@@ -1998,6 +2179,16 @@ LongAdder adder = new LongAdder();  // better than AtomicLong under high content
 | Use case | flags | critical sections | counters |
 
 ### 16.5 Double-Checked Locking — Why volatile is Required
+
+**Theory.** Double-checked locking tries to avoid synchronizing on every `getInstance()` call after initialization. Without `volatile`, the JVM may **reorder** instructions so another thread sees a non-null reference to an **incompletely constructed** object.
+
+**How it works.** `new Singleton()` is not atomic: (1) allocate memory, (2) run constructor, (3) assign reference. Another thread can see step 3 before step 2 completes. `volatile` on `instance` prevents this reordering.
+
+**Example — broken without volatile:**
+```
+Thread A: constructing Singleton (constructor not finished)
+Thread B: reads instance != null, uses half-built object → subtle bugs/crashes
+```
 
 ```java
 private static volatile Singleton instance;  // MANDATORY

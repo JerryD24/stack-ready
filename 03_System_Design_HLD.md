@@ -57,6 +57,19 @@ D - Delivery (summarize decisions)
 - Is real-time required?
 ```
 
+**Theory.** The first 5 minutes set up the rest of the interview. Weak requirements → wrong architecture. Always clarify **functional** (what features) and **non-functional** (scale, latency, consistency) before drawing boxes.
+
+**Example (worked estimation — "Design a photo-sharing feed").**
+- Clarify: 10M DAU, each posts 0.5 photos/day, views 50 photos/day.
+- **Write QPS:** 10M × 0.5 / 86,400 ≈ **58 writes/sec** (photos).
+- **Read QPS:** 10M × 50 / 86,400 ≈ **5,800 reads/sec**.
+- **Storage/day:** 5M photos × 2 MB avg = **10 TB/day** raw — likely need compression + CDN, not DB blob storage.
+- **Bandwidth:** 5,800 reads/sec × 200 KB (thumbnail) ≈ **1.1 GB/sec** peak — CDN mandatory.
+
+This math tells you: read-heavy, CDN + object storage + cache, not a monolithic DB holding images.
+
+**Interview angle.** State assumptions out loud: "I'll assume 10M DAU unless you say otherwise." Interviewers often correct you — that dialogue is part of the test.
+
 ---
 
 ## 2. Core Concepts — Scalability
@@ -76,6 +89,12 @@ Horizontal (Scale Out):
   - Used by all large-scale systems
 ```
 
+**Theory.** Vertical scaling hits a **hardware ceiling** (largest instance has finite CPU/RAM) and creates a **single point of failure**. Horizontal scaling trades simplicity for unlimited theoretical capacity — but requires stateless app design, load balancing, and distributed data stores.
+
+**Example.** API needs 8K RPS. One 4-core server handles ~2K RPS → need 4 servers behind a load balancer (horizontal). Alternative: one 16-core machine (vertical) — simpler but one failure takes down everything; 16-core machine may cost more than 4× 4-core due to exponential pricing.
+
+**Interview angle.** Start vertical for MVP; go horizontal when single-node limits or HA requirements demand it.
+
 ### Load Balancing
 ```
 Algorithms:
@@ -93,6 +112,16 @@ Types:
 
 Tools: Nginx, HAProxy, AWS ALB, Cloudflare Load Balancer
 ```
+
+**Theory.** A load balancer is the **traffic cop** in front of stateless app servers. It terminates connections (optional SSL), picks a backend, and health-checks instances. Without it, one server gets all traffic and others sit idle — or a dead server still receives requests.
+
+**How it works (L4 vs L7).** L4 sees IP + port only — fast, protocol-agnostic. L7 parses HTTP — can route `/api/orders` to order service and `/api/users` to user service on the same port. L7 enables sticky sessions via cookies.
+
+**Example.** 3 app servers, each handles ~2K RPS max. Total need: 5K RPS. LB with round-robin spreads ~1,667 RPS each — within capacity. One server dies → LB stops routing to it after failed health checks (~5–30s detection interval).
+
+**Pitfall.** Round-robin with unequal request cost (one endpoint is 10× heavier) → one server overloaded while others idle. Use **least connections** or **weighted** routing instead.
+
+**Interview angle.** "Where does the load balancer sit?" → Between clients and app tier. Not between app and DB (that's connection pooling / read replicas / sharding).
 
 ### CDN (Content Delivery Network)
 ```
@@ -114,6 +143,14 @@ Cache Invalidation:
   - Purge: manually invalidate specific URLs
   - Versioned URLs: /static/app.v2.js (no invalidation needed)
 ```
+
+**Theory.** A CDN puts copies of content **geographically close to users**. Without it, a user in Asia hitting a US origin adds **~150 ms RTT** per request. With CDN edge in Asia: **~20–50 ms**.
+
+**How it works.** DNS resolves to nearest edge (Anycast or GeoDNS). Edge checks cache; on miss, fetches from origin (one slow request), caches locally, serves subsequent users in that region from edge.
+
+**Example.** 1M users load a 500 KB JS bundle. Without CDN: 1M × 500 KB = 500 GB from origin. With CDN (90% hit rate after warm-up): 100 GB from origin + 400 GB served from edges — origin bandwidth drops 5×, user latency drops 3–10×.
+
+**Interview angle.** CDN for **static** assets always. For **API responses**, only if cacheable (short TTL, user-agnostic data like product catalog). Never CDN-cache personalized/authenticated responses without careful cache-key design.
 
 ---
 
@@ -202,6 +239,14 @@ Challenges:
   - Data hotspots (add shard key to avoid)
 ```
 
+**Theory.** Sharding is the **last resort** for write/storage scale. Before sharding, exhaust: query tuning, indexes, read replicas, caching, connection pooling, and table partitioning.
+
+**Example (capacity math).** Single PostgreSQL primary: ~5K writes/sec sustainable, ~2 TB practical limit before maintenance pain. Need 20K writes/sec and 10 TB → at least 4 write shards (rough order-of-magnitude — validate with load tests).
+
+**How replication fits.** 1 primary + 3 read replicas: writes still capped at primary rate (~5K/sec), reads scale to ~4× (each replica ~10K reads/sec with proper indexing) ≈ 40K read/sec total.
+
+**Interview angle.** Always say: "I'd start with a single DB + replicas + cache. Shard when metrics prove we can't scale vertically or replicate reads enough."
+
 ### Database Indexing
 ```
 B-Tree Index (default for most DBs):
@@ -273,6 +318,12 @@ Read-Through:
   PRO: Application code simpler
   CON: Cold start cache miss penalty
 ```
+
+**Theory.** Cache-aside (lazy loading) is the default because you only cache what's actually read — no wasted memory on write-through for cold data. The app owns invalidation logic: **write DB → delete cache key**.
+
+**Example (read ratio math).** Product page: 50K reads/sec, 100 writes/sec. Cache hit rate 95% → DB sees 2,500 reads/sec + 100 writes/sec instead of 50,100 reads/sec. Redis handles 47,500 reads/sec at ~1 ms each.
+
+**Pitfall.** Cache-aside without TTL jitter on hot keys → stampede when key expires (see Cache Problems below). Always pair with mutex or logical expiry for viral content.
 
 ### Cache Invalidation Strategies
 ```
@@ -395,6 +446,14 @@ Retention:
   Consumers can replay from any offset → event sourcing, reprocessing
 ```
 
+**Theory.** Kafka is a **distributed commit log**, not a traditional message queue. Messages are **retained** after consumption — consumers track their own offset (position). This enables replay, multiple consumer groups reading the same data independently, and decoupling producers from consumer speed.
+
+**How it works (throughput).** One broker with 3 partitions can handle ~100K–1M msgs/sec depending on message size and replication. Partition count = max parallelism per consumer group (one consumer per partition). Need 12 parallel consumers → at least 12 partitions.
+
+**Example (ordering).** Order events for `order_id=42` must be processed in sequence → publish all events with **key=42** → same partition → strict order. Events for different orders can parallelize across partitions.
+
+**Interview angle.** "Kafka vs RabbitMQ?" → Kafka: high throughput, replay, log retention, stream processing. RabbitMQ: task queues, complex routing, message deleted after ack — better for RPC-style job dispatch.
+
 ### Kafka vs RabbitMQ
 | Feature | Kafka | RabbitMQ |
 |---------|-------|----------|
@@ -425,6 +484,14 @@ In practice: Network partitions are inevitable → must choose between C and A
   CA systems: Single-node databases (not distributed)
               MySQL (single node), PostgreSQL (single node)
 ```
+
+**Theory (common misconception).** CAP is not "pick 2 and drop 1 forever." It's: **during a network partition**, you must choose between consistency and availability. During normal operation, many systems provide both. **P is non-optional** in distributed systems — networks fail.
+
+**How it works (partition scenario).** Primary and replica lose connectivity. CP system: reject writes until quorum confirms (unavailable to some clients). AP system: accept writes on both sides → conflict when partition heals (availability over consistency).
+
+**Example.** Payment ledger during partition: CP — block writes until primary reachable (prefer downtime over double-spend). Social media "like count": AP — show approximate count, reconcile later.
+
+**Interview angle.** "Is PostgreSQL CA or CP?" → Single node: CA (no partition). With synchronous replication quorum: CP during partition (writes blocked if can't reach quorum).
 
 ### ACID vs BASE
 ```
@@ -465,6 +532,14 @@ Causal Consistency:
   Causally related operations seen in order
   "Reply appears after the post it replies to"
 ```
+
+**Theory.** Most production systems pick a **pragmatic middle ground** — not full strong consistency everywhere (too slow), not pure eventual everywhere (bad UX for own writes).
+
+**Example (read-your-writes).** User posts a comment, immediately refreshes feed. Route that user's reads to primary (or session-sticky replica) for 30s after write — they see their comment. Other users on replicas see it after replication lag (~100 ms–2 s).
+
+**Example (monotonic reads).** User on replica A reads `balance=100`. Next read routed to replica B which is behind → sees `balance=50`. Violates monotonic reads. Fix: sticky routing — same user always hits same replica (or primary for financial data).
+
+**Interview angle.** Name the consistency level your design provides and **why it's enough** — "eventual for feed, read-your-writes for profile edits."
 
 ---
 
@@ -512,6 +587,14 @@ Causal Consistency:
    - Memory efficient, approximately accurate
    Formula: count = current_window_count + prev_window_count * (1 - elapsed_pct)
 ```
+
+**Theory.** Rate limiting protects **your service and downstream dependencies** from abuse and accidental retry storms. In distributed systems, the counter must live in shared storage (Redis) — per-instance counters are ineffective behind a load balancer.
+
+**Example (boundary attack on fixed window).** Limit: 100 req/min. User sends 100 requests at 00:00:59 and 100 at 00:01:00 → 200 requests in 2 seconds despite "100/minute" rule. Sliding window or token bucket closes this gap.
+
+**Example (token bucket).** Bucket size 100, refill 10/sec. User sends burst of 100 → allowed. Then sustained 10/sec → allowed. Sustained 50/sec → bucket drains in ~2s, then 429 until tokens refill. Good for APIs that tolerate short bursts.
+
+**Interview angle.** Always mention **429 Too Many Requests** + `Retry-After` header + idempotency for retried writes.
 
 ### Distributed Rate Limiting
 ```
@@ -574,6 +657,19 @@ Virtual Nodes:
 Used in: Amazon DynamoDB, Apache Cassandra, Memcached (ketama), Redis Cluster
 ```
 
+**Theory.** Regular hashing `hash(key) % N` remaps **almost all keys** when N changes (add/remove server). Consistent hashing limits remapping to **~K/N keys** (K = total keys) — critical for caches and distributed stores where moving data is expensive.
+
+**How it works (numeric example).** Ring from 0 to 2³²−1. Three servers at positions 0, 1.4B, 2.8B (hashed from their IDs).
+- Key "user:42" hashes to 500M → clockwise → lands on server at 1.4B.
+- Add server D at 2B → only keys between 1.4B and 2B move from old server to D (~25% of keys with 4 servers, not 100%).
+- Remove server → its keys move to next clockwise neighbor only.
+
+**Example (virtual nodes).** 3 physical servers with 1 vnode each → uneven load (one server might get 50% of keys by unlucky hash clustering). Each physical server gets **150 vnodes** on the ring → load within ~10% of perfect balance.
+
+**Pitfall.** Consistent hashing doesn't solve **hot keys** — a popular key still lands on one node. Combine with key replication or local caching for hot spots.
+
+**Interview angle.** Draw the ring. Show that adding a 4th node moves ~1/4 of keys, not all of them. Mention vnodes for even distribution.
+
 ---
 
 ## 9. Distributed Systems Concepts
@@ -604,6 +700,12 @@ Options:
    CON: SPOF (can run two for high availability)
 ```
 
+**How it works (Snowflake).** 64-bit ID: 41-bit timestamp (ms since epoch) + 10-bit machine ID + 12-bit sequence. IDs sort chronologically — great for B-tree inserts (no random UUID fragmentation). At 4096 IDs/ms per machine, one machine generates ~4M IDs/sec — far more than most services need.
+
+**Example.** Order IDs: `1740000000000000001`, `1740000000000000002` — time-sortable, URL-safe as decimal string, fits in `BIGINT`. Compare to UUIDv4: random, 36 chars, bad for clustered index insert order.
+
+**Pitfall (clock skew).** Machine clock goes backward → duplicate ID risk. NTP sync + refuse to generate until clock catches up. Interview mention shows depth.
+
 ### Bloom Filter
 ```
 Probabilistic data structure: check if element MAY be in a set
@@ -622,6 +724,14 @@ Implementation:
   - Add: hash with k functions → set those k bits to 1
   - Check: hash with k functions → if all bits are 1 → "probably present"
 ```
+
+**Theory.** A Bloom filter answers set membership with **no false negatives** but **possible false positives**. You never wrongly reject a valid key, but you might think a key exists when it doesn't (~1% with proper sizing).
+
+**How it works.** Bit array of size m, k hash functions. Insert "user:42": hash to positions 3, 17, 99 → set those bits to 1. Check "user:99": hash to 3, 44, 91 → bit 44 is 0 → **definitely not in set** (skip DB). Check "user:42": all bits 1 → **probably in set** (query DB to confirm).
+
+**Example.** 10M registered usernames, Bloom filter ~12 MB (vs 10M × 50 bytes = 500 MB for a hash set). Signup flow: check Bloom first → if "no", skip DB uniqueness check. False positive 1% → one extra DB lookup occasionally.
+
+**Interview angle.** "Why not just use Redis SET?" → Memory. Bloom filter is 10–50× smaller for large sets where false positives are acceptable.
 
 ### Distributed Locks
 ```
@@ -1235,6 +1345,14 @@ Compensating transactions:
 - **Exception** (application-level): invalid input, not found — return 4xx; business rule violation — return 422
 - **Checked vs unchecked** matters in Java code; in HLD discuss HTTP status codes and idempotency instead
 
+**Theory.** In distributed HLD, classify failures as **transient** (retry) vs **permanent** (don't retry). Transient: 503, timeout, connection reset. Permanent: 400 bad input, 404 not found, 409 conflict.
+
+**Example.** Payment service returns 503 → order service retries 3× with exponential backoff (1s, 2s, 4s), then publishes `PaymentFailed` for manual review. Payment returns 400 invalid card → no retry, return error to user immediately.
+
+**How it works (idempotency).** Retries cause duplicate requests. `POST /payments` with `Idempotency-Key: uuid` → server stores result keyed by UUID; duplicate POST returns same response without double-charging.
+
+**Interview angle.** "What happens if the client times out but server succeeded?" → Idempotency keys + at-least-once delivery with deduplication on server.
+
 ---
 
 ## 12. DEEP DIVE: Booking & Concurrency Systems
@@ -1279,12 +1397,42 @@ Booking flow:
 
 **Semaphore analogy (application level):** limit 100 concurrent DB transactions to protect connection pool.
 
+**Theory.** Seat booking is a classic **compare-and-swap at scale** problem: many users compete for finite resources. No single trick is enough — you layer defenses from edge to DB.
+
+**How it works (why layered locks).**
+1. **Rate limit at gateway** — stops 100K bots from reaching booking service; humans only (~10K).
+2. **Redis lock** — fast in-memory check; fails in <1 ms if seat taken (no DB hit for obvious conflicts).
+3. **DB pessimistic lock** — authoritative; prevents double-book even if two Redis locks race (TTL expiry edge case).
+4. **Queue (optional)** — for flash sales, serialize access so DB sees orderly 100 concurrent bookings, not 10K simultaneous.
+
+**Example (timeline).** 10K users grab seat A1 at sale open. Gateway rate limit → 2K reach service/sec. Redis: first `SET seat:A1:lock NX` wins; 9,999 get instant "seat taken." Winner gets 10 min to pay. Payment timeout → lock expires → seat released.
+
+**Pitfall.** Redis lock without DB validation → two users both think they hold the seat if lock expires during slow payment. Always confirm with DB transaction before marking CONFIRMED.
+
+**Interview angle.** "Why not only DB lock?" → DB lock per seat selection under 10K concurrent users exhausts connection pool and creates lock wait chains. Redis filters 99% of conflicts before DB.
+
 ### 12.2 Stock Price Tracker — Multiple Events (Priority Queue)
+
+**Theory.** When events arrive out of order or from multiple sources, you need a structure that always gives you the **next event to process** by timestamp or price priority.
 
 For processing multiple buy/sell events in time order:
 - **Min-heap** for buy prices (want lowest buy)
 - **Max-heap** for sell prices (want highest sell)
 - Or single **PriorityQueue** ordered by timestamp for event replay
+
+**Note on order books.** In a real matching engine, **bids** (buy side) typically use a **max-heap** (highest buyer first) and **asks** (sell side) use a **min-heap** (lowest seller first). The bullets above describe generic price-sorted processing; adapt heap direction to whether you want min or max at the top for your use case.
+
+**How it works (matching engine sketch).**
+- Buy order at $100 → push to max-heap of bids (highest bid wins).
+- Sell order at $99 → if best bid ≥ $99, **match** (trade executes); else push sell to min-heap of asks.
+- Events with timestamps: PriorityQueue ordered by `(timestamp, sequence)` ensures deterministic replay even when two events share a timestamp.
+
+**Example.** Events arrive: `[Buy $100, t=1], [Sell $99, t=2], [Buy $98, t=3]`.
+- t=1: bid heap = {$100}.
+- t=2: sell $99 ≤ best bid $100 → match at $99.5 or $100 (price-time priority rules vary).
+- t=3: bid $98 — no match if lowest ask > $98.
+
+**Interview angle.** "How do you handle events arriving out of order?" → Buffer in a priority queue keyed by event timestamp; process when watermark passes (allow small delay window) or use sequence numbers per instrument.
 
 ---
 
@@ -1327,6 +1475,11 @@ A: Adding/removing servers only remaps K/n keys (not all keys). Used in distribu
 ### 14.1 Design an E-Commerce Order Tracking System
 
 **Requirements:** Track order from placement → payment → shipped → delivered. Real-time status for users. 10M orders/day. Read-heavy.
+
+**Estimation.**
+- **Write QPS:** 10M / 86,400 ≈ **116 orders/sec** (creates + status updates maybe 3× → ~350 writes/sec peak).
+- **Read QPS:** Assume each order checked 5× during lifecycle, 10M active orders/day viewed → ~**580 reads/sec** average; peak 3× ≈ **1,750 reads/sec**.
+- **Storage:** 10M orders/day × 365 × 500 bytes/order row ≈ **1.8 TB/year** for orders table; event log similar — partition/archive after 1 year.
 
 **High-Level Design:**
 ```

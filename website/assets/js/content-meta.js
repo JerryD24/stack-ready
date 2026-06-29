@@ -8,16 +8,16 @@ window.CONTENT_META = {
     "minutes": 22
   },
   "01_Java_Core_to_Advanced.md": {
-    "words": 3876,
-    "minutes": 19
+    "words": 6130,
+    "minutes": 31
   },
   "02_SpringBoot.md": {
-    "words": 2980,
-    "minutes": 15
+    "words": 6255,
+    "minutes": 31
   },
   "03_System_Design_HLD.md": {
-    "words": 1964,
-    "minutes": 10
+    "words": 4355,
+    "minutes": 22
   },
   "04_System_Design_LLD.md": {
     "words": 1016,
@@ -60,16 +60,16 @@ window.CONTENT_META = {
     "minutes": 7
   },
   "14_AI_Agents_and_MCP_For_Developers.md": {
-    "words": 3881,
-    "minutes": 19
+    "words": 5087,
+    "minutes": 25
   },
   "15_React_JS_Complete_Guide.md": {
-    "words": 2288,
-    "minutes": 11
+    "words": 4351,
+    "minutes": 22
   },
   "16_Java_Multithreading_Deep_Dive.md": {
-    "words": 2876,
-    "minutes": 14
+    "words": 3813,
+    "minutes": 19
   },
   "17_Java_Streams_Deep_Dive.md": {
     "words": 865,
@@ -80,36 +80,36 @@ window.CONTENT_META = {
     "minutes": 9
   },
   "19_Node_JS_Complete_Guide.md": {
-    "words": 1393,
-    "minutes": 7
+    "words": 2422,
+    "minutes": 12
   },
   "20_Kafka_Deep_Dive.md": {
-    "words": 1542,
-    "minutes": 8
+    "words": 3171,
+    "minutes": 16
   },
   "21_Kubernetes_Docker_CloudNative.md": {
-    "words": 1187,
-    "minutes": 6
+    "words": 3625,
+    "minutes": 18
   },
   "22_Resilience_Distributed_Patterns.md": {
-    "words": 1246,
-    "minutes": 6
+    "words": 3441,
+    "minutes": 17
   },
   "23_Observability_Production_Debugging.md": {
-    "words": 1399,
-    "minutes": 7
+    "words": 3304,
+    "minutes": 17
   },
   "24_JVM_Performance_Advanced_Concurrency.md": {
-    "words": 1346,
-    "minutes": 7
+    "words": 2786,
+    "minutes": 14
   },
   "25_Redis_Caching_Strategy.md": {
-    "words": 1343,
-    "minutes": 7
+    "words": 4272,
+    "minutes": 21
   },
   "26_SQL_at_Scale.md": {
-    "words": 1477,
-    "minutes": 7
+    "words": 3616,
+    "minutes": 18
   },
   "27_Design_Patterns_Java.md": {
     "words": 3054,

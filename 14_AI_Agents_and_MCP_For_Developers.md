@@ -47,6 +47,8 @@
 
 ## 1. What Is an AI Agent?
 
+**Theory.** An AI agent is software that uses a Large Language Model (LLM) as a **reasoning engine** but does not stop at generating text. It can **take actions** in the real world (API calls, database queries, file operations) through a loop: plan → act → observe results → repeat until the user's goal is met. As a backend developer, you already build APIs and services — agents are clients that call those services intelligently based on natural language goals.
+
 ### Chatbot vs Agent
 
 | | Chatbot | AI Agent |
@@ -69,6 +71,8 @@ Agent:    1. Calls flight search API (tool)
 
 ### The Agent Loop (ReAct Pattern)
 
+**How it works.** ReAct = **Re**asoning + **Act**ing. Each iteration, the LLM receives the conversation so far (including prior tool results) and decides either: (a) call a tool with specific arguments, or (b) respond to the user with a final answer. Your orchestrator code executes the tool, appends the result to the message history, and sends everything back to the LLM. This continues until the model stops requesting tools or you hit a max-iteration guard.
+
 ```
 ┌─────────────────────────────────────────────┐
 │  1. REASON  — What should I do next?        │
@@ -84,6 +88,10 @@ Agent:    1. Calls flight search API (tool)
 - The **orchestrator** (loop that connects LLM + tools)
 - The **backend APIs** (REST services your tools call)
 
+**Example — manual trace.** User asks "Cancel order ORD-99 and refund." Iteration 1: LLM calls `get_order("ORD-99")` → returns `{status: "CANCELLED", amount: 49.99}`. Iteration 2: LLM calls `create_refund("ORD-99")` → returns `{refund_id: "RF-1"}`. Iteration 3: LLM responds in natural language — no more tools. Three LLM round-trips for one user request.
+
+**Pitfall.** Without a max-iteration limit, a confused model can loop forever calling tools. Always cap at e.g. 10 iterations and escalate to human on timeout.
+
 ---
 
 ## 2. Core Concepts Before You Code
@@ -93,6 +101,10 @@ Agent:    1. Calls flight search API (tool)
 - A model trained on text that predicts the next token
 - Examples: GPT-4, Claude, Gemini, Cursor's Composer
 - **You don't train models** as an agent developer — you **use** them via API
+
+**How it works.** An LLM receives a list of messages (system, user, assistant, tool) and generates the next tokens probabilistically. It has no built-in memory between API calls — **you** resend history each time. It also has no direct access to your database or filesystem unless you expose that through tools.
+
+**Interview angle.** "Do agents think?" → No consciousness; they pattern-match from training data and your prompt context. Reliability comes from good prompts, tools, and guardrails — not from the model "understanding" your business.
 
 ### 2.2 Prompt
 
@@ -118,6 +130,10 @@ You are a billing support agent.
 
 Functions the LLM can request to run. You define the schema; the LLM decides when to call them.
 
+**How it works.** You send the LLM a JSON schema describing each tool (name, description, parameters). The model does not execute code itself — it returns a structured **tool_call** request: `{name: "get_order_status", arguments: {"order_id": "ORD-123"}}`. Your backend validates arguments, runs the real function, and sends the result back as a `tool` message. The model then uses that result in its next reasoning step.
+
+**Pitfall.** Vague tool descriptions cause wrong tool selection. "Gets data" is useless; "Fetch order by ID when user asks about a specific order; requires ORD-XXXXX format" is actionable (see Section 16.5).
+
 ```json
 {
   "name": "get_order_status",
@@ -136,11 +152,15 @@ Your backend code executes the function and returns the result to the LLM.
 
 ### 2.5 RAG (Retrieval-Augmented Generation)
 
+**Theory.** LLMs know general knowledge from training but not your internal docs, policies, or live data. RAG **retrieves** relevant document chunks at query time and **injects** them into the prompt so answers are grounded in your data — without retraining the model.
+
 ```
 User question → Search your docs (vector DB) → Inject relevant chunks into prompt → LLM answers
 ```
 
-Use when the agent needs **your company's knowledge**, not just general training data.
+**Example.** User asks "What is our refund policy for cancelled orders?" Without RAG, the model guesses. With RAG: embed the question → search vector DB → top 3 chunks from `refund_policy.pdf` inserted into prompt → model cites actual policy text.
+
+**Interview angle.** RAG vs fine-tuning: RAG when data changes frequently or you need citations; fine-tuning when you need a specific output style at scale and have hundreds of labeled examples.
 
 ### 2.6 Memory
 
@@ -161,6 +181,8 @@ Code that manages the agent loop, tool routing, retries, and error handling. Fra
 ### One-Sentence Definition
 
 **MCP is an open standard (by Anthropic) that lets AI applications connect to external data and tools in a uniform way** — like USB for AI integrations.
+
+**Theory.** Before MCP, every IDE or agent framework built custom integrations for Slack, Postgres, GitHub, etc. MCP defines one **protocol** (JSON-RPC messages over stdio or HTTP) so any MCP-compatible client can talk to any MCP server. You write the server once; Cursor, Claude Desktop, or your own agent can all use it.
 
 ### The Problem MCP Solves
 
@@ -219,6 +241,10 @@ Cursor / Claude / Your Agent
 |-----------|----------|
 | **stdio** | Local — Cursor spawns your server as subprocess |
 | **HTTP/SSE** | Remote — server runs on a URL |
+
+**How it works — stdio transport.** Cursor runs `python server.py` as a child process. Client and server communicate via stdin/stdout using JSON-RPC messages. No network port needed — simple for local dev. HTTP/SSE is for remote/shared servers where multiple clients connect over the network (requires auth in production).
+
+**Interview angle.** MCP is not a replacement for REST — it's a **wrapper layer** optimized for LLM tool discovery and invocation. Your MCP server typically calls your existing REST APIs internally.
 
 ---
 
@@ -357,6 +383,8 @@ print(response.choices[0].message.content)
 
 ### Week 2 — Tool Calling (No Framework)
 
+**Goal.** Understand the agent loop manually before using frameworks — if you can't build this without LangChain, you won't debug production failures.
+
 ```python
 import json
 
@@ -382,7 +410,13 @@ def get_weather(city: str) -> str:
 # 4. Get final answer
 ```
 
-**Goal:** Understand the agent loop manually before using frameworks.
+**How it works — the four steps:**
+1. Send user message + tool definitions to LLM API.
+2. Parse response: if `tool_calls` present, extract function name and JSON arguments.
+3. Execute your Python function locally; capture return value as string/JSON.
+4. Append assistant message + tool result messages; call LLM again for final answer.
+
+**Interview angle.** "What's the difference between RAG and tool calling?" → RAG injects static retrieved text into context; tools execute **live** code/API calls and return dynamic results.
 
 ### Week 3 — LangChain Agent
 
@@ -419,6 +453,8 @@ Pick one from [Section 12](#12-project-ideas-beginner--advanced).
 
 ## 8. Build Your First MCP Server
 
+**Theory.** An MCP server is a small program you write and run locally (or deploy remotely). It advertises tools the LLM can call. Cursor acts as the **MCP client** — it discovers your tools, passes them to the LLM, and when the LLM requests a tool call, Cursor invokes your server and returns the result.
+
 ### Prerequisites
 
 ```bash
@@ -431,11 +467,11 @@ pip install mcp
 # server.py
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("demo-server")
+mcp = FastMCP("demo-server")  # server name shown in MCP settings
 
 @mcp.tool()
 def add(a: int, b: int) -> int:
-    """Add two numbers together."""
+    """Add two numbers together."""  # docstring becomes LLM tool description
     return a + b
 
 @mcp.tool()
@@ -445,8 +481,10 @@ def get_order_status(order_id: str) -> str:
     return f"Order {order_id}: SHIPPED"
 
 if __name__ == "__main__":
-    mcp.run()
+    mcp.run()  # starts stdio transport — blocks, listens on stdin
 ```
+
+**How it works.** `@mcp.tool()` registers a function. FastMCP generates the JSON schema from the function signature and docstring. When the LLM chooses `add`, Cursor sends a JSON-RPC call to your server; your function runs and returns the result.
 
 ### Connect to Cursor
 
@@ -500,6 +538,8 @@ def list_orders_by_status(status: str) -> list:
 
 ## 9. Build Your First Agent (Concept + Code)
 
+**Theory.** This section strips away frameworks to show the **minimum viable agent**: a `while` loop, an LLM API call, tool schemas, and message history. Every framework (LangChain, LangGraph) is structured sugar on top of this pattern.
+
 ### Minimal Agent Loop (Python)
 
 ```python
@@ -519,7 +559,7 @@ def run_agent(user_goal: str):
         "parameters": {"type": "object", "properties": {"order_id": {"type": "string"}}, "required": ["order_id"]}
     }}]
 
-    while True:
+    while True:  # agent loop — exits when LLM returns text instead of tool_calls
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages,
@@ -528,23 +568,34 @@ def run_agent(user_goal: str):
         msg = response.choices[0].message
 
         if not msg.tool_calls:
-            return msg.content  # Done — final answer
+            return msg.content  # Done — final answer to user
 
-        messages.append(msg)
+        messages.append(msg)  # include assistant's tool_call message in history
         for call in msg.tool_calls:
             args = json.loads(call.function.arguments)
             if call.function.name == "get_order_status":
-                result = f"Order {args['order_id']} is SHIPPED"
+                result = f"Order {args['order_id']} is SHIPPED"  # your real API call here
             else:
                 result = "Unknown tool"
             messages.append({
                 "role": "tool",
-                "tool_call_id": call.id,
+                "tool_call_id": call.id,  # links result to the specific tool request
                 "content": result
             })
+        # loop continues — LLM sees tool result and decides next step
 
 print(run_agent("What is the status of order 12345?"))
 ```
+
+**How it works step-by-step for "What is the status of order 12345?":**
+1. LLM receives user message + tool schemas.
+2. LLM returns `tool_calls: [{name: get_order_status, arguments: {order_id: "12345"}}]`.
+3. Your code runs the tool → `"Order 12345 is SHIPPED"`.
+4. That result is appended as a `tool` message.
+5. LLM receives updated history → responds with natural language, no tool_calls.
+6. Loop returns final answer.
+
+**Pitfall.** Production agents need: max iterations, input validation on `args`, error handling when the API fails, and logging of every tool call for audit.
 
 **This IS an agent** — loop, tools, reasoning. Frameworks just add structure around this.
 
@@ -667,6 +718,8 @@ You can configure MCP servers for SDK agents so programmatic agents use the same
 
 ## 13. Common Mistakes Beginners Make
 
+**Theory.** Most agent failures are software engineering mistakes, not "AI mysteries." The table below maps symptoms to fixes — treat agents like any distributed system with an unpredictable client (the LLM).
+
 | Mistake | Fix |
 |---------|-----|
 | Trying to learn ML/training first | Agent dev = software engineering + LLM APIs |
@@ -680,6 +733,8 @@ You can configure MCP servers for SDK agents so programmatic agents use the same
 ---
 
 ## 14. Interview Q&A for Agent Developers
+
+**Theory.** Interviewers test whether you understand the **architecture** (loop, tools, context limits) and **production risks** (hallucination, partial failure, cost) — not whether you've memorized framework APIs.
 
 **Q: What is an AI agent?**
 A: A system that uses an LLM to reason, call tools, observe results, and loop until a goal is achieved — not just generate text.
@@ -726,6 +781,8 @@ A: Allowlist tools, validate inputs, human-in-the-loop for sensitive ops, rate l
 ## 16. Prompt Engineering — Write Effective Prompts
 
 Prompt engineering is **the #1 skill** for agent developers. You don't need ML training — you need to write instructions the LLM follows reliably.
+
+**Theory.** The LLM has no persistent memory of your project. Everything it "knows" during a request comes from the messages you send: system prompt, retrieved docs, tool results, and user input. Prompt engineering is the discipline of crafting those messages so the model consistently picks the right tools, follows business rules, and formats output correctly.
 
 ### 16.1 Anatomy of a Production Prompt
 
@@ -872,6 +929,8 @@ When your agent behaves badly, check:
 
 **Context engineering** = deciding **what information** the LLM sees, **in what order**, and **how much**. This is as important as prompt writing.
 
+**Theory.** Prompt engineering tells the model *how* to behave. Context engineering decides *what facts* it has to work with. A perfect system prompt fails if you inject irrelevant docs, stale API responses, or 50KB of JSON — the model gets confused, costs spike, and early instructions get "lost in the middle."
+
 ### 17.1 What Goes Into Context?
 
 | Source | What | When to Use |
@@ -990,6 +1049,8 @@ Example rule (`.cursor/rules/agent-api.md`):
 
 ## 18. How to Build AI Agents — Complete Guide
 
+**Theory.** Building an agent is backend engineering with an LLM in the loop. You define the job, expose tools (your APIs), write guardrails, and implement the orchestration loop. Frameworks help at scale; understanding the raw loop (Section 9) is what separates debuggers from copy-pasters.
+
 ### 18.1 Agent Building Blocks
 
 ```
@@ -1106,6 +1167,8 @@ Frameworks: LangGraph, CrewAI, AutoGen
 ---
 
 ## 19. How to Build MCP Servers — Complete Guide
+
+**Theory.** An MCP server is a thin adapter between an AI client and your backend. The LLM never calls your REST API directly — it calls MCP tools; your server translates those into HTTP/DB operations, validates inputs, and returns structured results. This separation lets you enforce auth, rate limits, and audit logging at the tool boundary.
 
 ### 19.1 What You Are Actually Building
 

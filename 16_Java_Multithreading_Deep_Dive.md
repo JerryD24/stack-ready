@@ -37,6 +37,12 @@
 
 **Key takeaway:** Threads share heap memory. That sharing is exactly what makes them powerful *and* dangerous — every shared mutable object is a potential race condition.
 
+**Theory.** A **process** is an isolated program with its own virtual address space — like a separate apartment with its own furniture. A **thread** is a worker inside that apartment sharing the same furniture (heap) but with its own desk (stack). Multiple threads can work on shared data simultaneously, but without coordination they step on each other's edits.
+
+**How it works — OS perspective.** The OS **scheduler** time-slices CPU cores among runnable threads. On a 4-core machine, hundreds of RUNNABLE threads take turns — each gets a few milliseconds, then context-switches (save registers, load another thread's state). Context switches cost microseconds; too many threads → thrashing, little useful work.
+
+**Example.** An order service with one thread handles 100 req/s. With 4 threads on 4 cores doing CPU work, you might approach ~400 req/s (minus overhead). With I/O-bound work, you can run far more threads because most are blocked waiting on DB/network, not using CPU.
+
 What each thread owns vs shares:
 ```
 Shared across threads:   Heap (objects), Method Area (class metadata, static vars)
@@ -46,6 +52,8 @@ Private per thread:      Stack (local vars, method frames), Program Counter, nat
 ---
 
 ## 2. Why Multithreading
+
+**Theory.** Concurrency solves two different problems: **throughput** (more work per second) and **responsiveness** (don't block the user while work happens). The right tool depends on whether threads spend time on CPU or waiting on I/O.
 
 **Use it for:**
 - **CPU-bound parallelism** — split heavy computation across cores (image processing, batch math, aggregations).
@@ -92,6 +100,8 @@ NEW  ──start()──►  RUNNABLE  ──scheduler──►  (Running)
 | `TERMINATED` | Completed or threw |
 
 **Gotcha:** `Thread.sleep()` is `TIMED_WAITING` and **does not release** held monitor locks. `wait()` is `WAITING`/`TIMED_WAITING` and **does release** the monitor. This distinction is asked constantly.
+
+**Example.** Thread holds lock on `account`, calls `Thread.sleep(5000)` — no other thread can access `account` for 5 seconds. If it called `wait()` instead (inside synchronized), the lock would be released and others could proceed.
 
 ---
 
@@ -154,6 +164,22 @@ A senior engineer picks the model based on: workload type (CPU vs I/O), latency 
 ## 6. Synchronization
 
 ### 6.1 `synchronized`
+
+**Theory.** `synchronized` provides **mutual exclusion** (one thread at a time) and **happens-before visibility** (writes before unlock are seen after the next lock). Every object is a potential lock (monitor).
+
+**How it works — why `count++` races.** At bytecode level, `count++` is three steps: (1) read `count` from memory, (2) add 1, (3) write back. Two threads can interleave:
+
+```
+Thread A: READ count=0
+Thread B: READ count=0
+Thread A: WRITE count=1
+Thread B: WRITE count=1   → final count=1, not 2 (lost update)
+```
+
+`synchronized` makes the entire read-modify-write atomic relative to other threads holding the same lock.
+
+**Pitfall.** Locking the wrong object (e.g., `synchronized(new Object())` in each call — different locks!) or holding locks during I/O (blocks all other threads and pins virtual thread carriers).
+
 Mutual exclusion via an object's intrinsic monitor lock.
 ```java
 // Method-level: locks 'this' (or the Class object for static methods)
@@ -169,11 +195,19 @@ public void increment() {
 - `count++` is **not atomic** (read-modify-write) — without synchronization, two threads can lose updates.
 
 ### 6.2 `volatile`
-Guarantees **visibility** and ordering, but **not atomicity**.
+
+**Theory.** `volatile` is a **visibility contract**, not a lock. It tells the JVM: reads and writes of this field go directly to main memory (with appropriate barriers), so no thread sees a stale cached copy.
+
+**How it works.** Without volatile, Thread A may write `flag=true` to its CPU cache; Thread B reads `flag` from its cache (still false) and loops forever. `volatile` inserts a happens-before edge: write → subsequent read on any thread.
+
+**Example — safe shutdown flag:**
 ```java
 private volatile boolean running = true;   // good: simple flag, one thread writes
-public void stop() { running = false; }    // change visible to all threads immediately
+public void stop() { running = false; }    // visible to all worker threads immediately
+// workers: while (running) { ... }         // will eventually see false
 ```
+
+Guarantees **visibility** and ordering, but **not atomicity**.
 - Use for flags / publish-once references.
 - Do **NOT** use for `count++` — that's still a race (no atomicity).
 
@@ -213,7 +247,19 @@ Backed by **CAS (Compare-And-Swap)** CPU instructions — no locking, no blockin
 
 ## 7. Java Memory Model
 
+**Theory.** Without the JMM, you cannot reason about what one thread sees when another writes a variable. CPUs cache values in L1/L2 cache; compilers reorder instructions if they think it's safe within a single thread. The JMM defines **when** writes become visible across threads via **happens-before** relationships.
+
 The JMM defines **when** a write by one thread becomes **visible** to another. Without it, the compiler/CPU may reorder or cache values in registers.
+
+**How it works — a concrete visibility failure:**
+```java
+class StopFlag {
+    boolean running = true;  // NOT volatile
+    void worker() { while (running) { work(); } }  // may loop forever
+    void stop()   { running = false; }             // worker may never see this
+}
+```
+Thread 2's CPU may cache `running=true` in a register. `volatile running` or `AtomicBoolean` inserts a happens-before edge so the write is flushed and the read invalidated.
 
 **happens-before relationships** (if A happens-before B, A's effects are visible to B):
 - Program order within a single thread.
@@ -242,6 +288,10 @@ class Singleton {
 ---
 
 ## 8. wait / notify & Producer–Consumer
+
+**Theory.** `wait()`/`notify()` are the low-level **condition variable** API built into every Java object. They let a thread wait for a condition while **releasing the lock** so another thread can make the condition true. Used for hand-rolled producer-consumer before `java.util.concurrent`.
+
+**How it works.** `wait()` must be called inside `synchronized` — it atomically releases the monitor and adds the thread to the object's wait set. `notifyAll()` wakes all waiters, who must **re-acquire the lock** before proceeding. Always wait in a **while loop** — spurious wakeups and multiple waiters mean the condition may still be false when you wake.
 
 Low-level coordination on an object's monitor. **Always** call inside `synchronized` and **always** wait in a loop (guard against spurious wakeups).
 ```java
@@ -316,6 +366,21 @@ ThreadPoolExecutor executor = new ThreadPoolExecutor(
 ```
 
 ### How a task flows in (the algorithm — asked in interviews)
+
+**Theory.** `ThreadPoolExecutor` is a **producer-consumer** system: callers submit tasks (producer), worker threads pull tasks from a queue (consumer). The algorithm decides whether to spawn a new thread or buffer in the queue — getting this wrong means either wasted threads or unbounded memory growth.
+
+**Worked example** — `core=2, max=4, queue=ArrayBlockingQueue(2)`:
+
+| Submit # | Action | Active threads | Queue |
+|----------|--------|----------------|-------|
+| 1 | New core thread T1 | 1 | [] |
+| 2 | New core thread T2 | 2 | [] |
+| 3 | Enqueue (cores busy) | 2 | [task3] |
+| 4 | Enqueue | 2 | [task3, task4] |
+| 5 | Queue full → new thread T3 | 3 | [task3, task4] |
+| 6 | Queue full → new thread T4 | 4 | [task3, task4] |
+| 7 | Queue full, at max → **RejectedExecutionException** (AbortPolicy) |
+
 1. If running threads `< corePoolSize` → **create a new core thread** for the task.
 2. Else → **try to enqueue** the task in `workQueue`.
 3. If the queue is **full** and threads `< maximumPoolSize` → **create a non-core thread**.
@@ -422,6 +487,12 @@ Never do `if (!map.containsKey(k)) map.put(k, v);` — that's a race. Use `putIf
 
 ## 13. ForkJoinPool & Parallel Streams
 
+**Theory.** Fork/Join is **divide-and-conquer parallelism**: split a big task into halves until pieces are small enough to compute directly, then combine results. **Work-stealing** lets idle threads steal tasks from busy threads' deques — better CPU utilization when subtasks finish unevenly.
+
+**How it works.** Each worker thread has a **deque** (double-ended queue). It pushes/pops tasks from one end; idle threads steal from the other end. `parallelStream()` uses the shared `ForkJoinPool.commonPool()` — size ≈ `Runtime.getRuntime().availableProcessors() - 1`.
+
+**Pitfall.** Blocking I/O inside `parallelStream()` or `commonPool()` tasks starves **all** parallel streams and CompletableFutures using the default pool across the entire JVM.
+
 **Fork/Join** = divide-and-conquer with **work-stealing** (idle threads steal tasks from busy threads' deques).
 ```java
 class SumTask extends RecursiveTask<Long> {
@@ -456,7 +527,27 @@ new ForkJoinPool(8).submit(() -> list.parallelStream().forEach(this::process)).g
 
 ## 14. Virtual Threads
 
+**Theory.** Platform threads are expensive OS resources. For I/O-heavy services (REST APIs waiting on DB), you want **one thread per request** for simple code, but can't afford 50,000 OS threads. Virtual threads give you millions of lightweight threads with blocking-style code.
+
 Java 21 (Project Loom) — JEP 444. Lightweight threads scheduled by the JVM onto a small pool of **carrier** (platform) threads.
+
+**How it works.** When `socket.read()` blocks, the JVM **parks** the virtual thread: saves its stack frame state, unmounts it from the carrier platform thread, and runs another virtual thread on that carrier. When I/O completes, the virtual thread is **unparked** and rescheduled. Carrier pool size ≈ number of CPU cores (default).
+
+**Example — pinning scenario:**
+```java
+// BAD with virtual threads: synchronized block around blocking I/O pins the carrier
+synchronized (lock) {
+    socket.getInputStream().read(buffer);  // carrier blocked, can't run other virtual threads
+}
+
+// GOOD: ReentrantLock allows unmounting
+lock.lock();
+try { socket.getInputStream().read(buffer); }
+finally { lock.unlock(); }
+```
+
+**Interview angle.** Virtual threads don't make CPU-bound work faster — you still have N cores. They make **I/O-bound concurrency** cheap. Don't pool virtual threads; don't use thread-local caches assuming few threads.
+
 ```java
 // One virtual thread per task — cheap to create millions
 try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
@@ -478,10 +569,22 @@ try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 
 ## 15. Deadlock, Livelock, Starvation
 
+**Theory.** These are **progress failures** — threads are alive but the system doesn't advance. Deadlock = frozen; livelock = busy but frozen; starvation = one thread never gets a turn.
+
 **Deadlock** — two+ threads each hold a lock the other needs, forever.
 ```java
 // Thread 1: lock A then B ;  Thread 2: lock B then A  -> deadlock
 ```
+
+**Worked example:**
+```java
+// Thread 1                          Thread 2
+synchronized(accountA) {             synchronized(accountB) {
+    synchronized(accountB) { /* wait */    synchronized(accountA) { /* wait */
+}}                                   }}
+// Fix: always lock by account ID order (lower ID first)
+```
+
 The four **Coffman conditions** (all must hold): mutual exclusion, hold-and-wait, no preemption, circular wait. Break any one to prevent deadlock.
 
 **Prevention strategies:**

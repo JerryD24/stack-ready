@@ -30,6 +30,10 @@
 
 Node.js is a **runtime** that runs JavaScript outside the browser, built on Chrome's **V8** engine. It's **single-threaded** (for your JS code), **event-driven**, and uses **non-blocking I/O** — making it excellent for I/O-bound, high-concurrency workloads (APIs, real-time apps, proxies).
 
+**Theory.** If you're a Java developer, Node is closer to **Servlet + thread pool for I/O** than to "one thread per request." Your JavaScript runs on one thread, but while waiting for disk/network/DB, Node registers a callback and serves other requests. That model excels when work is mostly waiting (HTTP, DB queries), not computing.
+
+**Analogy.** A restaurant with one waiter (JS thread) who takes orders, passes cooking to the kitchen (libuv/OS), and serves other tables while food cooks — instead of one waiter standing at the stove until each dish is done (`readFileSync`).
+
 ```
 Your JS  ──►  V8 (compiles JS)  ──►  libuv (event loop + thread pool for I/O)  ──►  OS
 ```
@@ -42,11 +46,24 @@ Your JS  ──►  V8 (compiles JS)  ──►  libuv (event loop + thread pool
 **Great for:** REST/GraphQL APIs, real-time (WebSocket/chat), streaming, microservices, BFF layers.
 **Poor for:** CPU-heavy work (video encoding, ML) — it blocks the single thread (use worker threads or another runtime).
 
+**Interview angle.** "Is Node multi-threaded?" → Your JS runs on one thread; libuv uses a thread pool (default 4) for some blocking OS calls; network I/O is async via the OS. CPU-bound loops in a request handler block **all** clients on that process.
+
 ---
 
 ## 2. The Event Loop
 
 The heart of Node's concurrency. It processes callbacks in **phases**, each with its own queue:
+
+**How it works.** When you call `fs.readFile` or `http.get`, Node delegates I/O to libuv/OS and returns immediately. When data is ready, the callback is queued in the appropriate **phase**. Between phases, Node drains **microtasks** (`process.nextTick`, then Promise callbacks). Only when the call stack is empty does the loop pick the next macrotask.
+
+**Example — tracing one request:**
+1. HTTP request arrives → poll phase receives socket data.
+2. Your `async` handler runs → starts DB query (non-blocking).
+3. Handler returns; event loop serves other requests.
+4. DB responds → callback queued → runs when poll phase picks it up.
+5. `res.json(...)` sends response.
+
+If step 2 were `JSON.parse(hugeFile)` synchronously for 2 seconds, steps 3–5 wait for **everyone** — that's event loop blocking.
 ```
    ┌───────────────────────────┐
 ┌─►│           timers          │  setTimeout, setInterval
@@ -80,11 +97,15 @@ console.log('6');
 // (sync first; then microtasks: nextTick before promise; then macrotasks)
 ```
 
+**Pitfall.** The exact order of `setTimeout(0)` vs `setImmediate` depends on context. Inside an I/O callback, `setImmediate` runs before `setTimeout(0)`. In the main script top level, order can differ. Interviewers want you to know **microtasks run before macrotasks** and `nextTick` runs before Promise `.then`.
+
 > **Blocking the loop = killing throughput.** A synchronous CPU loop or `fs.readFileSync` in a request handler freezes *every* connection. Keep handlers async and offload CPU work.
 
 ---
 
 ## 3. Modules
+
+**Theory.** Node splits code into files. Each file is a **module** with its own scope — no global pollution. You export what other files need and import dependencies explicitly.
 
 **CommonJS (default historically):**
 ```js
@@ -116,9 +137,15 @@ import Calculator, { add } from './math.mjs';
 
 `require` caches modules — the same instance is returned on subsequent calls (useful for singletons like a DB pool).
 
+**Example.** First `require('./db')` runs `db.js` and creates the pool. Second `require('./db')` in another file returns the **same** pool object — critical for connection limits.
+
+**Interview angle.** ESM enables static analysis and tree-shaking (dead code elimination at build time). Mixed CJS/ESM projects need careful `"type": "module"` or `.mjs`/`.cjs` extensions.
+
 ---
 
 ## 4. npm, package.json
+
+**Theory.** `package.json` is the manifest for your Node project — name, scripts, dependencies. npm (or yarn/pnpm) resolves the dependency tree, downloads packages to `node_modules`, and runs scripts. Lockfiles ensure CI and production install the exact same versions you tested locally.
 
 ```json
 {
@@ -143,6 +170,8 @@ import Calculator, { add } from './math.mjs';
 ---
 
 ## 5. Async JavaScript
+
+**Theory.** Node's strength is non-blocking I/O, but JavaScript is still single-threaded. Async patterns let you **express** sequential or parallel I/O without blocking the thread. `async/await` is syntactic sugar over Promises — it does not create new threads.
 
 **Callbacks → callback hell:**
 ```js
@@ -177,14 +206,31 @@ async function loadAll() {
 **Run in parallel (don't `await` serially when independent):**
 ```js
 const [a, b] = await Promise.all([readFile('a.txt','utf8'), readFile('b.txt','utf8')]);
-// Promise.allSettled -> never rejects, returns status per promise
-// Promise.race -> first to settle ; Promise.any -> first to fulfill
+// Promise.any -> first to fulfill ; Promise.all rejects if any reject
 ```
+
+**Example — serial vs parallel:**
+```js
+// Serial: ~200ms total if each read takes 100ms
+const a = await readFile('a.txt');
+const b = await readFile('b.txt');
+
+// Parallel: ~100ms total
+const [a, b] = await Promise.all([
+  readFile('a.txt'),
+  readFile('b.txt')
+]);
+```
+
+**Pitfall.** `async` functions always return a Promise. Forgetting `await` on an async call gives you a Promise object, not the resolved value — a common bug in Express handlers and tests.
+
 > Common bug: awaiting in a `for` loop serializes independent calls. Use `Promise.all` with `map`.
 
 ---
 
 ## 6. Core Modules
+
+**Theory.** Node ships built-in modules so you can build servers without npm installs. `fs` for files, `path` for cross-platform paths, `events` for pub/sub, `http` for raw HTTP — Express wraps `http`. Knowing these avoids reinventing wheels and helps in interviews when they ask "how would you build X without Express?"
 
 ```js
 import fs from 'fs/promises';
@@ -211,6 +257,8 @@ Other essentials: `http`/`https`, `url`, `crypto`, `os`, `child_process`, `clust
 
 ## 7. Streams & Buffers
 
+**Theory.** Loading a 2GB log file into a string (`readFile`) can exhaust memory. **Streams** read/write data in **chunks**, processing incrementally — like reading a Java `InputStream` line-by-line instead of loading the whole file into a `byte[]`.
+
 **Streams** process data in chunks without loading it all into memory — essential for large files / network data.
 ```js
 import { createReadStream, createWriteStream } from 'fs';
@@ -226,6 +274,10 @@ await pipeline(
 ```
 Four stream types: **Readable**, **Writable**, **Duplex**, **Transform**. `pipeline` (or `.pipe`) handles **backpressure** — pausing the source when the destination is slow.
 
+**How backpressure works.** A fast readable produces chunks faster than a slow writable (e.g., disk or network) can consume. Without backpressure, chunks buffer in memory until OOM. Writable signals "pause" → readable stops until `drain` event → readable resumes. `pipeline` wires this automatically and propagates errors.
+
+**Example.** Upload proxy: `req` (readable) → gzip transform → `res` (writable). Each chunk is compressed and sent before the next is read — constant memory regardless of upload size.
+
 **Buffers** hold raw binary data:
 ```js
 const buf = Buffer.from('hello', 'utf8');
@@ -237,11 +289,14 @@ buf.toString('hex');
 ## 8. Express
 
 The de-facto web framework.
+
+**Theory.** Express sits on Node's `http` module and adds routing, middleware pipeline, and response helpers. A request flows through a stack of middleware functions — each can inspect/modify `req`/`res` or end the response.
+
 ```js
 import express from 'express';
 const app = express();
 
-app.use(express.json());                 // parse JSON bodies
+app.use(express.json());                 // parse JSON bodies — populates req.body
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
@@ -254,11 +309,14 @@ Alternatives worth naming in interviews: **Fastify** (faster, schema-based), **N
 ## 9. Middleware, Routing
 
 **Middleware** = functions with `(req, res, next)` that run in order; the pipeline is the core mental model of Express.
+
+**How it works.** Think of middleware as a chain of filters/interceptors (similar to Spring's filter chain or Python WSGI middleware). Each function receives `req`, `res`, and `next`. Call `next()` to pass to the next layer. Call `res.json()` / `res.send()` to finish. Forget either → request hangs until timeout.
+
 ```js
-// Logger middleware
+// Logger middleware — runs for every request registered after app.use
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
-  next();                       // pass control; omit -> request hangs
+  next();                       // pass control; omit -> request hangs forever
 });
 
 // Router module
@@ -292,6 +350,8 @@ app.get('/users/:id', asyncH(async (req, res) => {
 
 ## 10. REST API Design
 
+**Theory.** REST maps resources (nouns) to URLs and uses HTTP verbs for actions. Good APIs are predictable: same status codes, error shape, and naming conventions everywhere — so frontend and other services integrate without guessing.
+
 ```js
 const router = Router();
 
@@ -323,6 +383,8 @@ function create(req, res) {
 
 ## 11. Databases
 
+**Theory.** Node apps typically talk to databases over the network. Each query has latency; opening a new TCP connection per request is expensive. Use a **connection pool** (reuse connections) and **parameterized queries** (prevent SQL injection) — same principles as JDBC `PreparedStatement` or Python DB-API with placeholders.
+
 **MongoDB with Mongoose (ODM):**
 ```js
 import mongoose from 'mongoose';
@@ -351,6 +413,8 @@ const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [id]); //
 ---
 
 ## 12. Auth & Security
+
+**Theory.** Most Node APIs authenticate via **JWT** (stateless token) or **session cookies** (stateful server-side session). Passwords must never be stored plaintext — bcrypt/argon2 hash with salt. Auth middleware runs before protected routes and attaches user identity to `req`.
 
 **JWT auth:**
 ```js
@@ -389,6 +453,8 @@ function auth(req, res, next) {
 
 ## 13. Error Handling & Process Management
 
+**Theory.** Uncaught errors in async code don't crash Node by default — they become **unhandled rejections**. Sync throws in request handlers may crash the process if uncaught. Production apps need centralized error middleware, global handlers, and **graceful shutdown** so in-flight requests finish before exit.
+
 ```js
 // Centralized async error wrapper (see §9), plus global safety nets:
 process.on('unhandledRejection', (reason) => {
@@ -414,6 +480,8 @@ process.on('SIGTERM', async () => {
 ## 14. Performance, Clustering & Worker Threads
 
 Node is single-threaded, so a single process uses one CPU core. Two ways to scale:
+
+**How it works — cluster vs workers.** **Cluster** forks multiple Node **processes**, each with its own event loop and memory — good for utilizing all CPU cores for I/O-bound HTTP servers (share nothing; use Redis for sessions if needed). **Worker threads** share the same process but run JS on separate threads — good for CPU-heavy tasks without the overhead of full process fork.
 
 **Cluster (multi-process, one per core):**
 ```js
@@ -446,8 +514,10 @@ Use worker threads for CPU-heavy tasks (image processing, big computation) so th
 
 ## 15. Testing
 
+**Theory.** Test Node apps at two levels: **unit** tests for pure logic (services, validators) with mocked I/O, and **integration** tests that hit real HTTP routes (Supertest) optionally with a test database. Fast, deterministic tests run in CI on every commit.
+
 ```js
-// Jest example
+// Jest example — integration test hits Express app without starting a real server port
 import request from 'supertest';
 import app from '../src/app.js';
 
@@ -501,8 +571,10 @@ Setup: `typescript`, `@types/node`, `@types/express`, `tsx`/`ts-node` for dev, c
 
 ## 18. Coding Problems
 
+**Theory.** These patterns appear in live coding rounds and production code alike: promisify legacy callbacks, limit concurrency (like a semaphore), rate limit, retry with backoff, debounce. Understand **why** each exists — interviewers follow up with "what happens under load?"
+
 ```js
-// 1. promisify a callback API manually
+// 1. promisify a callback API manually — wraps Node-style (err, data) => void into a Promise
 const promisify = (fn) => (...args) =>
   new Promise((resolve, reject) =>
     fn(...args, (err, data) => (err ? reject(err) : resolve(data))));
