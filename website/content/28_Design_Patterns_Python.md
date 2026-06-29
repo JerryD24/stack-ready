@@ -3,33 +3,33 @@
 > The GoF patterns were written for C++/Java. In Python, **first-class functions, duck typing, decorators, generators, and modules** let you express many patterns far more simply — and some patterns *disappear* entirely. This guide shows each pattern the **Pythonic** way, with the theory of *what changes vs Java* and realistic backend examples. Interview signal: knowing which patterns Python makes trivial (Strategy, Command, Iterator) and which still matter (State, Observer, Adapter).
 
 ## TABLE OF CONTENTS
-- 1. Design Patterns the Pythonic Way
-- 2. Python Idioms That Replace Patterns
-- 3. Creational Patterns Overview
-- 4. Singleton
-- 5. Factory Method
-- 6. Abstract Factory
-- 7. Builder
-- 8. Prototype
-- 9. Adapter
-- 10. Bridge
-- 11. Composite
-- 12. Decorator
-- 13. Facade
-- 14. Flyweight
-- 15. Proxy
-- 16. Chain of Responsibility
-- 17. Command
-- 18. Iterator
-- 19. Mediator
-- 20. Memento
-- 21. Observer
-- 22. State
-- 23. Strategy
-- 24. Template Method
-- 25. Visitor
-- 26. Interpreter
-- 27. Interview Q&A
+1. [Design Patterns the Pythonic Way](#1-design-patterns-the-pythonic-way)
+2. [Python Idioms That Replace Patterns](#2-python-idioms-that-replace-patterns)
+3. [Creational Patterns Overview](#3-creational-patterns-overview)
+4. [Singleton](#4-singleton)
+5. [Factory Method](#5-factory-method)
+6. [Abstract Factory](#6-abstract-factory)
+7. [Builder](#7-builder)
+8. [Prototype](#8-prototype)
+9. [Adapter](#9-adapter)
+10. [Bridge](#10-bridge)
+11. [Composite](#11-composite)
+12. [Decorator](#12-decorator)
+13. [Facade](#13-facade)
+14. [Flyweight](#14-flyweight)
+15. [Proxy](#15-proxy)
+16. [Chain of Responsibility](#16-chain-of-responsibility)
+17. [Command](#17-command)
+18. [Iterator](#18-iterator)
+19. [Mediator](#19-mediator)
+20. [Memento](#20-memento)
+21. [Observer](#21-observer)
+22. [State](#22-state)
+23. [Strategy](#23-strategy)
+24. [Template Method](#24-template-method)
+25. [Visitor](#25-visitor)
+26. [Interpreter](#26-interpreter)
+27. [Interview Q&A](#27-interview-qa)
 
 ---
 

@@ -568,6 +568,27 @@ a:hover { color: var(--blue-700); }
   border-color: #6ee7b7;
 }
 
+/* Q&A blocks — render "**Qn. ...**" + answer as clean, scannable cards */
+.markdown-body .qa-block {
+  margin: 0.8rem 0;
+  padding: 0.8rem 1.05rem;
+  background: linear-gradient(135deg, var(--blue-50), rgba(255,255,255,0.6));
+  border-left: 3px solid var(--blue-500);
+  border-radius: var(--radius-md);
+  line-height: 1.72;
+}
+.markdown-body .qa-block strong:first-child {
+  display: inline-block;
+  margin-bottom: 0.4rem;
+  color: var(--blue-800);
+  font-size: 1.02em;
+}
+[data-theme="dark"] .markdown-body .qa-block {
+  background: #14233a;
+  border-left-color: var(--blue-500);
+}
+[data-theme="dark"] .markdown-body .qa-block strong:first-child { color: var(--blue-200); }
+
 .section-topics-header {
   width: 100%;
   font-size: 0.9rem;

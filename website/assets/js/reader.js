@@ -76,6 +76,20 @@
     document.body.removeChild(ta);
   }
 
+  // Render "**Qn. ...**" Q&A paragraphs as clean cards (question on its own line)
+  function beautifyQA() {
+    document.querySelectorAll('.markdown-body p').forEach(p => {
+      const strong = p.firstChild;
+      if (!strong || strong.nodeName !== 'STRONG') return;
+      if (!/^Q\d+\s*[.:]/.test(strong.textContent.trim())) return;
+      p.classList.add('qa-block');
+      const after = strong.nextSibling;
+      if (after && after.nodeName !== 'BR') {
+        p.insertBefore(document.createElement('br'), after);
+      }
+    });
+  }
+
   // Estimate reading time from rendered content (~200 wpm)
   function updateReadTime() {
     const el = document.getElementById('readTime');
@@ -556,6 +570,7 @@
 
       highlightCodeBlocks();
       addCopyButtons();
+      beautifyQA();
       updateReadTime();
       buildHeadingRegistry();
       addBookmarkStars();

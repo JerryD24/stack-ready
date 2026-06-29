@@ -3,35 +3,35 @@
 > Patterns are **named, reusable solutions to recurring design problems**. They are not libraries you import — they are *vocabulary* and *structure*. In an interview, the value is showing **when** and **why** you'd reach for one (and the trade-off), not just reciting the UML. Every example below uses a realistic backend scenario (payments, provisioning, notifications, billing) — not toy "animal/pizza" examples.
 
 ## TABLE OF CONTENTS
-- 1. Why Design Patterns Matter
-- 2. SOLID Principles Recap
-- 3. Pattern Categories & How to Choose
-- 4. Singleton
-- 5. Factory Method
-- 6. Abstract Factory
-- 7. Builder
-- 8. Prototype
-- 9. Adapter
-- 10. Bridge
-- 11. Composite
-- 12. Decorator
-- 13. Facade
-- 14. Flyweight
-- 15. Proxy
-- 16. Chain of Responsibility
-- 17. Command
-- 18. Iterator
-- 19. Mediator
-- 20. Memento
-- 21. Observer
-- 22. State
-- 23. Strategy
-- 24. Template Method
-- 25. Visitor
-- 26. Interpreter
-- 27. Enterprise & Spring Patterns
-- 28. Anti-Patterns to Avoid
-- 29. Interview Q&A
+1. [Why Design Patterns Matter](#1-why-design-patterns-matter)
+2. [SOLID Principles Recap](#2-solid-principles-recap)
+3. [Pattern Categories & How to Choose](#3-pattern-categories-how-to-choose)
+4. [Singleton](#4-singleton)
+5. [Factory Method](#5-factory-method)
+6. [Abstract Factory](#6-abstract-factory)
+7. [Builder](#7-builder)
+8. [Prototype](#8-prototype)
+9. [Adapter](#9-adapter)
+10. [Bridge](#10-bridge)
+11. [Composite](#11-composite)
+12. [Decorator](#12-decorator)
+13. [Facade](#13-facade)
+14. [Flyweight](#14-flyweight)
+15. [Proxy](#15-proxy)
+16. [Chain of Responsibility](#16-chain-of-responsibility)
+17. [Command](#17-command)
+18. [Iterator](#18-iterator)
+19. [Mediator](#19-mediator)
+20. [Memento](#20-memento)
+21. [Observer](#21-observer)
+22. [State](#22-state)
+23. [Strategy](#23-strategy)
+24. [Template Method](#24-template-method)
+25. [Visitor](#25-visitor)
+26. [Interpreter](#26-interpreter)
+27. [Enterprise & Spring Patterns](#27-enterprise-spring-patterns)
+28. [Anti-Patterns to Avoid](#28-anti-patterns-to-avoid)
+29. [Interview Q&A](#29-interview-qa)
 
 ---
 

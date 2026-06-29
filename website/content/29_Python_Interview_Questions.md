@@ -3,22 +3,22 @@
 > Curated from current (2026) hiring trends. Modern Python interviews have moved **past syntax** — at mid/senior level they probe interpreter internals (the GIL, memory model, descriptors), concurrency trade-offs, async discipline, and production patterns. The follow-up that filters candidates is always **"why"** — why the GIL exists, why mutable defaults bite, why `__del__` is unreliable. Each answer below gives the *mechanism*, not just the symptom. Every question is in flashcard form (`**Qn. ...**`) so it appears in Practice mode.
 
 ## TABLE OF CONTENTS
-- 1. Core Language & Data Model
-- 2. Data Structures & Complexity
-- 3. OOP, MRO & Dunder Methods
-- 4. Decorators
-- 5. Generators & Iterators
-- 6. The GIL & Concurrency
-- 7. Async / Await (asyncio)
-- 8. Memory Management & Garbage Collection
-- 9. Performance & Optimization
-- 10. Type Hints, Dataclasses & Pydantic
-- 11. Standard Library Idioms
-- 12. Modern Python (3.10 - 3.13)
-- 13. Exceptions & Context Managers
-- 14. Testing & Tooling
-- 15. Tricky Output & Gotchas
-- 16. Coding Problems (Pythonic)
+1. [Core Language & Data Model](#1-core-language-data-model)
+2. [Data Structures & Complexity](#2-data-structures-complexity)
+3. [OOP, MRO & Dunder Methods](#3-oop-mro-dunder-methods)
+4. [Decorators](#4-decorators)
+5. [Generators & Iterators](#5-generators-iterators)
+6. [The GIL & Concurrency](#6-the-gil-concurrency)
+7. [Async / Await (asyncio)](#7-async-await-asyncio)
+8. [Memory Management & Garbage Collection](#8-memory-management-garbage-collection)
+9. [Performance & Optimization](#9-performance-optimization)
+10. [Type Hints, Dataclasses & Pydantic](#10-type-hints-dataclasses-pydantic)
+11. [Standard Library Idioms](#11-standard-library-idioms)
+12. [Modern Python (3.10 - 3.13)](#12-modern-python-310-313)
+13. [Exceptions & Context Managers](#13-exceptions-context-managers)
+14. [Testing & Tooling](#14-testing-tooling)
+15. [Tricky Output & Gotchas](#15-tricky-output-gotchas)
+16. [Coding Problems (Pythonic)](#16-coding-problems-pythonic)
 
 ---
 
