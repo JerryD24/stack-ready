@@ -374,6 +374,26 @@ const INTERVIEW_TRACKS = [
     ]
   },
   {
+    id: 'angular',
+    title: 'Frontend — Angular',
+    subtitle: 'Components → RxJS → DI → Signals → NgRx',
+    icon: '🅰️',
+    color: '#dd0031',
+    gradient: 'linear-gradient(135deg, #b8002a 0%, #dd0031 50%, #f43f5e 100%)',
+    topics: [
+      {
+        id: 'angular',
+        file: '31_Angular_Complete_Guide.md',
+        title: 'Angular Complete Guide',
+        description: 'Components & templates, data binding & directives, services & DI, RxJS/Observables, HttpClient, routing, reactive forms, pipes, lifecycle, change detection & OnPush, standalone components, Signals, NgRx, testing, Angular CLI, Angular vs React, coding problems, Q&A',
+        sections: 21,
+        level: 'Beginner → Pro',
+        priority: 'high',
+        tags: ['Angular', 'RxJS', 'TypeScript', 'Frontend']
+      }
+    ]
+  },
+  {
     id: 'nodejs',
     title: 'Backend — Node.js',
     subtitle: 'Event loop → Express → APIs → production',

@@ -534,6 +534,30 @@ const ProgressMap = (function () {
       '15-collaboration-project-management': ['Collaboration — issues, branch protection, CODEOWNERS, releases'],
       '16-best-practices-common-mistakes': ['Git best practices & common mistakes'],
       '17-interview-qa': ['Git & GitHub interview Q&A bank']
+    },
+
+    '31_Angular_Complete_Guide.md': {
+      '1-what-is-angular-how-it-works': ['What Angular is & how it works (framework vs library)'],
+      '2-typescript-essentials-for-angular': ['TypeScript essentials (interfaces, generics, decorators)'],
+      '3-components-templates': ['Components & templates (view encapsulation)'],
+      '4-data-binding-directives': ['Data binding (4 types) & directives (structural/attribute)'],
+      '5-component-communication': ['Component communication (@Input/@Output, shared service)'],
+      '6-services-dependency-injection': ['Services & Dependency Injection (providedIn, singletons)'],
+      '7-rxjs-observables': ['RxJS & Observables (operators, Subjects, switchMap)'],
+      '8-http-client-apis': ['HttpClient & APIs (typed calls, interceptors)'],
+      '9-routing-navigation': ['Routing & navigation (params, guards, lazy loading)'],
+      '10-forms-template-driven-reactive': ['Forms — template-driven vs reactive, validation'],
+      '11-pipes': ['Pipes (pure vs impure, async pipe, custom pipes)'],
+      '12-lifecycle-hooks': ['Lifecycle hooks (ngOnInit, ngOnChanges, ngOnDestroy)'],
+      '13-change-detection-performance': ['Change detection, Zone.js & OnPush performance'],
+      '14-modules-vs-standalone-components': ['NgModules vs standalone components'],
+      '15-signals-modern-angular': ['Signals (signal/computed/effect) vs RxJS'],
+      '16-state-management-ngrx': ['State management with NgRx (store/action/reducer/effect)'],
+      '17-testing-angular': ['Testing Angular (TestBed, mocking DI, Jasmine/Karma)'],
+      '18-build-tools-angular-cli': ['Build tools & Angular CLI (AOT vs JIT)'],
+      '19-angular-vs-react': ['Angular vs React (framework vs library trade-offs)'],
+      '20-coding-problems-patterns': ['Angular coding problems & patterns'],
+      '21-interview-qa': ['Angular interview Q&A bank']
     }
   };
 

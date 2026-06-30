@@ -56,8 +56,8 @@ window.CONTENT_META = {
     "minutes": 3
   },
   "13_AWS_Complete_Guide.md": {
-    "words": 1359,
-    "minutes": 7
+    "words": 3047,
+    "minutes": 15
   },
   "14_AI_Agents_and_MCP_For_Developers.md": {
     "words": 5087,
@@ -126,6 +126,10 @@ window.CONTENT_META = {
   "30_Git_and_GitHub.md": {
     "words": 5388,
     "minutes": 27
+  },
+  "31_Angular_Complete_Guide.md": {
+    "words": 4964,
+    "minutes": 25
   },
   "Complete_PeerReview_Report.md": {
     "words": 3202,
