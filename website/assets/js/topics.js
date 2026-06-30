@@ -355,8 +355,8 @@ const INTERVIEW_TRACKS = [
   },
   {
     id: 'frontend',
-    title: 'Frontend — React',
-    subtitle: 'React.js beginner → pro interview guide',
+    title: 'Frontend — React & Angular',
+    subtitle: 'React + Angular — beginner → pro interview guides',
     icon: '⚛️',
     color: '#0ea5e9',
     gradient: 'linear-gradient(135deg, #0369a1 0%, #0ea5e9 50%, #38bdf8 100%)',
@@ -370,17 +370,7 @@ const INTERVIEW_TRACKS = [
         level: 'Beginner → Pro',
         priority: 'critical',
         tags: ['React', 'Hooks', 'Redux', 'Frontend']
-      }
-    ]
-  },
-  {
-    id: 'angular',
-    title: 'Frontend — Angular',
-    subtitle: 'Components → RxJS → DI → Signals → NgRx',
-    icon: '🅰️',
-    color: '#dd0031',
-    gradient: 'linear-gradient(135deg, #b8002a 0%, #dd0031 50%, #f43f5e 100%)',
-    topics: [
+      },
       {
         id: 'angular',
         file: '31_Angular_Complete_Guide.md',
