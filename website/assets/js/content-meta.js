@@ -8,8 +8,8 @@ window.CONTENT_META = {
     "minutes": 22
   },
   "01_Java_Core_to_Advanced.md": {
-    "words": 6130,
-    "minutes": 31
+    "words": 6588,
+    "minutes": 33
   },
   "02_SpringBoot.md": {
     "words": 6255,

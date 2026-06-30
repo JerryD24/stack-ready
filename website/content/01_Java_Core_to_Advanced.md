@@ -2030,6 +2030,51 @@ A: Yes — if capacity stays < 64 and all keys collide, it stays a linked list.
 
 ## 15. DEEP DIVE: ConcurrentHashMap (Complete)
 
+### 15.0 What ConcurrentHashMap Is (and Fine-Grained Locking)
+
+**What it is.** `ConcurrentHashMap` (CHM) is a thread-safe implementation of `Map` in `java.util.concurrent`. It lets many threads read and write concurrently **without you writing any synchronization**, and without the performance penalty of locking the entire map on every operation.
+
+**Why it exists.** You have three options for a map shared across threads:
+
+| Option | Thread-safe? | Problem |
+|--------|--------------|---------|
+| `HashMap` | No | Data corruption / infinite loops under concurrent writes |
+| `Hashtable` / `Collections.synchronizedMap()` | Yes | Locks the **whole map** on every `get`/`put` → threads queue up, no real parallelism |
+| `ConcurrentHashMap` | Yes | None of the above — high concurrency |
+
+The first is unsafe; the second is safe but slow because it's a single lock for the entire structure. `ConcurrentHashMap` solves both.
+
+**How it works (modern Java 8+), in short:**
+- The map is an array of **buckets** (like `HashMap`).
+- **Reads (`get`)** are **lock-free** — they acquire no lock at all (`volatile` fields guarantee threads see the latest values).
+- **Writes (`put`)** lock **only the single bucket** being modified, via `synchronized` on that bucket's head node. If the target bucket is empty, it inserts with a **CAS** (compare-and-swap) — no lock needed at all.
+- So two threads writing to *different* buckets never block each other; they run truly in parallel.
+
+It also forbids `null` keys/values, so a `get` returning `null` always means "absent" (never "present but null") — important reasoning in concurrent code.
+
+#### Fine-grained vs coarse-grained locking
+
+This is the core idea that makes CHM fast. **Granularity** = how much you lock at once.
+
+**Coarse-grained locking** = one big lock for the whole data structure.
+- Example: `Hashtable` / `synchronizedMap` — every operation locks the entire map.
+- Analogy: a house with **one bathroom and one key** — only one person can use *any* of the plumbing at a time. Simple, but everyone waits in line.
+
+**Fine-grained locking** = many small locks, each guarding a small piece.
+- Example: `ConcurrentHashMap` locks only the **individual bucket** being written.
+- Analogy: a house where **each bathroom has its own key** — many people use different bathrooms at once; they only wait if they want the *same* one.
+
+```
+Coarse-grained (Hashtable):        Fine-grained (ConcurrentHashMap):
+   [ whole map = 1 lock ]             [b0][b1][b2][b3]...  each bucket lockable
+   Thread A: put → locks map          Thread A: put key→b1  (locks only b1)
+   Thread B: put → WAITS              Thread B: put key→b3  (locks only b3) → runs in parallel
+```
+
+**The win:** with fine-grained locking, contention happens **only when two threads touch the same bucket**, which is rare with a good hash spread. Throughput scales with the number of cores instead of bottlenecking on one lock.
+
+**Interview angle (one-liner).** *ConcurrentHashMap is a thread-safe map that uses fine-grained locking — locking only the individual bucket on writes (and CAS for empty buckets) while keeping reads lock-free — instead of the single coarse-grained lock used by `Hashtable`, so threads operating on different keys don't block each other.* (Java 7 achieved this with ~16 segment locks; Java 8 moved to the finer per-bucket locking detailed below.)
+
 ### 15.1 The Problem ConcurrentHashMap Solves
 
 `Hashtable` and `Collections.synchronizedMap(new HashMap<>())` lock the **entire map** for every read and write. Under high concurrency, threads queue up on one lock → throughput collapses. `ConcurrentHashMap` (CHM) allows concurrent reads and fine-grained writes.
