@@ -1,0 +1,213 @@
+/**
+ * Copies all study guides into website/content/ for static hosting (GitHub Pages).
+ * Optionally sets basePath in config.js for project-site URLs.
+ *
+ * Usage:
+ *   node prepare-deploy.js
+ *   node prepare-deploy.js stack-ready    # sets basePath to /stack-ready
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+const WEBSITE_DIR = __dirname;
+const PREP_DIR = path.dirname(WEBSITE_DIR);
+const CONTENT_DIR = path.join(WEBSITE_DIR, 'content');
+const CONFIG_FILE = path.join(WEBSITE_DIR, 'config.js');
+const META_FILE = path.join(WEBSITE_DIR, 'assets', 'js', 'content-meta.js');
+const STUDY_FILE = path.join(WEBSITE_DIR, 'assets', 'js', 'study-data.js');
+const repoName = process.argv[2] || '';
+const WORDS_PER_MIN = 200;
+
+// Map each guide file -> { title, trackId, trackTitle } from the topic catalog
+function buildFileMeta() {
+  const map = {};
+  try {
+    const { INTERVIEW_TRACKS, UTILITY_DOCS } = require(path.join(WEBSITE_DIR, 'assets', 'js', 'topics.js'));
+    INTERVIEW_TRACKS.forEach(track => {
+      track.topics.forEach(t => {
+        map[t.file] = { title: t.title, trackId: track.id, trackTitle: track.title };
+      });
+    });
+    (UTILITY_DOCS || []).forEach(d => {
+      map[d.file] = { title: d.title, trackId: 'utility', trackTitle: 'Planning' };
+    });
+  } catch (e) {
+    console.warn('Could not load topics.js for study data:', e.message);
+  }
+  return map;
+}
+
+function githubSlug(text) {
+  return text.toLowerCase().trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+// Split a markdown doc into heading-delimited sections with searchable plain text
+function parseSections(raw) {
+  const lines = raw.split(/\r?\n/);
+  const sections = [];
+  let cur = null;
+  let inFence = false;
+  const push = () => {
+    if (cur) {
+      cur.text = stripMarkdown(cur.buf.join('\n')).replace(/\s+/g, ' ').trim().slice(0, 2000);
+      delete cur.buf;
+      sections.push(cur);
+    }
+  };
+  for (const line of lines) {
+    if (/^```/.test(line.trim())) inFence = !inFence;
+    const h = !inFence && line.match(/^(#{1,3})\s+(.+?)\s*$/);
+    if (h) {
+      push();
+      const heading = h[2].replace(/[*`]/g, '').trim();
+      cur = { id: githubSlug(heading), heading, level: h[1].length, buf: [] };
+    } else if (cur) {
+      cur.buf.push(line);
+    }
+  }
+  push();
+  return sections.filter(s => s.heading.toUpperCase() !== 'TABLE OF CONTENTS');
+}
+
+// Extract Q&A flashcards: "**Q1. ...**" or "**Q: ...**" followed by answer line(s)
+function parseFlashcards(raw) {
+  const lines = raw.split(/\r?\n/);
+  const cards = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^\*\*\s*Q\d*\s*[:.]?\s*(.+?)\*\*\s*(.*)$/);
+    if (!m) continue;
+    const q = m[1].replace(/\s+/g, ' ').trim();
+    const ans = [];
+    if (m[2] && m[2].trim()) ans.push(m[2].trim());
+    let j = i + 1;
+    while (j < lines.length) {
+      const ln = lines[j];
+      if (!ln.trim()) break;
+      if (/^\*\*\s*Q\d*\s*[:.]/.test(ln)) break;
+      if (/^#{1,6}\s/.test(ln)) break;
+      ans.push(ln.replace(/^A:\s*/, ''));
+      j++;
+    }
+    const a = ans.join('\n').trim();
+    if (!q || !a || a.startsWith('→') || a.length < 3) continue;
+    cards.push({ q, a });
+  }
+  return cards;
+}
+
+const EXTENSIONS = new Set(['.md', '.txt']);
+const EXCLUDE_FILES = new Set(['00_Study_Plan_Day_by_Day.txt']);
+
+function copyGuides() {
+  if (!fs.existsSync(CONTENT_DIR)) fs.mkdirSync(CONTENT_DIR, { recursive: true });
+
+  const files = fs.readdirSync(PREP_DIR).filter(f => {
+    const ext = path.extname(f).toLowerCase();
+    return EXTENSIONS.has(ext) && !EXCLUDE_FILES.has(f);
+  });
+  let count = 0;
+  for (const file of files) {
+    fs.copyFileSync(path.join(PREP_DIR, file), path.join(CONTENT_DIR, file));
+    count++;
+  }
+  // Remove excluded files if previously deployed
+  for (const excluded of EXCLUDE_FILES) {
+    const p = path.join(CONTENT_DIR, excluded);
+    if (fs.existsSync(p)) fs.unlinkSync(p);
+  }
+  console.log(`Copied ${count} guide files to website/content/`);
+}
+
+function stripMarkdown(raw) {
+  return raw
+    .replace(/```[\s\S]*?```/g, ' ')      // code fences
+    .replace(/`[^`]*`/g, ' ')             // inline code
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')// images
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // links -> text
+    .replace(/[#>*_~|-]/g, ' ');          // md punctuation
+}
+
+function generateContentMeta() {
+  const files = fs.readdirSync(PREP_DIR).filter(f => {
+    const ext = path.extname(f).toLowerCase();
+    return EXTENSIONS.has(ext) && !EXCLUDE_FILES.has(f);
+  });
+
+  const meta = {};
+  for (const file of files) {
+    const raw = fs.readFileSync(path.join(PREP_DIR, file), 'utf8');
+    const words = (stripMarkdown(raw).match(/\S+/g) || []).length;
+    meta[file] = { words, minutes: Math.max(1, Math.round(words / WORDS_PER_MIN)) };
+  }
+
+  const out = `/**
+ * Per-guide reading metadata (word count + estimated minutes).
+ * AUTO-GENERATED by prepare-deploy.js — do not edit by hand.
+ */
+window.CONTENT_META = ${JSON.stringify(meta, null, 2)};
+`;
+  fs.writeFileSync(META_FILE, out, 'utf8');
+  console.log(`Generated reading metadata for ${Object.keys(meta).length} guides.`);
+}
+
+function generateStudyData() {
+  const fileMeta = buildFileMeta();
+  const files = fs.readdirSync(PREP_DIR).filter(f => {
+    const ext = path.extname(f).toLowerCase();
+    return ext === '.md' && !EXCLUDE_FILES.has(f);
+  });
+
+  const guides = {};
+  let totalCards = 0, totalSections = 0;
+  for (const file of files) {
+    const raw = fs.readFileSync(path.join(PREP_DIR, file), 'utf8');
+    const meta = fileMeta[file] || { title: file.replace(/\.md$/, ''), trackId: 'other', trackTitle: 'Other' };
+    const sections = parseSections(raw).map(s => ({ id: s.id, heading: s.heading, level: s.level, text: s.text }));
+    const qa = parseFlashcards(raw);
+    guides[file] = {
+      title: meta.title,
+      trackId: meta.trackId,
+      trackTitle: meta.trackTitle,
+      sections,
+      qa
+    };
+    totalCards += qa.length;
+    totalSections += sections.length;
+  }
+
+  const out = `/**
+ * Full-text search index + Q&A flashcards per guide.
+ * AUTO-GENERATED by prepare-deploy.js — do not edit by hand.
+ */
+window.STUDY_DATA = ${JSON.stringify(guides)};
+`;
+  fs.writeFileSync(STUDY_FILE, out, 'utf8');
+  const kb = Math.round(Buffer.byteLength(out) / 1024);
+  console.log(`Generated study data: ${totalSections} sections, ${totalCards} flashcards (${kb} KB).`);
+}
+
+function updateConfig() {
+  const basePath = repoName ? `/${repoName.replace(/^\//, '')}` : '';
+  const config = `/**
+ * Site configuration — update basePath when deploying to GitHub Pages.
+ * Generated by prepare-deploy.js
+ */
+window.SITE_CONFIG = {
+  basePath: '${basePath}'
+};
+`;
+  fs.writeFileSync(CONFIG_FILE, config, 'utf8');
+  console.log(`config.js basePath = '${basePath}'${basePath ? ' (GitHub Pages project site)' : ' (local / user site)'}`);
+}
+
+copyGuides();
+generateContentMeta();
+generateStudyData();
+updateConfig();
+console.log('\nNext: commit, push, enable GitHub Pages on /website folder.');
+console.log('See DEPLOY_GITHUB_PAGES.md for full steps.');
