@@ -2159,7 +2159,22 @@ map.forEach(2, (k, v) -> System.out.println(k));  // parallel threshold
 | Null key/value | Allowed (HashMap) | Not allowed |
 | size() | Exact | Approximate under concurrency |
 
-**Why no nulls in CHM?** `get(key)` returning null means either key absent OR value is null. In concurrent context, you can't distinguish these safely.
+**Why no nulls in CHM? (and why `HashMap` *can* allow them)**
+
+`get(key)` returning `null` is **ambiguous**: it could mean "key absent" *or* "key present, value is null." This ambiguity exists in `HashMap` too — the difference is whether you can **reliably resolve** it.
+
+- **`HashMap` (single-threaded)** — you disambiguate with a second call:
+```java
+if (map.get(key) == null) {
+    if (map.containsKey(key)) { /* present, value is null */ }
+    else                      { /* truly absent */ }
+}
+```
+Because a `HashMap` isn't shared across threads, **nothing changes between `get()` and `containsKey()`**, so the two-step check is trustworthy. That's why `HashMap` allows one null key and null values.
+
+- **`ConcurrentHashMap` (multi-threaded)** — that same two-step check is a **race condition**. Between your `get()` returning `null` and your `containsKey()`, another thread could insert or remove that key, so `containsKey()` no longer reflects the state at the time of your `get()`. There is **no atomic way** to distinguish "absent" from "null value" in a concurrent map. Rather than ship an unresolvable ambiguity, the designers forbid `null` — so `get() == null` *always* means "absent," unambiguously.
+
+**Interview one-liner.** *"`HashMap` allows a null value because a single thread can safely disambiguate it with `containsKey()`. In `ConcurrentHashMap` that follow-up check is racy — the map can change between the two calls — so null is banned to keep `get()==null` meaning exactly one thing: absent."*
 
 ### 15.8 ConcurrentHashMap Resize (Java 8)
 
@@ -2607,6 +2622,12 @@ A: HashMap and HashSet use `hashCode()` to find the bucket. If two equal objects
 
 **Q: ConcurrentHashMap vs synchronized HashMap?**
 A: `Collections.synchronizedMap()` locks the entire map for every operation. `ConcurrentHashMap` uses CAS and segment/bucket-level locking for much better concurrency. Also, `ConcurrentHashMap` doesn't allow null keys/values. For full depth see [Section 15](#15-deep-dive-concurrenthashmap-complete).
+
+**Q: Why does ConcurrentHashMap forbid null keys/values when HashMap allows them?**
+A: `get()` returning null is ambiguous — "key absent" or "value is null". In `HashMap` (single-threaded) you resolve it with `containsKey()`, and nothing changes between the two calls, so it's safe — that's why HashMap allows one null key and null values. In `ConcurrentHashMap` that follow-up `containsKey()` is a race: another thread can insert/remove the key between the `get()` and the check, so there's no atomic way to disambiguate. Null is banned so `get()==null` always means exactly "absent".
+
+**Q: What is Compare-And-Swap (CAS)?**
+A: CAS is an atomic CPU instruction (e.g., `CMPXCHG`) that takes a memory location, an expected old value, and a new value: it sets the location to the new value only if it currently equals the expected value, otherwise it fails — all in one indivisible step. It's the foundation of lock-free concurrency (used by `AtomicInteger`/`AtomicLong` and by `ConcurrentHashMap` for empty-bucket inserts): you read, compute, then CAS, retrying in a loop if it fails. Benefits: no locks, no deadlock. Downsides: the ABA problem (fix with `AtomicStampedReference`) and CPU spin under high contention (mitigated by `LongAdder`).
 
 **Q: What is the difference between `Callable` and `Runnable`?**
 A: `Runnable.run()` returns void and cannot throw checked exceptions. `Callable.call()` returns a value of generic type and can throw checked exceptions. `Callable` is used with `ExecutorService.submit()` and returns a `Future`.
