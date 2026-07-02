@@ -16,7 +16,7 @@
 | File | Topics Covered |
 |------|---------------|
 | `01_Java_Core_to_Advanced.md` | Java 8–21, OOP, Collections, Concurrency, JVM, Design Patterns, **§22 wait/sleep/join, ThreadLocal, class loaders, deep/shallow copy** |
-| `02_SpringBoot.md` | Spring Core, Boot, REST, Security, JPA, Microservices, **§14 JPA/Hibernate deep dive, §15 Spring Q&A** |
+| `02_SpringBoot.md` | Spring Core, Boot, REST, Security, JPA, Microservices, **§14 JPA/Hibernate deep dive, §15 Spring Q&A, §16 annotations cheat sheet** |
 | `03_System_Design_HLD.md` | Scalability, Caching, Databases, Messaging, Real-world designs, **§14 Order tracking, Rate limiter, URL shortener, Redis KV, Auth** |
 | `04_System_Design_LLD.md` | OOP Design, SOLID, Design Patterns, LLD problems, **§8 Order Management System** |
 | `05_DSA.md` | Arrays, Strings, Trees, Graphs, DP, Greedy, Searching, Sorting |
@@ -207,6 +207,9 @@
 - [ ] Inter-service communication: REST vs gRPC vs Messaging
 - [ ] Event-driven architecture with Kafka/RabbitMQ
 - [ ] Docker & Kubernetes basics for microservices
+
+### 2.7 Spring annotations cheat sheet (in `02_SpringBoot.md` §16)
+- [ ] Spring annotations cheat sheet — core, Boot, REST, JPA, validation, security, testing
 
 ---
 

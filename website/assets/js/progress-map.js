@@ -212,6 +212,9 @@ const ProgressMap = (function () {
         'Inter-service communication: REST vs gRPC vs Messaging',
         'Event-driven architecture with Kafka/RabbitMQ',
         'Docker & Kubernetes basics for microservices'
+      ],
+      '16-spring-annotations--simple-cheat-sheet': [
+        'Spring annotations cheat sheet — core, Boot, REST, JPA, validation, security, testing'
       ]
     },
 

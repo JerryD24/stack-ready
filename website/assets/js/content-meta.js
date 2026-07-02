@@ -12,8 +12,8 @@ window.CONTENT_META = {
     "minutes": 35
   },
   "02_SpringBoot.md": {
-    "words": 6255,
-    "minutes": 31
+    "words": 6378,
+    "minutes": 32
   },
   "03_System_Design_HLD.md": {
     "words": 4355,

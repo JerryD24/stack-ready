@@ -19,24 +19,24 @@
 13. [Additional Interview Q&A (New Questions Only)](#13-additional-interview-qa-new-questions-only)
 14. [JPA / Hibernate Deep Dive](#14-jpa--hibernate-deep-dive)
 15. [Additional Spring & Spring Boot Q&A](#15-additional-spring--spring-boot-qa)
+16. [Spring Annotations — Simple Cheat Sheet](#16-spring-annotations--simple-cheat-sheet)
 
 ---
 
 ## 1. Spring Core — IoC and DI
 
-**Theory.** Spring Core is the foundation everything else sits on. Before Spring, a typical service class looked like this: `new PaymentService(new StripeClient(), new EmailClient())` — your code decided *what* to create, *when*, and *how* objects wired together. That works for small apps but becomes painful when you have dozens of dependencies, need to swap implementations (mock in tests, real in prod), or share singletons like connection pools.
+**In simple terms.** Without Spring, you write `new PaymentService()` everywhere — you control object creation. With Spring, you say *"I need a PaymentService"* and Spring **creates it and hands it to you**. That's the whole idea.
 
-**Inversion of Control (IoC)** flips that: the **Spring container** (an `ApplicationContext`) owns object creation and wiring. You declare *what* you need (`@Autowired PaymentService`); Spring decides *which implementation* and *when* to inject it. **Dependency Injection (DI)** is how IoC is delivered — dependencies are passed *into* your class rather than created inside it.
+- **IoC (Inversion of Control)** = *you stop creating objects; Spring does it for you.*
+- **DI (Dependency Injection)** = *how Spring gives them to you* — through the constructor (best), a setter, or a field.
 
-**Analogy.** Think of a restaurant kitchen: traditionally each chef buys their own ingredients (you `new` everything). With IoC, a central pantry (the container) stocks ingredients and delivers them to each station. Chefs focus on cooking (business logic), not sourcing.
+**Kitchen analogy.** Old way: every chef buys their own ingredients. Spring way: a central pantry delivers ingredients to each station — chefs just cook.
 
-**How it works.** At startup, Spring scans classes annotated with `@Component`, `@Service`, etc., registers them as **beans** in a registry (a map of name → instance), resolves constructor/setter dependencies (topological sort — if A needs B, B is created first), and stores singletons in the container. When a request hits your `@RestController`, Spring injects already-wired beans — no manual `new`.
+**Bean** = any object Spring manages (your `@Service`, `@Repository`, etc.). Spring keeps them in a container (`ApplicationContext`) and wires them together at startup.
 
-**Example.** `OrderService` needs `PaymentService`. You write one constructor; Spring finds the `@Service PaymentService` bean and passes it in. In a unit test, you pass a mock `PaymentService` directly — no Spring container required.
+**Why it matters for interviews:** IoC is the *idea*; DI is the *mechanism*. Spring uses DI to achieve IoC.
 
-**Pitfall.** If you still `new` dependencies inside services (`new EmailService()`), you bypass the container: no transaction proxies, no `@Autowired` overrides, no test doubles.
-
-**Interview angle.** "IoC vs DI" — IoC is the principle (framework controls flow); DI is the pattern (dependencies injected). Spring implements IoC *via* DI.
+**Common mistake:** Still writing `new EmailService()` inside a class — you skip Spring entirely (no transactions, no easy mocking in tests).
 
 ### Inversion of Control (IoC)
 ```
@@ -92,13 +92,7 @@ public class ProductService {
 
 ### ApplicationContext vs BeanFactory
 
-**Theory.** Both are IoC containers — they hold beans and resolve dependencies. `BeanFactory` is the minimal interface; `ApplicationContext` extends it with enterprise features. Spring Boot always uses `ApplicationContext` under the hood.
-
-**How it works.** With `BeanFactory`, a singleton bean is not instantiated until you call `getBean("orderService")` — lazy. With `ApplicationContext`, almost all singleton beans are created during startup (eager) so misconfiguration fails fast at boot time, not on first request. `ApplicationContext` also publishes events (`ApplicationEvent`), supports `@Autowired`/`@PostConstruct`, and integrates AOP proxies.
-
-**Example.** If `PaymentService` has a typo in its `@Value("${payment.api-key}")` property, an `ApplicationContext` app fails at startup. A pure lazy `BeanFactory` might not fail until the first order is placed.
-
-**Interview angle.** "Which do you use?" — Always `ApplicationContext` in modern Spring Boot. Mention `BeanFactory` only to show you know the history.
+**In simple terms.** Both hold your Spring beans. **`ApplicationContext`** is what Spring Boot uses — it creates beans at startup so config errors show up immediately. **`BeanFactory`** is the older, minimal version (lazy loading). In interviews: *"I use ApplicationContext; BeanFactory is legacy."*
 
 | Feature | BeanFactory | ApplicationContext |
 |---------|-------------|-------------------|
@@ -119,13 +113,7 @@ MyBean namedBean = ctx.getBean("myBeanName", MyBean.class);
 
 ### @Qualifier and @Primary
 
-**Theory.** When Spring sees `@Autowired MessageService`, it finds **two** candidates (`EmailService`, `SmsService`) and throws `NoUniqueBeanDefinitionException`. You must disambiguate.
-
-**How it works.** `@Qualifier("emailService")` picks a bean by name. `@Primary` marks one implementation as the default when no qualifier is specified — useful when you have one "real" impl and several alternates. Qualifier wins over `@Primary` when both are present.
-
-**Example.** `NotificationService` needs email for receipts but SMS for alerts — inject two different implementations using distinct `@Qualifier` values on separate constructor parameters.
-
-**Pitfall.** Forgetting `@Primary` when adding a second implementation breaks every existing `@Autowired MessageService` injection site.
+**In simple terms.** Two beans implement the same interface → Spring doesn't know which one to inject. Fix with **`@Qualifier("beanName")`** to pick one, or **`@Primary`** to mark the default.
 
 ```java
 interface MessageService { void send(String msg); }
@@ -156,13 +144,11 @@ public class EmailService implements MessageService { ... }
 
 ## 2. Bean Lifecycle & Scopes
 
-**Theory.** A Spring bean is not just "constructed and done." Spring runs a defined pipeline so dependencies are injected, custom init logic runs, and (critically) **AOP proxies are created** before the bean is handed to callers.
+**In simple terms.** A Spring bean isn't just "new and done." Spring: (1) calls your constructor, (2) injects dependencies, (3) runs `@PostConstruct`, (4) wraps the bean in a **proxy** (for `@Transactional`, etc.), then it's ready. On shutdown: `@PreDestroy`.
 
-**How it works.** For a `@Component` singleton: (1) constructor, (2) inject `@Autowired` fields/constructor args, (3) optional `Aware` callbacks, (4) `BeanPostProcessor` hooks, (5) `@PostConstruct` / `InitializingBean`, (6) more post-processors — **this is where `@Transactional` proxies wrap your bean**, (7) bean ready. On shutdown: `@PreDestroy`, then removal from container.
+**Scope = how many copies exist.** Default is **`singleton`** — one instance shared by the whole app. **`prototype`** = new instance every time you ask for it.
 
-**Example.** A `CacheWarmupService` with `@PostConstruct` loads reference data into Redis after all repos are injected but before traffic arrives.
-
-**Interview angle.** Key trap: AOP proxies are applied in `postProcessAfterInitialization`, so if you fetch a raw bean reference before that step completes, you might bypass advice. In practice, always call through injected references.
+**Trap:** Putting a `prototype` bean inside a `singleton` — you get only one prototype instance, not a fresh one each call. Use `ObjectProvider` or `@Lookup` to fix.
 
 ### Bean Lifecycle
 ```
@@ -209,24 +195,12 @@ public class MyBean implements InitializingBean, DisposableBean {
 
 ### Bean Scopes
 
-**Theory.** Scope controls **how many instances** of a bean exist and **how long** they live. Default is `singleton` — one instance per Spring container, shared by all threads.
-
-**How it works.** `singleton` beans are created once at startup (unless `@Lazy`). `prototype` creates a new instance every time the container is asked for one. Web scopes (`request`, `session`) tie bean lifetime to HTTP lifecycle via scoped proxies.
-
-**Example.** A `UserPreferences` bean should be `@Scope("session")` — one per logged-in user. A stateless `TaxCalculator` should stay singleton.
-
-**Pitfall — prototype inside singleton.** Injecting `@Autowired TaskProcessor` (prototype) into a singleton `TaskService` gives you **one** prototype instance for the lifetime of `TaskService`, not a fresh one per call. Fix with `@Lookup`, `ObjectProvider`, or `ApplicationContext.getBean()`.
-
-**Interview angle.** "Is singleton thread-safe?" — The bean instance is shared; **you** must make mutable state thread-safe or use request/prototype scope.
-
-| Scope | Description | Thread-safe? |
-|-------|-------------|--------------|
-| `singleton` | One instance per IoC container (default) | No (by default) |
-| `prototype` | New instance every time | Yes (each thread gets own) |
-| `request` | One per HTTP request (web only) | Yes |
-| `session` | One per HTTP session (web only) | Usually yes |
-| `application` | One per ServletContext | No |
-| `websocket` | One per WebSocket session | Yes |
+| Scope | Meaning | When to use |
+|-------|---------|-------------|
+| `singleton` | One per app (default) | Stateless services |
+| `prototype` | New every injection | Stateful / per-use objects |
+| `request` | One per HTTP request | Web apps |
+| `session` | One per user session | Login-specific data |
 
 ```java
 @Component
@@ -256,11 +230,11 @@ public class TaskService {
 
 ## 3. Spring AOP
 
-**Theory.** **Aspect-Oriented Programming** separates **cross-cutting concerns** (logging, security, transactions, caching) from business logic. Without AOP, every service method would start with `log.info(...)`, `checkPermission(...)`, `beginTransaction()` — duplicated boilerplate.
+**In simple terms.** Some logic repeats everywhere — logging, security checks, transactions. **AOP** lets you write it once and Spring runs it *around* your methods automatically.
 
-**How it works.** You define an **aspect** (advice + pointcut). At runtime, Spring wraps your bean in a **proxy**. External callers hit the proxy → advice runs → proxy delegates to your real object. Internal `this.method()` calls skip the proxy — the most common AOP bug.
+**How it works (plain English):** Spring wraps your bean in a **proxy**. When someone calls your method from outside, the proxy runs extra code first (e.g., open transaction), then your method, then cleanup (commit/rollback).
 
-**Analogy.** A security guard at a building entrance (proxy) checks badges before you enter any office (target method). If you use an internal hallway between offices without passing the guard (self-invocation), security is bypassed.
+**The #1 trap:** Calling `this.otherMethod()` inside the same class **skips the proxy** — so `@Transactional` on `otherMethod()` won't work. Fix: inject `self` and call `self.otherMethod()`.
 
 ### Concepts
 ```
@@ -393,15 +367,18 @@ public class OrderService {
 
 ## 4. Spring Boot Fundamentals
 
-**Theory.** Spring Boot is opinionated Spring — it removes XML boilerplate, embeds a servlet container (Tomcat), and **auto-configures** beans based on what's on your classpath. You focus on business code; Boot wires DataSource, Jackson, security defaults, etc.
+**In simple terms.** Spring Boot = Spring + **batteries included**. You get:
+- An **embedded Tomcat** (no separate server install)
+- **Auto-configuration** (Boot sets up DataSource, JSON, etc. based on what's on your classpath)
+- **Starters** (one dependency pulls in everything you need for web, JPA, security…)
 
-**How it works — startup sequence.**
-1. `SpringApplication.run()` creates `ApplicationContext`.
-2. `@ComponentScan` finds `@Service`, `@RestController`, etc. in your package and below.
-3. `@EnableAutoConfiguration` loads hundreds of conditional config classes from JARs.
-4. Each `@ConditionalOnClass` / `@ConditionalOnMissingBean` decides whether to register a bean.
-5. Embedded Tomcat starts on `server.port` (default 8080).
-6. Actuator endpoints register if `spring-boot-starter-actuator` is present.
+**What happens when you run `main()`?**
+1. Spring starts and scans your package for `@Service`, `@RestController`, etc.
+2. Boot reads its auto-config list and creates default beans (only if you didn't define your own)
+3. Tomcat starts on port 8080
+4. Your app is ready
+
+**Auto-config in one sentence:** Add `spring-boot-starter-data-jpa` + set DB URL in YAML → Boot creates a connection pool for you. Define your own `@Bean DataSource` → Boot backs off and uses yours.
 
 ### @SpringBootApplication
 ```java
@@ -418,20 +395,12 @@ public class MyApplication {
 
 ### Auto-Configuration
 
-**Theory.** Auto-configuration is "convention over configuration." If MySQL driver is on the classpath and you set `spring.datasource.url`, Boot creates a `DataSource` without you writing a `@Bean`.
+Boot only creates a bean if:
+- The needed library is on the classpath (`@ConditionalOnClass`)
+- **You haven't already defined that bean** (`@ConditionalOnMissingBean`)
+- A property says so (`@ConditionalOnProperty`)
 
-**How it works — concrete example.**
-1. You add `spring-boot-starter-data-jpa` → `HibernateJpaAutoConfiguration` is a candidate.
-2. `@ConditionalOnClass(DataSource.class)` passes (JDBC on classpath).
-3. `@ConditionalOnMissingBean(DataSource.class)` passes (you didn't define your own).
-4. Boot creates HikariCP pool from `spring.datasource.*` properties.
-5. If you add `@Bean DataSource customDs()`, step 3 fails → Boot skips its auto-configured pool.
-
-**Example.** Run with `--debug` and search logs for `DataSourceAutoConfiguration` — you'll see `matched` or `did not match` with reasons (missing class, user-defined bean, etc.).
-
-**Pitfall.** Defining a custom `@Bean DataSource` disables Boot's auto-configured one entirely — you must configure pool size, URL, etc. yourself.
-
-**Interview angle.** "How do you override auto-config?" — Define your own `@Bean` (same type) or exclude via `@SpringBootApplication(exclude = {...})`.
+**Debug tip:** Run with `--debug` to see which auto-configs matched and which were skipped.
 
 ```
 How Spring Boot auto-configures:
@@ -495,11 +464,7 @@ logging:
 
 ### Profiles
 
-**Theory.** Profiles let one codebase run in dev (H2 in-memory), test (embedded DB), and prod (PostgreSQL cluster) without changing code.
-
-**How it works.** Beans annotated `@Profile("dev")` only register when that profile is active. `@Profile("!test")` means "every profile except test." Multiple profiles can be active: `spring.profiles.active=dev,debug`.
-
-**Pitfall.** Forgetting to set `spring.profiles.active` in prod may leave dev-only beans active or skip prod-specific security config.
+**In simple terms.** Same JAR, different settings per environment. `application-dev.yml` for local, `application-prod.yml` for production. Activate with `spring.profiles.active=prod`.
 
 ```java
 // application-dev.yml, application-prod.yml, application-test.yml
@@ -524,14 +489,10 @@ public class EmailSender { ... }
 
 ### Externalized Configuration
 
-**Theory.** Hard-coding URLs, ports, or API keys in Java is an anti-pattern. Externalized config lets the same JAR run in any environment by changing properties only.
+**In simple terms.** Don't hard-code URLs or passwords in Java. Put them in `application.yml` or environment variables.
 
-**How it works.** `@Value("${app.name}")` injects a single property. `@ConfigurationProperties(prefix = "app.mail")` binds a **tree** of properties to a type-safe POJO — preferred when you have 5+ related settings (validation, IDE autocomplete with `spring-boot-configuration-processor`).
-
-| Approach | Best for |
-|----------|----------|
-| `@Value` | One-off values, defaults |
-| `@ConfigurationProperties` | Grouped config (mail, payment gateway, feature flags) |
+- **`@Value("${key}")`** — read one property
+- **`@ConfigurationProperties(prefix = "app")`** — bind a whole group of related settings to a Java class (preferred when you have many)
 
 ```java
 // @Value
@@ -565,17 +526,11 @@ app:
 
 ## 5. Spring REST API
 
-**Theory.** Spring MVC maps HTTP requests to Java methods. `@RestController` combines `@Controller` (handles web requests) with `@ResponseBody` (serialize return value to JSON via Jackson, not a view template).
+**In simple terms.** `@RestController` = a class that handles HTTP requests and returns JSON (not HTML pages). You map URLs to methods with `@GetMapping`, `@PostMapping`, etc.
 
-**How it works — request lifecycle.**
-1. HTTP `GET /api/v1/orders/42` hits embedded Tomcat.
-2. `DispatcherServlet` receives request, consults handler mappings.
-3. Finds `OrderController.getOrder(@PathVariable Long id)`.
-4. Spring converts path segment `42` → `Long`, invokes method.
-5. Return value `OrderDTO` → Jackson → JSON response with `200 OK`.
-6. If method throws `OrderNotFoundException`, `@RestControllerAdvice` handler returns `404`.
+**Request flow:** Browser/client → Tomcat → `DispatcherServlet` → finds your controller method → runs it → Jackson converts result to JSON → response.
 
-**Interview angle.** Know the difference: `@Controller` returns view names; `@RestController` always writes body directly. Use `ResponseEntity<T>` when you need custom status codes or headers.
+**Quick difference:** `@Controller` returns HTML view names; `@RestController` always returns JSON in the body. Use `ResponseEntity` when you need a specific status code (201, 404, etc.).
 
 ### Request Handling
 ```java
@@ -2419,3 +2374,213 @@ public class InvoiceListener {
 ```
 
 **AOP** — for cross-cutting concerns on the **same** call (logging, audit, `@Transactional`), not for business workflow between services. For distributed microservices use **Kafka** events instead of in-process Spring Events.
+
+---
+
+## 16. Spring Annotations — Simple Cheat Sheet
+
+**In simple terms.** Annotations are labels on your code that tell Spring what to do. You don't call Spring APIs — you just mark classes and methods, and Spring reads them at startup.
+
+> For full depth on custom annotations, meta-annotations, and reflection → see `18_Annotations_Deep_Dive.md`.
+
+### 16.1 Core — register beans & inject dependencies
+
+| Annotation | What it does (plain English) | Example |
+|------------|------------------------------|---------|
+| `@Component` | "Spring, manage this class as a bean" | Generic bean |
+| `@Service` | Same as `@Component`, for business logic | `OrderService` |
+| `@Repository` | Same as `@Component`, for DB access (+ exception translation) | `UserRepository` |
+| `@Controller` | Handles web requests, returns view names (HTML) | MVC pages |
+| `@RestController` | `@Controller` + always return JSON body | REST APIs |
+| `@Configuration` | Class that defines `@Bean` methods | `AppConfig` |
+| `@Bean` | Method returns an object Spring should manage | `DataSource` bean |
+| `@Autowired` | "Inject this dependency" (constructor preferred) | Constructor param |
+| `@Qualifier("name")` | Pick which bean when several exist | `@Qualifier("email")` |
+| `@Primary` | Default bean when multiple match | Main `PaymentGateway` |
+| `@Value("${key}")` | Inject a property from YAML/env | `@Value("${app.name}")` |
+| `@Lazy` | Create bean only when first used | Heavy startup beans |
+| `@PostConstruct` | Run this method after injection (init) | Load cache |
+| `@PreDestroy` | Run before bean is removed (cleanup) | Close connections |
+| `@Scope("prototype")` | New instance every time (not singleton) | Per-task processor |
+
+```java
+@Service
+public class OrderService {
+    private final UserRepository repo;
+    public OrderService(UserRepository repo) { this.repo = repo; }  // @Autowired optional
+}
+```
+
+### 16.2 Spring Boot — app setup & config
+
+| Annotation | What it does | Example |
+|------------|--------------|---------|
+| `@SpringBootApplication` | Main class: scan components + auto-config | `public static void main` |
+| `@EnableAutoConfiguration` | Turn on Boot auto-config (inside above) | Rarely used alone |
+| `@ComponentScan` | Scan packages for `@Component` etc. | Default: main class package |
+| `@ConfigurationProperties` | Bind YAML group to a Java class | `prefix = "app.mail"` |
+| `@Profile("dev")` | Bean only active in that profile | Dev-only `DataSource` |
+| `@ConditionalOnProperty` | Bean only if property is set | Feature flags |
+| `@EnableScheduling` | Turn on `@Scheduled` jobs | Cron tasks |
+| `@Scheduled(cron = "...")` | Run method on a schedule | Nightly cleanup |
+| `@EnableAsync` | Turn on `@Async` methods | Background work |
+| `@Async` | Run method on a thread pool | Send email async |
+| `@EnableCaching` | Turn on `@Cacheable` | Cache layer |
+| `@Cacheable("users")` | Cache method result | `findById` |
+| `@CacheEvict` | Remove from cache | After update/delete |
+
+```java
+@SpringBootApplication
+public class App {
+    public static void main(String[] args) { SpringApplication.run(App.class, args); }
+}
+```
+
+### 16.3 Web / REST — map HTTP to Java
+
+| Annotation | What it does | Example |
+|------------|--------------|---------|
+| `@RequestMapping("/api")` | Base URL for all methods in class | Class-level path |
+| `@GetMapping` | Handle HTTP GET | List / read |
+| `@PostMapping` | Handle HTTP POST | Create |
+| `@PutMapping` | Handle HTTP PUT | Full update |
+| `@PatchMapping` | Handle HTTP PATCH | Partial update |
+| `@DeleteMapping` | Handle HTTP DELETE | Remove |
+| `@PathVariable` | Value from URL `{id}` | `/users/{id}` |
+| `@RequestParam` | Query string `?page=0` | Pagination, filters |
+| `@RequestBody` | JSON body → Java object | POST payload |
+| `@RequestHeader` | HTTP header value | `Authorization` |
+| `@CookieValue` | Cookie value | Session id |
+| `@ResponseStatus(404)` | Set HTTP status on method | Not found |
+| `@ResponseBody` | Return value → response body | On `@Controller` methods |
+| `@Valid` | Trigger validation on object | With `@RequestBody` |
+| `@ExceptionHandler` | Handle exception in one controller | Local errors |
+| `@ControllerAdvice` | Global exception handlers | App-wide |
+| `@RestControllerAdvice` | `@ControllerAdvice` + JSON responses | REST error format |
+| `@CrossOrigin` | Allow CORS from browser | Frontend on other port |
+
+```java
+@GetMapping("/{id}")
+public User get(@PathVariable Long id, @RequestParam(defaultValue = "true") boolean active) { ... }
+
+@PostMapping
+public ResponseEntity<User> create(@Valid @RequestBody CreateUserDto dto) { ... }
+```
+
+### 16.4 JPA / Database — map Java ↔ tables
+
+| Annotation | What it does | Example |
+|------------|--------------|---------|
+| `@Entity` | This class = a database table | `User` |
+| `@Table(name = "users")` | Table name (if different from class) | `users` |
+| `@Id` | Primary key field | `Long id` |
+| `@GeneratedValue` | Auto-generate PK | `IDENTITY`, `SEQUENCE` |
+| `@Column` | Column name, nullable, length | `name = "email"` |
+| `@OneToMany` | One parent → many children | Order → OrderItems |
+| `@ManyToOne` | Many children → one parent | OrderItem → Order |
+| `@ManyToMany` | Many-to-many with join table | Student ↔ Course |
+| `@OneToOne` | One-to-one | User ↔ Profile |
+| `@JoinColumn` | FK column name | `order_id` |
+| `@Enumerated(STRING)` | Store enum as text (not number) | `Status.ACTIVE` |
+| `@Version` | Optimistic locking column | Prevent lost updates |
+| `@Transactional` | DB operations in one transaction | Service methods |
+| `@Query` | Custom JPQL/SQL on repository | `findByStatus` |
+| `@Modifying` | UPDATE/DELETE query | Bulk update |
+| `@EntityGraph` | Fetch related data in one query | Fix N+1 |
+
+```java
+@Entity
+public class Order {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    private List<OrderItem> items;
+}
+```
+
+### 16.5 Validation — check input before processing
+
+| Annotation | What it checks |
+|------------|----------------|
+| `@NotNull` | Must not be null |
+| `@NotBlank` | String not null/empty/whitespace |
+| `@NotEmpty` | Collection/string not empty |
+| `@Size(min, max)` | Length or collection size |
+| `@Min` / `@Max` | Number range |
+| `@Email` | Valid email format |
+| `@Pattern(regexp)` | Matches regex |
+| `@Past` / `@Future` | Date in past/future |
+| `@Valid` | Run validation (on `@RequestBody` or nested object) |
+
+```java
+public record CreateUserDto(
+    @NotBlank String name,
+    @Email String email,
+    @Size(min = 8) String password
+) {}
+```
+
+### 16.6 Security — auth & permissions
+
+| Annotation | What it does |
+|------------|--------------|
+| `@EnableWebSecurity` | Turn on Spring Security |
+| `@PreAuthorize("hasRole('ADMIN')")` | Check role before method runs |
+| `@PostAuthorize` | Check after method returns |
+| `@Secured("ROLE_USER")` | Role-based access |
+| `@RolesAllowed` | JSR-250 role check |
+
+```java
+@PreAuthorize("hasAuthority('ORDER_WRITE')")
+public void cancelOrder(Long id) { ... }
+```
+
+### 16.7 Transactions & AOP
+
+| Annotation | What it does |
+|------------|--------------|
+| `@Transactional` | All DB ops succeed or all roll back |
+| `@Transactional(readOnly = true)` | Read-only — performance hint |
+| `@Transactional(propagation = REQUIRES_NEW)` | New separate transaction |
+| `@Transactional(rollbackFor = Exception.class)` | Roll back on checked exceptions too |
+| `@Aspect` | Class containing cross-cutting advice |
+| `@Before` / `@After` / `@Around` | When advice runs around methods |
+
+**Remember:** `@Transactional` only works when called **through the Spring proxy** — not via `this.method()` inside the same class.
+
+### 16.8 Testing
+
+| Annotation | What it does |
+|------------|--------------|
+| `@SpringBootTest` | Load full application context (integration test) |
+| `@WebMvcTest` | Test only web layer (controller slice) |
+| `@DataJpaTest` | Test only JPA layer |
+| `@MockBean` | Replace a Spring bean with a Mockito mock |
+| `@SpyBean` | Partial mock of a real bean |
+| `@ActiveProfiles("test")` | Use test profile config |
+| `@Test` | JUnit test method |
+
+```java
+@SpringBootTest
+class OrderServiceTest {
+    @MockBean PaymentClient payment;  // real bean replaced with mock
+    @Autowired OrderService service;
+}
+```
+
+### 16.9 Quick interview recap — most-asked annotations
+
+| If they ask… | Say this annotation |
+|--------------|---------------------|
+| Mark a REST API class | `@RestController` |
+| Inject dependency | Constructor + `@Service` (no field `@Autowired`) |
+| Read config from YAML | `@Value` or `@ConfigurationProperties` |
+| DB transaction | `@Transactional` |
+| Validate request body | `@Valid` + `@NotNull` etc. |
+| Custom SQL | `@Query` on repository |
+| Global error handling | `@RestControllerAdvice` + `@ExceptionHandler` |
+| Main Boot class | `@SpringBootApplication` |
+| Run code after startup | `@PostConstruct` or `CommandLineRunner` |
+| Async background task | `@Async` + `@EnableAsync` |
+
+**One-liner for interviews:** *"Spring annotations are metadata — I use stereotypes (`@Service`, `@Repository`) to register beans, constructor injection for dependencies, `@RestController` + mapping annotations for APIs, `@Transactional` for DB boundaries, and `@Valid` + Bean Validation for input checks."*
