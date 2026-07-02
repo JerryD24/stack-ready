@@ -126,8 +126,9 @@
   }
 
   function renderTopicCard(topic, trackColor) {
-    const pct = getTopicCardProgress(topic.file);
+    const { pct, done, total } = getProgressDisplay(topic.file);
     const diff = StackReadyCookies.getDifficulty(topic.file);
+    const countLabel = total > 0 ? `${done}/${total}` : '';
     const levels = ['easy', 'medium', 'hard'];
     const diffBtns = levels.map(l =>
       `<button type="button" class="diff-btn diff-${l}${diff === l ? ' active' : ''}" data-level="${l}" title="Mark ${l}">${l[0].toUpperCase()}</button>`
@@ -137,7 +138,10 @@
       <a href="${siteUrl('reader.html?file=' + encodeURIComponent(topic.file))}" class="topic-card" data-file="${topic.file}" data-diff="${diff}" data-pct="${pct}">
         <div class="topic-card-header">
           <h3>${topic.title}</h3>
-          <span class="priority-badge priority-${topic.priority || 'medium'}">${topic.priority || 'medium'}</span>
+          <div class="topic-card-badges">
+            <span class="topic-pct-badge" title="${countLabel ? countLabel + ' topics done' : 'Progress'}">${pct}%</span>
+            <span class="priority-badge priority-${topic.priority || 'medium'}">${topic.priority || 'medium'}</span>
+          </div>
         </div>
         <p>${topic.description}</p>
         <div class="topic-meta">

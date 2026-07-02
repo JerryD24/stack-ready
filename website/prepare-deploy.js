@@ -201,6 +201,35 @@ window.SITE_CONFIG = {
   basePath: '${basePath}',
   buildId: '${buildId}'
 };
+
+/** Purge stale service-worker + HTTP caches when a new deploy ships. */
+(function () {
+  var id = window.SITE_CONFIG && window.SITE_CONFIG.buildId;
+  if (!id) return;
+  var key = 'sr_build_id';
+  var prev = null;
+  try { prev = localStorage.getItem(key); } catch (e) { return; }
+  if (prev && prev !== id) {
+    var reload = function () { try { location.reload(); } catch (e) { /* ignore */ } };
+    var purge = function () {
+      if ('caches' in window) {
+        return caches.keys().then(function (keys) {
+          return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+        });
+      }
+    };
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations()
+        .then(function (regs) { return Promise.all(regs.map(function (r) { return r.unregister(); })); })
+        .then(purge)
+        .then(reload);
+    } else {
+      purge().then(reload);
+    }
+    return;
+  }
+  try { localStorage.setItem(key, id); } catch (e) { /* ignore */ }
+})();
 `;
   fs.writeFileSync(CONFIG_FILE, config, 'utf8');
   console.log(`config.js basePath = '${basePath}'${basePath ? ' (GitHub Pages project site)' : ' (local / user site)'}`);
@@ -290,13 +319,11 @@ generateStudyData();
 const buildId = getBuildId();
 updateConfig(buildId);
 
-// Production deploy (GitHub Actions): unique cache bust + SW per deploy
-if (process.env.GITHUB_ACTIONS === 'true') {
+// Production deploy: unique cache bust + SW per build (local stack-ready + GitHub Actions)
+if (repoName) {
   writeBuildInfo(buildId);
-  if (repoName) {
-    stampHtmlAssets(buildId);
-    writeServiceWorker(buildId);
-  }
+  stampHtmlAssets(buildId);
+  writeServiceWorker(buildId);
 }
 
 console.log('\nNext: commit, push, enable GitHub Pages on /website folder.');
