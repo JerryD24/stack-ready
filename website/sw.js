@@ -3,7 +3,7 @@
  * App shell is precached; guides and CDN assets are cached at runtime
  * so everything you've opened once is readable offline.
  */
-const CACHE = 'stackready-v2';
+const CACHE = 'stackready-v3';
 
 // Same-origin app shell (relative to the SW scope, so basePath-safe)
 const PRECACHE = [
@@ -57,6 +57,18 @@ function staleWhileRevalidate(request) {
   );
 }
 
+/** Guides must be network-first so new Q&A appears without a manual cache clear. */
+function networkFirst(request) {
+  return caches.open(CACHE).then((cache) =>
+    fetch(request)
+      .then((res) => {
+        if (res && res.ok) cache.put(request, res.clone());
+        return res;
+      })
+      .catch(() => cache.match(request))
+  );
+}
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
@@ -81,7 +93,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Everything else (assets, guide markdown, CDN libs): stale-while-revalidate
+  // Guide markdown: network-first (content updates must show immediately)
+  if (sameOrigin && url.pathname.includes('/content/')) {
+    event.respondWith(networkFirst(req));
+    return;
+  }
+
+  // Other assets + CDN libs: stale-while-revalidate
   if (sameOrigin || url.protocol === 'https:') {
     event.respondWith(staleWhileRevalidate(req));
   }

@@ -10,7 +10,9 @@ function siteUrl(relativePath) {
 }
 
 function contentUrl(fileName) {
-  return siteUrl(`content/${fileName}`);
+  const base = siteUrl(`content/${fileName}`);
+  const buildId = (window.SITE_CONFIG && window.SITE_CONFIG.buildId) || '';
+  return buildId ? `${base}?v=${buildId}` : base;
 }
 
 /* ---- PWA: service worker registration + install prompt ---- */
