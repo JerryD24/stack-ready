@@ -4,7 +4,7 @@
  */
 window.CONTENT_META = {
   "00_Topic_List.md": {
-    "words": 4386,
+    "words": 4411,
     "minutes": 22
   },
   "01_Java_Core_to_Advanced.md": {
@@ -132,8 +132,8 @@ window.CONTENT_META = {
     "minutes": 25
   },
   "32_Real_Interview_Questions.md": {
-    "words": 793,
-    "minutes": 4
+    "words": 1742,
+    "minutes": 9
   },
   "Complete_PeerReview_Report.md": {
     "words": 3202,

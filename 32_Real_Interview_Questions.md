@@ -174,6 +174,79 @@ Map<String, Set<Set<String>>>
 - `entry.getValue()` → `Set` of employees (`E1`, `E2`)
 - For each employee, pair: `(employee, manager)` → `Map.entry(emp, entry.getKey())`
 
+**Full solution (as written in the interview)**
+
+```java
+public static Map<String, Set<String>> invert(Map<String, Set<String>> map) {
+    if (map == null) {
+        return Collections.emptyMap();
+    }
+    return map.entrySet().stream()
+        .filter(entry -> entry.getValue() != null)
+        .flatMap(entry -> entry.getValue().stream()
+            .map(employee -> Map.entry(employee, entry.getKey())))
+        .collect(Collectors.groupingBy(
+            Map.Entry::getKey,
+            Collectors.mapping(Map.Entry::getValue, Collectors.toSet())
+        ));
+}
+```
+
+**Sample input from the round**
+
+```java
+Map<String, Set<String>> map = new HashMap<>();
+map.put("M1", Set.of("A1", "A2"));
+map.put("M2", Set.of("A1", "B1", "B2"));
+map.put("M3", Set.of("B2"));
+// Output: {A1=[M1,M2], A2=[M1], B1=[M2], B2=[M2,M3]}
+```
+
+**flatMap() — step-by-step walkthrough**
+
+Input: `{ M1 -> [E1, E2], M2 -> [E2, E3] }`
+
+**Iteration 1** — `flatMap` receives `(M1, [E1, E2])`:
+1. `entry.getValue().stream()` → `E1`, `E2`
+2. `.map(emp -> Map.entry(emp, entry.getKey()))` → `(E1, M1)`, `(E2, M1)`
+
+**Iteration 2** — `flatMap` receives `(M2, [E2, E3])`:
+1. Stream → `E2`, `E3`
+2. Map → `(E2, M2)`, `(E3, M2)`
+
+**After flattening**, the stream contains:
+```
+(E1, M1), (E2, M1), (E2, M2), (E3, M2)
+```
+
+**After `groupingBy` + `mapping` + `toSet()`**:
+```java
+{ E1 -> [M1], E2 -> [M1, M2], E3 -> [M2] }
+```
+
+**Hierarchy example (manager is also an employee)**
+
+Input:
+```java
+{ M1 -> [E1, E2], M2 -> [E2, E3], M3 -> [M1, M2] }
+```
+
+After `flatMap` (before grouping):
+```
+(E1, M1), (E2, M1), (E2, M2), (E3, M2), (M1, M3), (M2, M3)
+```
+
+Final output:
+```java
+{
+    E1 -> [M1],
+    E2 -> [M1, M2],
+    E3 -> [M2],
+    M1 -> [M3],
+    M2 -> [M3]
+}
+```
+
 **30-second explanation (say this in the interview)**
 
 *"Inside flatMap, `getValue()` is the set of employees and `getKey()` is the manager. For each employee I create `(employee, manager)` pairs, then groupingBy collects all managers per employee into a Set."*
@@ -220,6 +293,240 @@ Cover happy path, multiple managers per employee, empty/null inputs, and hierarc
 **Spoken answer**
 
 *"For this inversion I considered empty and null inputs, managers with no reportees, employees reporting to multiple managers, managers who are also employees, null reportee sets, and circular reporting. Cycles don't break inversion, but they'd matter if we walked the hierarchy recursively."*
+
+---
+
+### Q5. When to use an Abstract Class?
+
+**Fast answer**
+
+Use an **abstract class** when subclasses share common code and you want to **force** certain methods to be implemented — but you never want anyone to instantiate the base type directly.
+
+**Use an abstract class when:**
+
+| Situation | Why abstract class |
+|-----------|-------------------|
+| Common implementation for multiple subclasses | Put shared logic in the base; subclasses inherit it |
+| Force subclasses to implement specific methods | Declare `abstract` methods — compiler enforces override |
+| Base object should never be created directly | `abstract` class cannot be instantiated with `new` |
+
+```java
+abstract class Shape {
+    String color;
+
+    Shape(String color) { this.color = color; }
+
+    // Common implementation — shared by all subclasses
+    void printColor() {
+        System.out.println("Color: " + color);
+    }
+
+    // Force every subclass to define area
+    abstract double area();
+}
+
+class Circle extends Shape {
+    double radius;
+    Circle(String color, double radius) {
+        super(color);
+        this.radius = radius;
+    }
+    @Override
+    double area() { return Math.PI * radius * radius; }
+}
+
+// Shape s = new Shape("red");  // ❌ compile error — cannot instantiate abstract class
+```
+
+**Abstract class vs Interface (quick contrast)**
+
+| | Abstract class | Interface |
+|---|---|---|
+| State (fields) | Can have instance fields | Only constants (until Java 8+ default methods) |
+| Constructor | Yes | No |
+| Multiple inheritance | No (single extends) | Yes (implements many) |
+| When to pick | Shared code + forced overrides | Pure contract / capability |
+
+**30-second interview close**
+
+*"I use an abstract class when several subclasses share real implementation and I need to force certain methods while preventing direct instantiation of the base type."*
+
+---
+
+### Q6. HashMap vs ConcurrentHashMap
+
+**Fast answer**
+
+Both store **key-value pairs**. `HashMap` is for single-threaded use; `ConcurrentHashMap` is thread-safe for concurrent read/write.
+
+| | HashMap | ConcurrentHashMap |
+|---|---|---|
+| Thread-safe | ❌ No | ✅ Yes |
+| Null key | ✅ One null key allowed | ❌ Not allowed |
+| Null values | ✅ Multiple null values | ❌ Not allowed |
+| Performance | O(1) average for get/put/remove | O(1) average; scales under concurrency |
+| Use when | Single-threaded apps | Multi-threaded / concurrent apps |
+
+**Internal working — HashMap**
+
+1. Stores entries in an **array of buckets**.
+2. Uses `hashCode()` to pick the bucket index.
+3. Uses `equals()` to resolve key equality inside a bucket.
+4. From **Java 8**: long collision chains convert to a **Red-Black Tree** (when bucket size > 8) for better worst-case performance.
+
+**Internal working — ConcurrentHashMap**
+
+1. Also uses buckets and hashing.
+2. Uses **fine-grained synchronization** — locks at bucket/segment level, not the whole map.
+3. Uses **CAS (Compare-And-Swap)** atomic operations so different threads can work on **different buckets** concurrently.
+4. Much better than wrapping a `HashMap` in `synchronized` or `Collections.synchronizedMap()`.
+
+**Why CHM disallows null keys/values**
+
+In concurrent code, `null` is ambiguous — does it mean "key not present" or "value is null"? That ambiguity causes bugs under races, so CHM rejects nulls outright.
+
+**30-second interview close**
+
+*"HashMap is fast but not thread-safe and allows one null key. ConcurrentHashMap is for multi-threaded apps — fine-grained locking and CAS per bucket, no null keys or values, and much better throughput than synchronizing the entire map."*
+
+---
+
+### Q7. Checked vs Unchecked Exceptions
+
+**Fast answer**
+
+| | Checked (Compile-time) | Unchecked (Runtime) |
+|---|---|---|
+| Checked by compiler | ✅ Yes — must handle or declare | ❌ No — optional to handle |
+| When thrown | Compile-time enforcement; thrown at runtime if triggered | Only at runtime |
+| Extends | `Exception` (not `RuntimeException`) | `RuntimeException` |
+| Handle with | `try-catch` or `throws` | Optional `try-catch` |
+
+**Checked exception examples**
+
+```java
+IOException
+SQLException
+ClassNotFoundException
+FileNotFoundException
+```
+
+**Unchecked (runtime) exception examples**
+
+```java
+NullPointerException
+ArithmeticException
+ArrayIndexOutOfBoundsException
+NumberFormatException
+IllegalArgumentException
+```
+
+**Compile-time error vs runtime exception — don't confuse them**
+
+A **compile-time error** happens when `javac` cannot produce a `.class` file — the JVM never runs.
+
+```java
+// ❌ Compile-time error — variable not declared
+public class Demo {
+    public static void main(String[] args) {
+        System.out.println(a);   // cannot find symbol: a
+    }
+}
+```
+
+```java
+// ❌ Compile-time error — checked exception not handled
+import java.io.FileReader;
+
+public class Demo {
+    public static void main(String[] args) {
+        FileReader file = new FileReader("test.txt");
+        // unreported exception FileNotFoundException;
+        // must be caught or declared to be thrown
+    }
+}
+```
+
+Since compilation fails → `Demo.class` is **not** created → JVM **never starts**.
+
+**Correct — declare with throws**
+
+```java
+public static void main(String[] args) throws Exception {
+    FileReader file = new FileReader("test.txt");
+}
+```
+
+**Correct — handle with try-catch (compiles; exception may still throw at runtime)**
+
+```java
+try {
+    FileReader file = new FileReader("test.txt");
+} catch (FileNotFoundException e) {
+    System.out.println("File not found");
+}
+```
+
+- Code **compiles** because the checked exception is handled.
+- At **runtime**: if `test.txt` exists → no exception; if missing → `FileNotFoundException` thrown and caught.
+
+**The FileNotFoundException trap (interview favorite)**
+
+| What you write | When error appears |
+|----------------|-------------------|
+| `new FileReader("x.txt")` with no try/catch or throws | **Compile-time** error |
+| try-catch around `new FileReader("x.txt")` | Compiles fine; exception thrown at **runtime** only if file missing |
+
+**Easy way to remember**
+
+- **Compile time:** Java checks whether you've **handled the possibility** of a checked exception.
+- **Runtime:** Java **actually tries** to open the file — if it's not there, it throws `FileNotFoundException`.
+
+**30-second interview close**
+
+*"Checked exceptions like FileNotFoundException must be handled or declared at compile time. Unchecked exceptions like NullPointerException are not enforced by the compiler. A compile-time error means javac failed — the program never runs. Runtime exceptions happen while the JVM is executing."*
+
+---
+
+### Q8. What is a compile-time error? (Full interview answer)
+
+**Fast answer**
+
+A compile-time error occurs **during compilation** when the Java compiler (`javac`) detects invalid code. The `.class` file is never created, so the program **never runs**.
+
+**Common causes**
+
+| Cause | Example |
+|-------|---------|
+| Syntax errors | Missing `;`, unmatched `{ }` |
+| Undeclared variables | `System.out.println(a);` when `a` doesn't exist |
+| Type mismatch | `int num = "10";` — String assigned to int |
+| Unhandled checked exception | `new FileReader("x.txt")` without try-catch or throws |
+| Wrong method signature | Calling method with wrong argument types |
+
+**Type mismatch example**
+
+```java
+int num = "10";   // ❌ incompatible types: String cannot be converted to int
+```
+
+**Spoken interview answer**
+
+*"A compile-time error happens when javac analyzes the source and finds something invalid — syntax mistakes, undeclared variables, type mismatches, or unhandled checked exceptions. For example, `int num = \"10\"` fails at compile time because String and int are incompatible. Since compilation fails, no .class file is produced and the JVM never executes the program."*
+
+**Checked exception — what the compiler actually does**
+
+When the compiler sees `new FileReader("test.txt")`:
+
+1. It knows `FileReader` constructor can throw `FileNotFoundException` (checked).
+2. It checks whether `main()` catches it or declares `throws`.
+3. If neither → **stops compilation** with `unreported exception FileNotFoundException`.
+4. No `.class` file → JVM never starts → program never executes.
+
+This is why interviewers ask: *"Is FileNotFoundException compile-time or runtime?"* — **both are involved, in different ways**:
+
+- **Compile time:** compiler forces you to handle the *possibility*.
+- **Runtime:** JVM throws it only if the file actually doesn't exist (after you've handled the compile-time requirement).
 
 ---
 

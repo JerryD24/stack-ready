@@ -565,7 +565,7 @@ const ProgressMap = (function () {
 
     '32_Real_Interview_Questions.md': {
       '1-how-to-use-this-guide': ['How to use the real interview Q&A bank'],
-      '2-product-company--java-backend-round-1': ['Product company Java backend round 1 — inheritance vs composition, streams invert map, test cases'],
+      '2-product-company--java-backend-round-1': ['Product company Java backend round 1 — inheritance vs composition, abstract class, HashMap vs CHM, exceptions, streams invert map, test cases'],
       '3-more-companies-coming-soon': ['More company interview rounds (coming soon)']
     }
   };
