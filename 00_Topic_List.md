@@ -23,6 +23,7 @@
 | `06_CP_Tricks.md` | Java tricks, Bit manipulation, Math shortcuts, Template code |
 | `14_AI_Agents_and_MCP_For_Developers.md` | AI Agents, MCP servers, prompt & context engineering, RAG, Beginner → Pro |
 | `15_React_JS_Complete_Guide.md` | React.js — JSX, Hooks, Router, Redux, Performance, TypeScript, Testing, React 18/19, Q&A |
+| `32_Real_Interview_Questions.md` | **Real interview Q&A** — company-wise actual technical round questions with full answers |
 | `website/` | **StackReady Web UI** — responsive dashboard + markdown reader (`node server.js`) — deploy: `DEPLOY_GITHUB_PAGES.md` |
 
 ---

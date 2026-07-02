@@ -461,6 +461,14 @@ const UTILITY_DOCS = [
     description: 'Code review patterns and best practices reference',
     icon: '📋',
     type: 'reference'
+  },
+  {
+    id: 'real-interviews',
+    file: '32_Real_Interview_Questions.md',
+    title: 'Real Interview Questions',
+    description: 'Company-wise real technical round Q&A — actual questions with full answers',
+    icon: '🎯',
+    type: 'interviews'
   }
 ];
 

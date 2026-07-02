@@ -558,6 +558,12 @@ const ProgressMap = (function () {
       '19-angular-vs-react': ['Angular vs React (framework vs library trade-offs)'],
       '20-coding-problems-patterns': ['Angular coding problems & patterns'],
       '21-interview-qa': ['Angular interview Q&A bank']
+    },
+
+    '32_Real_Interview_Questions.md': {
+      '1-how-to-use-this-guide': ['How to use the real interview Q&A bank'],
+      '2-product-company--java-backend-round-1': ['Product company Java backend round 1 — inheritance vs composition, streams invert map, test cases'],
+      '3-more-companies-coming-soon': ['More company interview rounds (coming soon)']
     }
   };
 
