@@ -3,7 +3,7 @@
  * App shell is precached; guides and CDN assets are cached at runtime
  * so everything you've opened once is readable offline.
  */
-const CACHE = 'stackready-v3';
+const CACHE = 'stackready-v4';
 
 // Same-origin app shell (relative to the SW scope, so basePath-safe)
 const PRECACHE = [

@@ -37,10 +37,44 @@
     return Math.round((keys.filter(k => checklist[k]).length / keys.length) * 100);
   }
 
-  function getTopicCardProgress(file) {
+  function getProgressDisplay(file) {
     const p = ProgressMap.getGuideProgress(file);
-    if (p.total > 0) return p.percent;
-    return StackReadyCookies.getProgress()[file] ? 100 : 0;
+    if (p.total > 0) {
+      return { pct: p.percent, done: p.done, total: p.total };
+    }
+    const legacyDone = StackReadyCookies.getProgress()[file];
+    return { pct: legacyDone ? 100 : 0, done: legacyDone ? 1 : 0, total: legacyDone ? 1 : 0 };
+  }
+
+  function renderProgressBlock(file, variant) {
+    const { pct, done, total } = getProgressDisplay(file);
+    const countLabel = total > 0 ? `${done}/${total}` : '';
+    if (variant === 'utility') {
+      return `
+        <div class="utility-progress">
+          <div class="utility-progress-top">
+            <span>Progress</span>
+            <span>${pct}%${countLabel ? ` · ${countLabel}` : ''}</span>
+          </div>
+          <div class="utility-progress-wrap">
+            <div class="utility-progress-bar" style="width:${pct}%"></div>
+          </div>
+        </div>`;
+    }
+    return `
+      <div class="card-progress">
+        <div class="card-progress-top">
+          <span>Progress</span>
+          <span class="card-progress-pct">${pct}%${countLabel ? ` <span class="card-progress-count">(${countLabel})</span>` : ''}</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" style="width:${pct}%"></div>
+        </div>
+      </div>`;
+  }
+
+  function getTopicCardProgress(file) {
+    return getProgressDisplay(file).pct;
   }
 
   function readTimeLabel(file) {
@@ -80,11 +114,12 @@
   function renderUtilityStrip() {
     const strip = document.getElementById('utilityStrip');
     strip.innerHTML = UTILITY_DOCS.map(doc => `
-      <a href="${siteUrl('reader.html?file=' + encodeURIComponent(doc.file))}" class="utility-card">
+      <a href="${siteUrl('reader.html?file=' + encodeURIComponent(doc.file))}" class="utility-card" data-file="${doc.file}">
         <span class="utility-card-icon">${doc.icon}</span>
-        <div>
+        <div class="utility-card-body">
           <h3>${doc.title}</h3>
           <p>${doc.description}</p>
+          ${renderProgressBlock(doc.file, 'utility')}
         </div>
       </a>
     `).join('');
@@ -113,9 +148,7 @@
           ${readTimeLabel(topic.file) ? `<span class="read-time">⏱ ${readTimeLabel(topic.file)}</span>` : '<span></span>'}
           <span class="diff-controls" data-file="${topic.file}">${diffBtns}</span>
         </div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar" style="width:${pct}%"></div>
-        </div>
+        ${renderProgressBlock(topic.file, 'topic')}
       </a>
     `;
   }
