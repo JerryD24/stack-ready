@@ -9,20 +9,56 @@ function siteUrl(relativePath) {
   return base ? `${base}/${path}` : `/${path}`;
 }
 
-function contentUrl(fileName) {
-  const base = siteUrl(`content/${fileName}`);
+/** Append deploy buildId so browsers never reuse stale JS/CSS/markdown. */
+function assetUrl(relativePath) {
   const buildId = (window.SITE_CONFIG && window.SITE_CONFIG.buildId) || '';
-  return buildId ? `${base}?v=${buildId}` : base;
+  const url = siteUrl(relativePath);
+  if (!buildId || url.includes('?v=')) return url;
+  return `${url}?v=${buildId}`;
 }
 
-/* ---- PWA: service worker registration + install prompt ---- */
+function contentUrl(fileName) {
+  return assetUrl(`content/${fileName}`);
+}
+
+/* ---- PWA: service worker — network-first, auto-update on deploy ---- */
 (function () {
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch(() => { /* offline support unavailable */ });
-    });
+  if (!('serviceWorker' in navigator)) return;
+
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    location.reload();
+  });
+
+  function activateWaiting(reg) {
+    if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
   }
 
+  window.addEventListener('load', () => {
+    const buildId = (window.SITE_CONFIG && window.SITE_CONFIG.buildId) || '';
+    const swUrl = assetUrl('sw.js');
+    navigator.serviceWorker.register(swUrl, { updateViaCache: 'none' })
+      .then((reg) => {
+        reg.update();
+        if (reg.waiting) activateWaiting(reg);
+        reg.addEventListener('updatefound', () => {
+          const installing = reg.installing;
+          if (!installing) return;
+          installing.addEventListener('statechange', () => {
+            if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+              activateWaiting(reg);
+            }
+          });
+        });
+      })
+      .catch(() => { /* offline support unavailable */ });
+  });
+})();
+
+/* ---- PWA install prompt ---- */
+(function () {
   let deferredPrompt = null;
 
   function showInstallButton() {

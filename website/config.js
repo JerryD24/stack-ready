@@ -4,5 +4,5 @@
  */
 window.SITE_CONFIG = {
   basePath: '/stack-ready',
-  buildId: '20260702'
+  buildId: '1783016326669'
 };

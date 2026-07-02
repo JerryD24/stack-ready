@@ -1,40 +1,11 @@
 /**
- * StackReady service worker — offline-first PWA.
- * App shell is precached; guides and CDN assets are cached at runtime
- * so everything you've opened once is readable offline.
+ * StackReady service worker — network-first, offline fallback only.
+ * CACHE name is replaced on each GitHub Pages deploy by prepare-deploy.js.
  */
-const CACHE = 'stackready-v4';
+const CACHE = 'stackready-dev';
 
-// Same-origin app shell (relative to the SW scope, so basePath-safe)
-const PRECACHE = [
-  './',
-  'index.html',
-  'reader.html',
-  'practice.html',
-  'config.js',
-  'favicon.svg',
-  'site.webmanifest',
-  'assets/css/styles.css',
-  'assets/js/site.js',
-  'assets/js/cookies.js',
-  'assets/js/theme.js',
-  'assets/js/topics.js',
-  'assets/js/progress-map.js',
-  'assets/js/content-meta.js',
-  'assets/js/study-data.js',
-  'assets/js/confetti.js',
-  'assets/js/app.js',
-  'assets/js/reader.js',
-  'assets/js/practice.js'
-];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) =>
-      // add individually so one missing file doesn't abort the whole install
-      Promise.allSettled(PRECACHE.map((url) => cache.add(url)))
-    ).then(() => self.skipWaiting())
-  );
+self.addEventListener('install', () => {
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -45,22 +16,14 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-function staleWhileRevalidate(request) {
-  return caches.open(CACHE).then((cache) =>
-    cache.match(request).then((cached) => {
-      const network = fetch(request).then((res) => {
-        if (res && (res.ok || res.type === 'opaque')) cache.put(request, res.clone());
-        return res;
-      }).catch(() => cached);
-      return cached || network;
-    })
-  );
-}
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
 
-/** Guides must be network-first so new Q&A appears without a manual cache clear. */
+/** Always try network first; cache is only for offline reading. */
 function networkFirst(request) {
   return caches.open(CACHE).then((cache) =>
-    fetch(request)
+    fetch(request, { cache: 'no-store' })
       .then((res) => {
         if (res && res.ok) cache.put(request, res.clone());
         return res;
@@ -74,33 +37,7 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
-  const sameOrigin = url.origin === self.location.origin;
+  if (url.origin !== self.location.origin) return;
 
-  // Navigations: network-first, fall back to cached page (offline)
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
-          return res;
-        })
-        .catch(() =>
-          caches.match(req, { ignoreSearch: true })
-            .then((hit) => hit || caches.match('index.html'))
-        )
-    );
-    return;
-  }
-
-  // Guide markdown: network-first (content updates must show immediately)
-  if (sameOrigin && url.pathname.includes('/content/')) {
-    event.respondWith(networkFirst(req));
-    return;
-  }
-
-  // Other assets + CDN libs: stale-while-revalidate
-  if (sameOrigin || url.protocol === 'https:') {
-    event.respondWith(staleWhileRevalidate(req));
-  }
+  event.respondWith(networkFirst(req));
 });
