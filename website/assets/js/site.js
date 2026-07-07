@@ -21,38 +21,14 @@ function contentUrl(fileName) {
   return assetUrl(`content/${fileName}`);
 }
 
-/* ---- PWA: service worker — network-first, auto-update on deploy ---- */
+/* ---- PWA: service worker — network-first, no auto-reload loop ---- */
 (function () {
   if (!('serviceWorker' in navigator)) return;
 
-  let refreshing = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (refreshing) return;
-    refreshing = true;
-    location.reload();
-  });
-
-  function activateWaiting(reg) {
-    if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-  }
-
   window.addEventListener('load', () => {
-    const buildId = (window.SITE_CONFIG && window.SITE_CONFIG.buildId) || '';
     const swUrl = assetUrl('sw.js');
     navigator.serviceWorker.register(swUrl, { updateViaCache: 'none' })
-      .then((reg) => {
-        reg.update();
-        if (reg.waiting) activateWaiting(reg);
-        reg.addEventListener('updatefound', () => {
-          const installing = reg.installing;
-          if (!installing) return;
-          installing.addEventListener('statechange', () => {
-            if (installing.state === 'installed' && navigator.serviceWorker.controller) {
-              activateWaiting(reg);
-            }
-          });
-        });
-      })
+      .then((reg) => { reg.update(); })
       .catch(() => { /* offline support unavailable */ });
   });
 })();

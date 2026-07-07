@@ -202,33 +202,46 @@ window.SITE_CONFIG = {
   buildId: '${buildId}'
 };
 
-/** Purge stale service-worker + HTTP caches when a new deploy ships. */
+/** Purge stale service-worker + HTTP caches when a new deploy ships (once per build). */
 (function () {
   var id = window.SITE_CONFIG && window.SITE_CONFIG.buildId;
   if (!id) return;
   var key = 'sr_build_id';
   var prev = null;
   try { prev = localStorage.getItem(key); } catch (e) { return; }
-  if (prev && prev !== id) {
-    var reload = function () { try { location.reload(); } catch (e) { /* ignore */ } };
-    var purge = function () {
-      if ('caches' in window) {
-        return caches.keys().then(function (keys) {
-          return Promise.all(keys.map(function (k) { return caches.delete(k); }));
-        });
-      }
-    };
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations()
-        .then(function (regs) { return Promise.all(regs.map(function (r) { return r.unregister(); })); })
-        .then(purge)
-        .then(reload);
-    } else {
-      purge().then(reload);
-    }
+  if (!prev) {
+    try { localStorage.setItem(key, id); } catch (e) { /* ignore */ }
     return;
   }
-  try { localStorage.setItem(key, id); } catch (e) { /* ignore */ }
+  if (prev === id) return;
+
+  // Save new build id FIRST — prevents infinite reload loop
+  try { localStorage.setItem(key, id); } catch (e) { return; }
+
+  var onceKey = 'sr_purged_' + id;
+  try {
+    if (sessionStorage.getItem(onceKey)) return;
+    sessionStorage.setItem(onceKey, '1');
+  } catch (e) { /* ignore */ }
+
+  var purge = function () {
+    if ('caches' in window) {
+      return caches.keys().then(function (keys) {
+        return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+      });
+    }
+  };
+  var done = function () {
+    try { location.reload(); } catch (e) { /* ignore */ }
+  };
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations()
+      .then(function (regs) { return Promise.all(regs.map(function (r) { return r.unregister(); })); })
+      .then(purge)
+      .then(done);
+  } else {
+    purge().then(done);
+  }
 })();
 `;
   fs.writeFileSync(CONFIG_FILE, config, 'utf8');
@@ -262,7 +275,7 @@ function writeServiceWorker(buildId) {
 const CACHE = 'stackready-${buildId}';
 
 self.addEventListener('install', () => {
-  self.skipWaiting();
+  // Normal install — activate on next visit (avoids reload flicker)
 });
 
 self.addEventListener('activate', (event) => {
