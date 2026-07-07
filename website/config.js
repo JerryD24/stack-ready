@@ -4,7 +4,7 @@
  */
 window.SITE_CONFIG = {
   basePath: '/stack-ready',
-  buildId: '5c806b780a79'
+  buildId: 'cf2a2f2r2'
 };
 
 /** Purge stale service-worker + HTTP caches when a new deploy ships. */

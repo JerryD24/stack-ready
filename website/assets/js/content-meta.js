@@ -132,8 +132,8 @@ window.CONTENT_META = {
     "minutes": 25
   },
   "32_Real_Interview_Questions.md": {
-    "words": 1742,
-    "minutes": 9
+    "words": 2675,
+    "minutes": 13
   },
   "Complete_PeerReview_Report.md": {
     "words": 3202,

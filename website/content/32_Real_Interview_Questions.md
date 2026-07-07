@@ -6,7 +6,8 @@
 ## TABLE OF CONTENTS
 1. [How to use this guide](#1-how-to-use-this-guide)
 2. [Product Company — Java Backend, Round 1](#2-product-company--java-backend-round-1)
-3. [More companies coming soon](#3-more-companies-coming-soon)
+3. [AI SaaS Company — Java Backend, Round 2](#3-ai-saas-company--java-backend-round-2)
+4. [More companies coming soon](#4-more-companies-coming-soon)
 
 ---
 
@@ -530,7 +531,289 @@ This is why interviewers ask: *"Is FileNotFoundException compile-time or runtime
 
 ---
 
-## 3. More companies coming soon
+## 3. AI SaaS Company — Java Backend, Round 2
+
+**Role:** Software Engineer — Java Backend  
+**Experience:** ~3 years  
+**Round:** Second technical (Kafka + Spring + SOLID + live coding)  
+**Domain:** AI-powered recruiting / HR SaaS  
+
+---
+
+### Q1. What is consumer lag in Kafka? How do you fix it?
+
+**Fast answer**
+
+Consumer lag means the producer is sending messages **faster** than the consumer can process them, so the **backlog keeps growing**.
+
+**What to check first**
+
+| Check | Why |
+|-------|-----|
+| Consumer lag metrics | How far behind each partition is |
+| Consumer health | Are consumers alive and in the group? |
+| Processing time per message | Slow handler = growing lag |
+| Partition assignment | All partitions have active consumers? |
+
+**How to fix**
+
+1. **Optimize consumer processing** — faster code, batch DB writes, async I/O
+2. **Increase consumers** — up to **one consumer per partition** (max parallelism = partition count)
+3. **Scale horizontally** — more consumer instances in the same group
+4. **Increase partitions** (if needed) — only when you need more parallelism than current partition count allows
+
+**Example (say this in the interview)**
+
+*"If the producer sends 1000 msgs/sec and the consumer processes 700 msgs/sec, lag grows by 300 msgs/sec. We need faster processing or more consumers — but never more consumers than partitions."*
+
+**30-second close**
+
+*"Lag is backlog. I check metrics and consumer health, optimize the handler, then scale consumers up to the partition count."*
+
+---
+
+### Q2. A Kafka message fails during processing — what do you do with offsets?
+
+**Fast answer**
+
+Do **not** commit the offset for a failed message until it is handled successfully (depending on your ack strategy). Retry with backoff; if still failing, send to a **Dead Letter Queue (DLQ)**.
+
+**Step-by-step**
+
+1. **Don't commit offset** for the failed message until success (manual ack / at-least-once)
+2. **Retry** a few times with exponential backoff (transient errors: DB timeout, network blip)
+3. **Non-recoverable error** → publish to **DLQ** topic for later analysis
+4. **Commit offsets** only for successfully processed messages — avoids silent data loss
+
+**Example**
+
+Out of 10 messages, if the 10th fails:
+- Retry message 10 (e.g., 3 times with backoff)
+- If still failing → move to DLQ, log + alert
+- Don't block the entire consumer group indefinitely on one poison pill
+
+**Ack strategies (if they probe)**
+
+| Strategy | Behavior |
+|----------|----------|
+| At-least-once | Commit after success; retries possible; no commit on failure |
+| At-most-once | Commit before process; fast but can lose messages |
+| Exactly-once | Kafka transactions + idempotent producer (heavier setup) |
+
+**30-second close**
+
+*"I don't ack failed messages. Retry with backoff for transient failures. Poison messages go to DLQ so the consumer group keeps moving without data loss."*
+
+---
+
+### Q3. Which design patterns do you use in Spring Boot?
+
+**Fast answer**
+
+Singleton, Factory, Strategy, Observer, Builder, and Dependency Injection — Spring uses several of these by default.
+
+| Pattern | Where in Spring Boot |
+|---------|---------------------|
+| **Singleton** | Spring beans (default scope) |
+| **Factory** | `BeanFactory`, `@Bean` methods, `ObjectProvider` |
+| **Strategy** | Switch implementations at runtime (payment type, pricing rule) |
+| **Observer** | Application events, `@EventListener`, Kafka consumers |
+| **Builder** | Complex DTOs / config objects (`@Builder`, Lombok) |
+| **Dependency Injection** | `@Autowired` / constructor injection — loose coupling |
+
+**Example**
+
+Different payment methods (UPI, Card, Wallet):
+
+```java
+interface PaymentStrategy {
+    void pay(BigDecimal amount);
+}
+
+@Service
+class UpiPayment implements PaymentStrategy { ... }
+
+@Service
+class CardPayment implements PaymentStrategy { ... }
+
+@Service
+class PaymentService {
+    private final Map<String, PaymentStrategy> strategies;
+
+    PaymentService(List<PaymentStrategy> list) {
+        this.strategies = list.stream()
+            .collect(Collectors.toMap(s -> s.getClass().getSimpleName(), s -> s));
+    }
+
+    void checkout(String type, BigDecimal amount) {
+        strategies.get(type).pay(amount);  // Strategy — pick at runtime
+    }
+}
+```
+
+**30-second close**
+
+*"Spring beans are Singletons. I use Strategy for swappable business logic, Observer for events/Kafka, Factory via `@Bean`, and DI everywhere for loose coupling."*
+
+---
+
+### Q4. What is the O in SOLID? (Open/Closed Principle)
+
+**Fast answer**
+
+**O** = **Open/Closed Principle (OCP)** — classes/modules should be **open for extension, closed for modification**.
+
+| | Meaning |
+|---|---|
+| ✅ Open for extension | Add new behavior via new classes/interfaces |
+| ❌ Closed for modification | Don't edit existing, tested code for every new requirement |
+
+**Vehicle example (interview favorite)**
+
+If `Vehicle` is implemented by `Bike` and `Car`, and you add `start()` directly to `Vehicle`:
+- You must change `Vehicle`, `Bike`, and `Car` → **modifying** existing code → **OCP violation**
+
+**Better approaches**
+
+- Separate `Startable` interface
+- Composition: `Engine.start()` inside `Bike`
+- Default method on interface (Java 8+) — partial mitigation
+
+**30-second close**
+
+*"OCP means extend via new code, don't keep editing old classes. Adding a method to a base interface forces all implementors to change — that's the violation."*
+
+---
+
+### Q5. Does Factory pattern violate OCP?
+
+**Fast answer**
+
+A **simple factory** with `if-else` / `switch` **does violate OCP** — every new type requires editing the factory.
+
+**❌ Violates OCP**
+
+```java
+class VehicleFactory {
+    Vehicle create(String type) {
+        if ("bike".equals(type)) return new Bike();
+        if ("car".equals(type)) return new Car();
+        // new Truck → must EDIT this method
+        throw new IllegalArgumentException();
+    }
+}
+```
+
+**✅ OCP-compliant options**
+
+1. **Registration map** — `Map<String, Supplier<Vehicle>>`
+2. **Separate factory per type** — `BikeFactory`, `CarFactory` (no central switch)
+3. **Spring DI** — register new `@Service` implementations; inject `List<Vehicle>` or `Map<String, Vehicle>`
+
+```java
+class VehicleFactory {
+    private final Map<String, Supplier<Vehicle>> registry = new HashMap<>();
+
+    void register(String type, Supplier<Vehicle> supplier) {
+        registry.put(type, supplier);
+    }
+
+    Vehicle create(String type) {
+        Supplier<Vehicle> s = registry.get(type);
+        if (s == null) throw new IllegalArgumentException("Unknown: " + type);
+        return s.get();
+    }
+}
+
+// New Truck — register only, no factory edit:
+// factory.register("truck", Truck::new);
+```
+
+**30-second close**
+
+*"Simple if-else factory violates OCP because adding Truck means editing the factory. Fix with a registry map, per-type factories, or let Spring inject implementations."*
+
+---
+
+### Q6. Coding — Top K users by total spend (PriorityQueue)
+
+**Problem**
+
+Given `List<Transaction(userId, amount, timestamp)>`, return the **top K user IDs** by **total spend**.
+
+**Constraints from the round**
+
+- ~50M transactions
+- ~10k distinct users
+- k = 2 (small K)
+
+**Fast answer**
+
+1. Aggregate total per `userId` in a `HashMap` — O(n)
+2. Use a **min-heap of size k** to keep top K spenders — O(u log k), u = distinct users
+
+```java
+record Transaction(int userId, long amount, long timestamp) {}
+
+public static List<Integer> topKSpenders(List<Transaction> transactions, int k) {
+    if (transactions == null || transactions.isEmpty() || k <= 0) {
+        return List.of();
+    }
+
+    Map<Integer, Long> totalSpent = new HashMap<>();
+    for (Transaction t : transactions) {
+        totalSpent.merge(t.userId(), t.amount(), Long::sum);
+    }
+
+    // Min-heap: smallest total at top → evict when size > k
+    PriorityQueue<Map.Entry<Integer, Long>> minHeap = new PriorityQueue<>(
+        Comparator.comparingLong(Map.Entry::getValue)
+    );
+
+    for (Map.Entry<Integer, Long> e : totalSpent.entrySet()) {
+        minHeap.offer(e);
+        if (minHeap.size() > k) minHeap.poll();
+    }
+
+    List<Integer> result = new ArrayList<>();
+    while (!minHeap.isEmpty()) {
+        result.add(minHeap.poll().getKey());
+    }
+    result.sort((u1, u2) -> Long.compare(totalSpent.get(u2), totalSpent.get(u1)));
+    return result;
+}
+```
+
+**Sample**
+
+```java
+// user 2: 10000+20000=30000, user 3: 30000, user 4: 40000, user 5: 50000
+// topK(transactions, 2) → [5, 4]
+```
+
+**Common bugs (they may ask what went wrong)**
+
+| Bug | Fix |
+|-----|-----|
+| Forgot `totalSpent.put(userId, currAmt)` after merge | Use `merge()` or explicit `put` |
+| Sorting inside the transaction loop | Aggregate first, then heap/sort once |
+| Rebuilding result on every iteration | Build result only after aggregation |
+
+**Complexity**
+
+| Step | Time |
+|------|------|
+| HashMap aggregate | O(n) — n = transactions |
+| Min-heap top K | O(u log k) — u = distinct users |
+| Space | O(u + k) |
+
+**30-second close**
+
+*"One pass to sum per userId in a HashMap. Min-heap of size k keeps the top spenders — O(u log k). For 10k users and k=2, that's trivial. Don't sort inside the transaction loop."*
+
+---
+
+## 4. More companies coming soon
 
 New company rounds will be added here as you share them. Each gets its own `## Company — Role, Round N` section with full Q&A.
 
