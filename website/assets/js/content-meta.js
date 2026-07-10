@@ -4,16 +4,16 @@
  */
 window.CONTENT_META = {
   "00_Topic_List.md": {
-    "words": 4411,
-    "minutes": 22
+    "words": 4593,
+    "minutes": 23
   },
   "01_Java_Core_to_Advanced.md": {
     "words": 6944,
     "minutes": 35
   },
   "02_SpringBoot.md": {
-    "words": 6378,
-    "minutes": 32
+    "words": 8875,
+    "minutes": 44
   },
   "03_System_Design_HLD.md": {
     "words": 4355,

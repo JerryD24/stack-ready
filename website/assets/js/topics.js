@@ -136,7 +136,7 @@ const INTERVIEW_TRACKS = [
         file: '02_SpringBoot.md',
         title: 'Spring Boot',
         description: 'IoC/DI, REST, JPA, Security, JWT, Microservices — plain-language theory + annotations cheat sheet',
-        sections: 16,
+        sections: 17,
         level: 'Intermediate → Advanced',
         priority: 'critical',
         tags: ['Spring', 'JPA', 'Security', 'Microservices']

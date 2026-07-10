@@ -20,6 +20,7 @@
 14. [JPA / Hibernate Deep Dive](#14-jpa--hibernate-deep-dive)
 15. [Additional Spring & Spring Boot Q&A](#15-additional-spring--spring-boot-qa)
 16. [Spring Annotations — Simple Cheat Sheet](#16-spring-annotations--simple-cheat-sheet)
+17. [Production & Interview Q&A — 20 Must-Know Questions](#17-production--interview-qa--20-must-know-questions)
 
 ---
 
@@ -2584,3 +2585,690 @@ class OrderServiceTest {
 | Async background task | `@Async` + `@EnableAsync` |
 
 **One-liner for interviews:** *"Spring annotations are metadata — I use stereotypes (`@Service`, `@Repository`) to register beans, constructor injection for dependencies, `@RestController` + mapping annotations for APIs, `@Transactional` for DB boundaries, and `@Valid` + Bean Validation for input checks."*
+
+---
+
+## 17. Production & Interview Q&A — 20 Must-Know Questions
+
+Real-world Spring Boot questions — transactions, production debugging, security, JPA, Kafka, and scaling. Each answer is written for **spoken interview style**: fast opening line, then depth if they probe.
+
+---
+
+### Q1. Why might `@Transactional` not roll back a transaction?
+
+**Fast answer:** Default rollback is **unchecked exceptions only**. Checked exceptions, caught-and-swallowed exceptions, self-invocation, and wrong propagation all prevent rollback.
+
+**Common causes:**
+
+| Cause | What happens | Fix |
+|-------|--------------|-----|
+| **Checked exception thrown** | Default: no rollback | `rollbackFor = Exception.class` |
+| **Exception caught inside method** | Transaction commits | Re-throw or mark rollback-only |
+| **Self-invocation** | Proxy bypassed — no transaction advice | Call via injected self or separate bean |
+| **Non-public method** | Proxy can't wrap it | Make method `public` |
+| **`REQUIRES_NEW` inner tx commits** | Outer rolls back, inner already committed | Design transaction boundaries carefully |
+| **Wrong isolation / read-only** | `readOnly = true` — writes may fail silently or not persist | Remove readOnly for writes |
+
+```java
+@Transactional(rollbackFor = Exception.class)  // roll back on checked too
+public void transfer(Account from, Account to, BigDecimal amount) throws InsufficientFundsException {
+    debit(from, amount);
+    credit(to, amount);
+    // if InsufficientFundsException thrown → rolls back with rollbackFor
+}
+
+// Self-invocation trap — inner @Transactional IGNORED
+@Service
+public class OrderService {
+    public void placeOrder() {
+        saveOrder();          // ❌ called via 'this' — no proxy
+    }
+    @Transactional
+    public void saveOrder() { ... }
+}
+
+// Fix — inject self or move to another @Service
+@Autowired private OrderService self;
+public void placeOrder() { self.saveOrder(); }  // ✅ goes through proxy
+```
+
+**30-second close:** *"By default only unchecked exceptions roll back. I also watch for caught exceptions, self-invocation bypassing the proxy, and propagation like REQUIRES_NEW where inner work commits independently."*
+
+---
+
+### Q2. How does Spring Boot auto-configuration work internally?
+
+**Fast answer:** `@EnableAutoConfiguration` loads candidate config classes from JAR metadata, then applies each only if `@Conditional*` rules match (classpath, properties, missing beans).
+
+**Step-by-step at startup:**
+
+1. **`@SpringBootApplication`** = `@Configuration` + `@ComponentScan` + `@EnableAutoConfiguration`.
+2. **`AutoConfigurationImportSelector`** reads `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` from every JAR on the classpath.
+3. Each entry is a `@Configuration` class (e.g. `DataSourceAutoConfiguration`, `JacksonAutoConfiguration`).
+4. **`@ConditionalOnClass`** — only if a class exists (e.g. `DataSource` on classpath).
+5. **`@ConditionalOnMissingBean`** — skip if you already defined your own bean.
+6. **`@ConditionalOnProperty`** — enable/disable via `application.yml` (e.g. `spring.kafka.enabled=false`).
+7. Matching configs register beans; non-matching are skipped silently.
+
+```java
+@Configuration
+@ConditionalOnClass(DataSource.class)
+@ConditionalOnMissingBean(DataSource.class)
+@EnableConfigurationProperties(DataSourceProperties.class)
+public class DataSourceAutoConfiguration {
+    @Bean
+    public DataSource dataSource(DataSourceProperties props) {
+        return DataSourceBuilder.create()
+            .url(props.getUrl())
+            .username(props.getUsername())
+            .password(props.getPassword())
+            .build();  // HikariCP by default
+    }
+}
+```
+
+**Override auto-config:** define your own `@Bean`, exclude via `@SpringBootApplication(exclude = {...})`, or set `spring.autoconfigure.exclude` in YAML.
+
+**30-second close:** *"Boot scans auto-config classes from classpath metadata and conditionally registers beans — class present, property enabled, and no user-defined bean yet. That's why adding a custom DataSource disables Boot's default."*
+
+---
+
+### Q3. What's the difference between `@Component`, `@Service`, and `@Repository`?
+
+**Fast answer:** All three are `@Component` stereotypes — Spring registers them as beans. The difference is **semantic** plus one technical bonus on `@Repository`.
+
+| Annotation | Purpose | Special behavior |
+|------------|---------|----------------|
+| `@Component` | Generic Spring-managed bean | None |
+| `@Service` | Business logic layer | None (convention only) |
+| `@Repository` | Data access layer | **SQLException → `DataAccessException`** translation |
+
+```java
+@Component   // generic — e.g. EmailValidator, Mapper
+public class OrderMapper { ... }
+
+@Service     // business rules
+public class OrderService {
+    private final OrderRepository repo;
+    public OrderService(OrderRepository repo) { this.repo = repo; }
+}
+
+@Repository  // DB access — Spring wraps SQL exceptions
+public interface OrderRepository extends JpaRepository<Order, Long> { }
+```
+
+**Why stereotypes matter:** clearer architecture, easier scanning/filtering, and `@Repository` gives consistent exception handling for JDBC/JPA failures.
+
+**Also know:** `@Controller` / `@RestController` are web-layer stereotypes. For DI purposes all are equivalent — pick by layer.
+
+---
+
+### Q4. How would you handle duplicate API requests in a payment service?
+
+**Fast answer:** Use **idempotency keys** + DB unique constraint + short-lived lock/cache so the same payment intent is processed exactly once.
+
+**Production pattern:**
+
+1. Client sends `Idempotency-Key: uuid` header on POST `/payments`.
+2. Server checks Redis/DB: key seen before → return **same response** (200/201), don't charge again.
+3. DB unique constraint on `(idempotency_key)` or `(user_id, idempotency_key)`.
+4. Wrap charge logic in `@Transactional` — insert idempotency record **before** calling payment gateway (or use `PENDING → SUCCESS` state machine).
+
+```java
+@PostMapping("/payments")
+public ResponseEntity<PaymentResponse> pay(
+        @RequestHeader("Idempotency-Key") String key,
+        @Valid @RequestBody PaymentRequest req) {
+
+    Optional<PaymentResponse> existing = idempotencyStore.find(key);
+    if (existing.isPresent()) return ResponseEntity.ok(existing.get());
+
+    return idempotencyService.executeOnce(key, () -> paymentService.charge(req));
+}
+```
+
+```sql
+CREATE UNIQUE INDEX ux_payment_idempotency ON payments(idempotency_key);
+```
+
+**Extra safeguards:** distributed lock (Redis Redlock) for concurrent duplicate requests with same key; payment gateway idempotency token; return **409 Conflict** only if key reused with **different** payload.
+
+**30-second close:** *"Idempotency key in header, store result in Redis/DB with unique constraint, return cached response on retry, and use transactional state machine so gateway is never called twice for the same key."*
+
+---
+
+### Q5. What happens if two users update the same record simultaneously?
+
+**Fast answer:** Without locking you get **lost updates**. Fix with **optimistic locking** (`@Version`) or **pessimistic locking** (`SELECT FOR UPDATE`).
+
+**Scenario — lost update (no locking):**
+
+```
+User A reads balance = 100
+User B reads balance = 100
+User A writes 100 - 20 = 80
+User B writes 100 - 30 = 70   ← overwrites A's change; should be 50
+```
+
+**Optimistic locking (preferred for web apps):**
+
+```java
+@Entity
+public class Account {
+    @Id Long id;
+    BigDecimal balance;
+    @Version Long version;   // JPA increments on each update
+}
+
+// Update fails with OptimisticLockException if version changed
+account.setBalance(newBalance);
+accountRepo.save(account);
+```
+
+Client gets **409 Conflict** → refresh and retry.
+
+**Pessimistic locking (high contention, financial critical path):**
+
+```java
+@Lock(LockModeType.PESSIMISTIC_WRITE)
+@Query("SELECT a FROM Account a WHERE a.id = :id")
+Optional<Account> findByIdForUpdate(@Param("id") Long id);
+```
+
+Holds DB row lock until transaction ends — second user waits.
+
+| Strategy | When to use |
+|----------|-------------|
+| Optimistic (`@Version`) | Low/medium contention, most REST APIs |
+| Pessimistic | Same record hot-spot, must serialize updates |
+| Last-write-wins | Only if business accepts it (rare for money) |
+
+---
+
+### Q6. How does Spring Boot manage database connections using HikariCP?
+
+**Fast answer:** Boot auto-configures **HikariCP** as the default `DataSource`. It maintains a **pool** of open connections — borrow on query, return after use — instead of opening a new TCP connection every time.
+
+**How it works:**
+
+1. `DataSourceAutoConfiguration` creates `HikariDataSource` from `spring.datasource.*` properties.
+2. Pool keeps `minimum-idle` to `maximum-pool-size` connections alive to the DB.
+3. When a `@Transactional` method runs, Spring gets a connection from pool → binds to current thread → returns to pool on commit/rollback.
+4. If all connections busy, caller **waits** up to `connection-timeout`, then throws exception.
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/orders
+    username: app
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20      # max concurrent DB connections
+      minimum-idle: 5
+      connection-timeout: 30000  # ms to wait for free connection
+      idle-timeout: 600000
+      max-lifetime: 1800000      # recycle connections periodically
+      pool-name: OrderServicePool
+```
+
+**Key metrics (Actuator / logs):** active connections, idle, pending threads, connection acquire time.
+
+**Rule of thumb:** `pool size ≈ (CPU cores on DB-facing service) × 2` for OLTP — too large pools hurt DB; too small → timeouts under load.
+
+---
+
+### Q7. What are the most common causes of connection pool exhaustion?
+
+**Fast answer:** Connections borrowed but **never returned** — long transactions, missing `@Transactional` boundaries, streaming large results without closing, or pool sized too small for load.
+
+**Top causes:**
+
+| Cause | Symptom | Fix |
+|-------|---------|-----|
+| **Long-running `@Transactional`** | Connections held for entire method (including HTTP calls) | Short transactions; move external calls outside tx |
+| **Missing transaction boundary** | Session/connection leak in manual JDBC | Use `@Transactional` or try-with-resources |
+| **N+1 + lazy loading outside tx** | LazyInitializationException or connection held open | JOIN FETCH / `@Transactional(readOnly=true)` on whole read |
+| **Pool too small** | `Connection is not available, request timed out` | Increase `maximum-pool-size` after fixing leaks |
+| **Thread pool >> connection pool** | Many threads block waiting | Align Tomcat threads with pool size |
+| **Slow queries** | Connections busy for seconds | Index tuning, query optimization |
+| **`REQUIRES_NEW` overuse** | Each call grabs another connection | Reduce nested transactions |
+
+```java
+// ❌ BAD — holds DB connection while calling payment API (5 sec)
+@Transactional
+public void checkout(Order order) {
+    orderRepo.save(order);
+    paymentGateway.charge(order);  // external HTTP inside transaction
+}
+
+// ✅ GOOD — short DB transaction only
+public void checkout(Order order) {
+    orderRepo.save(order);
+    paymentGateway.charge(order);  // no open DB connection during HTTP
+}
+```
+
+**Debug:** enable HikariCP leak detection (`leak-detection-threshold`), Actuator `hikaricp.connections`, thread dump when timeout occurs.
+
+---
+
+### Q8. How would you secure REST APIs using Spring Security and JWT?
+
+**Fast answer:** Stateless JWT — login validates credentials, server signs token, every request passes through a filter that validates token and sets `SecurityContext`.
+
+**End-to-end flow:**
+
+1. **Login** `POST /auth/login` → `AuthenticationManager` validates username/password via `UserDetailsService`.
+2. **Generate JWT** — payload (sub, roles, exp) signed with HMAC secret or RSA private key.
+3. **Client** stores token; sends `Authorization: Bearer <jwt>` on every API call.
+4. **`JwtAuthFilter`** (extends `OncePerRequestFilter`) — parse token, verify signature + expiry, load authorities, populate `SecurityContextHolder`.
+5. **`SecurityFilterChain`** — authorize paths: public login, protected APIs, role-based admin routes.
+
+```java
+@Bean
+SecurityFilterChain filterChain(HttpSecurity http, JwtAuthFilter jwtFilter) throws Exception {
+    return http
+        .csrf(csrf -> csrf.disable())  // stateless API — use CSRF for cookie sessions
+        .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/auth/**", "/actuator/health").permitAll()
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+            .anyRequest().authenticated())
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+        .build();
+}
+```
+
+**Security checklist:** BCrypt passwords; short JWT expiry + refresh token; HTTPS only; don't store JWT in localStorage if XSS risk — prefer httpOnly cookie; validate issuer/audience; rate-limit login; `@PreAuthorize` on sensitive service methods.
+
+---
+
+### Q9. What's the difference between `@PathVariable` and `@RequestParam`?
+
+**Fast answer:** `@PathVariable` = part of the **URL path**. `@RequestParam` = **query string** after `?`.
+
+```java
+// GET /users/42?include=orders&active=true
+
+@GetMapping("/users/{id}")
+public User getUser(
+    @PathVariable Long id,                        // 42 — from path
+    @RequestParam(defaultValue = "false") boolean include,
+    @RequestParam(required = false) Boolean active // query params
+) { ... }
+```
+
+| | `@PathVariable` | `@RequestParam` |
+|--|-----------------|-----------------|
+| Location | `/users/{id}` | `/users?id=42` |
+| Required for REST | Identifies **resource** | Filters, pagination, optional flags |
+| Default | Required unless `required = false` | Can have `defaultValue` |
+| Multiple values | One segment per variable | Same name repeated or `List<String>` |
+
+```java
+@GetMapping("/orders")
+public Page<Order> list(
+    @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "20") int size) { ... }
+
+@DeleteMapping("/orders/{orderId}/items/{itemId}")
+public void removeItem(
+    @PathVariable Long orderId,
+    @PathVariable Long itemId) { ... }
+```
+
+**Interview tip:** path = **noun identity**; query = **modifiers** (sort, filter, page).
+
+---
+
+### Q10. How would you improve a slow Spring Data JPA query?
+
+**Fast answer:** Find the query in logs (SQL + timing), check execution plan, fix N+1, add indexes, reduce selected columns, paginate.
+
+**Step-by-step:**
+
+1. **Enable SQL logging** (dev/staging): `spring.jpa.show-sql=true` + `logging.level.org.hibernate.SQL=DEBUG` or use **P6Spy**/ datasource-proxy.
+2. **Identify** — slow query log, APM trace (Datadog/New Relic), Actuator metrics.
+3. **`EXPLAIN ANALYZE`** on PostgreSQL/MySQL — full table scan? missing index?
+4. **Fix fetch strategy** — JOIN FETCH / `@EntityGraph` / DTO projection instead of lazy N+1.
+5. **Add index** on WHERE/JOIN/ORDER BY columns.
+6. **Pagination** — never `findAll()` on large tables; use `Pageable`.
+7. **Read-only hint** — `@Transactional(readOnly = true)` for queries.
+8. **Cache** — `@Cacheable` for stable read-heavy data (with TTL/invalidation).
+
+```java
+// ❌ N+1 — 1 + N queries
+List<Order> orders = orderRepo.findAll();
+orders.forEach(o -> o.getItems().size());
+
+// ✅ One query
+@Query("SELECT o FROM Order o JOIN FETCH o.items WHERE o.status = :status")
+List<Order> findWithItems(@Param("status") Status status);
+
+// ✅ DTO projection — only columns needed
+@Query("SELECT new com.example.OrderSummary(o.id, o.total) FROM Order o")
+List<OrderSummary> findSummaries(Pageable pageable);
+```
+
+---
+
+### Q11. What is the N+1 query problem, and how do you fix it?
+
+**Fast answer:** Load N parent rows (1 query), then touch a lazy relationship on each → **N extra queries**. Fix by fetching associations in one query.
+
+**Example:**
+
+```java
+@Entity
+public class Order {
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
+    List<OrderItem> items;
+}
+
+List<Order> orders = orderRepo.findAll();     // 1 query
+for (Order o : orders) {
+    o.getItems().size();                      // N queries — one per order!
+}
+// Total: 1 + N queries
+```
+
+**Fixes:**
+
+| Fix | How |
+|-----|-----|
+| **JOIN FETCH** | `@Query("SELECT o FROM Order o JOIN FETCH o.items")` |
+| **`@EntityGraph`** | `@EntityGraph(attributePaths = "items")` on repository method |
+| **Batch fetching** | `hibernate.default_batch_fetch_size=20` |
+| **DTO / projection** | Select only needed fields in one query |
+| **EAGER** | Avoid global EAGER — causes cartesian product |
+
+```java
+@EntityGraph(attributePaths = {"items", "customer"})
+List<Order> findByStatus(OrderStatus status);
+```
+
+**Detection:** Hibernate statistics, datasource logging showing repeated similar SELECTs, APM showing query count spike per request.
+
+---
+
+### Q12. How would you debug a Spring Boot application that's slow only in production?
+
+**Fast answer:** Compare prod vs non-prod — data volume, config, infra, and observability. Use APM + logs + metrics; don't guess locally.
+
+**Debugging checklist:**
+
+1. **Confirm scope** — all endpoints slow or one? Started after deploy?
+2. **Compare environments** — JVM heap, CPU limits, DB size, network latency, replica vs primary.
+3. **APM trace** — Datadog/New Relic/Micrometer — find slow span (DB? external HTTP? GC?).
+4. **DB** — slow query log, connection pool wait time, lock contention, missing indexes (prod has 10M rows, dev has 10K).
+5. **JVM** — GC pauses (`GC log`), heap pressure, thread pool saturation.
+6. **External deps** — payment/email APIs slower from prod VPC.
+7. **Config drift** — different profile, debug logging off, caching disabled in prod.
+8. **Load** — prod traffic triggers contention invisible locally.
+
+```yaml
+# Enable for investigation (then turn off)
+management.endpoints.web.exposure.include: health,metrics,prometheus,threaddump,heapdump
+logging.level.org.hibernate.SQL: DEBUG  # staging only
+```
+
+**Production-safe tools:** Actuator `/actuator/metrics`, `/actuator/threaddump`, distributed tracing (Micrometer Tracing + Zipkin/Jaeger), DB `pg_stat_statements`.
+
+**30-second close:** *"Prod-only slowness is usually data volume, pool exhaustion, missing indexes, or infra limits — I trace one slow request end-to-end in APM and compare pool/DB/GC metrics against staging."*
+
+---
+
+### Q13. What's the difference between synchronous and asynchronous processing in Spring Boot?
+
+**Fast answer:** **Sync** — caller thread waits until work finishes. **Async** — work dispatched to another thread; caller continues (or gets `CompletableFuture`).
+
+**Sync (default):**
+
+```java
+@GetMapping("/report")
+public Report getReport() {
+    return reportService.build();  // HTTP thread blocked until done
+}
+```
+
+**Async with `@Async`:**
+
+```java
+@EnableAsync
+@Configuration
+class AsyncConfig {
+    @Bean
+    Executor taskExecutor() {
+        return Executors.newFixedThreadPool(10);
+    }
+}
+
+@Service
+class NotificationService {
+    @Async
+    public CompletableFuture<Void> sendEmail(String to) {
+        emailClient.send(to);
+        return CompletableFuture.completedFuture(null);
+    }
+}
+```
+
+| | Sync | Async (`@Async`) |
+|--|------|------------------|
+| Thread | Same request thread | Thread pool worker |
+| Use when | Fast DB/CPU work | Email, file processing, long I/O |
+| Error handling | Immediate exception to caller | Must handle `Future` / `@Async` exception handler |
+| Transaction | Straightforward | `@Transactional` on `@Async` method starts **new** thread/tx |
+
+**Also know:** `@Async` requires **proxy** (public method on Spring bean). For heavy async I/O at scale, prefer **message queue** (Kafka/RabbitMQ) over in-memory `@Async`.
+
+---
+
+### Q14. How would you prevent duplicate Kafka message processing?
+
+**Fast answer:** Kafka guarantees **at-least-once** by default — consumers must be **idempotent**. Use consumer idempotency store + unique business key + manual offset commit after success.
+
+**Patterns:**
+
+1. **Idempotent consumer** — track `messageId` / `(topic, partition, offset)` in DB; skip if already processed.
+2. **Business-key dedup** — `UNIQUE(order_id)` in DB; second insert fails gracefully.
+3. **Upsert instead of insert** — `INSERT ... ON CONFLICT DO NOTHING`.
+4. **Transactional outbox** — DB write + event in same transaction.
+5. **Commit offset after success** — `ack.acknowledge()` only after DB commit (Spring Kafka `AckMode.MANUAL`).
+
+```java
+@KafkaListener(topics = "payments", groupId = "payment-processor")
+@Transactional
+public void consume(PaymentEvent event, Acknowledgment ack) {
+    if (processedRepo.existsByEventId(event.getId())) {
+        ack.acknowledge();
+        return;
+    }
+    paymentService.process(event);
+    processedRepo.save(new ProcessedEvent(event.getId()));
+    ack.acknowledge();  // commit offset only after success
+}
+```
+
+**Exactly-once:** Kafka EOS with transactional producer + `read_committed` consumers — heavier; most teams use **at-least-once + idempotent consumer**.
+
+---
+
+### Q15. What's the purpose of Spring Boot Actuator, and which endpoints do you use most?
+
+**Fast answer:** Actuator exposes **production-ready endpoints** for health, metrics, and diagnostics — essential for K8s probes and monitoring.
+
+**Most-used endpoints:**
+
+| Endpoint | Purpose |
+|----------|---------|
+| `/actuator/health` | Liveness/readiness — UP/DOWN, DB/Kafka checks |
+| `/actuator/metrics` | JVM, HTTP, HikariCP, custom counters |
+| `/actuator/prometheus` | Scrape metrics for Grafana |
+| `/actuator/info` | App version, git commit (customizable) |
+| `/actuator/threaddump` | Debug thread contention |
+| `/actuator/loggers` | Change log level at runtime (temporary DEBUG) |
+
+```yaml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  health:
+    db:
+      enabled: true
+```
+
+**Kubernetes:**
+
+```yaml
+livenessProbe:
+  httpGet: { path: /actuator/health/liveness, port: 8080 }
+readinessProbe:
+  httpGet: { path: /actuator/health/readiness, port: 8080 }
+```
+
+**Security:** never expose all endpoints publicly — restrict via Spring Security + network policy.
+
+---
+
+### Q16. How would you upload large files without causing memory issues?
+
+**Fast answer:** Stream multipart data to disk/S3 — **never** load entire file into a `byte[]` or `String`. Use `MultipartFile.getInputStream()` or direct streaming to object storage.
+
+**Approaches:**
+
+1. **Streaming upload to S3** — AWS SDK transfer manager / `PutObjectRequest` with InputStream.
+2. **Chunked/resumable** — client sends chunks; server assembles or uploads parts (S3 multipart upload).
+3. **Increase limits carefully** — `spring.servlet.multipart.max-file-size` / `max-request-size` — still stream, don't buffer whole file in RAM.
+4. **Async processing** — accept file → store → return 202 → process in background job.
+
+```java
+@PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+public ResponseEntity<Void> upload(@RequestParam("file") MultipartFile file) throws IOException {
+    try (InputStream in = file.getInputStream()) {
+        storageService.streamToS3(in, file.getOriginalFilename(), file.getSize());
+    }
+    return ResponseEntity.accepted().build();
+}
+```
+
+```yaml
+spring:
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+      file-size-threshold: 1MB   # above this → temp disk, not memory
+```
+
+**Avoid:** `file.getBytes()` on 500MB file → heap OOM. Use temp file or direct stream.
+
+---
+
+### Q17. What's the difference between BeanFactory and ApplicationContext?
+
+**Fast answer:** `BeanFactory` is the minimal container (lazy bean creation). `ApplicationContext` extends it with events, i18n, AOP, and enterprise features — **Spring Boot always uses ApplicationContext**.
+
+| Feature | BeanFactory | ApplicationContext |
+|---------|-------------|-------------------|
+| Bean creation | Lazy (on first `getBean`) | Eager (singletons at startup) |
+| Events | ❌ | ✅ `ApplicationEventPublisher` |
+| i18n | ❌ | ✅ `MessageSource` |
+| AOP / `@Autowired` | Limited | ✅ Full |
+| Web support | ❌ | ✅ `WebApplicationContext` |
+| Used in Boot | Almost never directly | Always |
+
+```java
+// Spring Boot — this IS an ApplicationContext
+@SpringBootApplication
+public class App {
+    public static void main(String[] args) {
+        ApplicationContext ctx = SpringApplication.run(App.class, args);
+    }
+}
+```
+
+**Interview close:** *"BeanFactory is the low-level IoC container; ApplicationContext adds enterprise services. In Boot we never touch BeanFactory directly — `@SpringBootApplication` bootstraps an ApplicationContext."*
+
+---
+
+### Q18. How would you trace a request across multiple Spring Boot microservices?
+
+**Fast answer:** **Distributed tracing** — propagate trace ID (W3C `traceparent` header) across HTTP/Kafka calls; visualize in Zipkin/Jaeger/Datadog.
+
+**Implementation:**
+
+1. **Micrometer Tracing** + **Brave** or OpenTelemetry bridge.
+2. Incoming request — filter creates/receives trace ID, span for controller.
+3. Outgoing **RestTemplate/WebClient/Feign** — interceptor adds `traceparent` header.
+4. **Kafka** — trace context in message headers.
+5. **Central collector** — Zipkin/Jaeger/Tempo stores spans; Grafana/Datadog UI shows waterfall.
+
+```java
+// WebClient with tracing (Boot auto-configures when on classpath)
+@Bean
+WebClient webClient(WebClient.Builder builder) {
+    return builder.build();  // trace propagation automatic with micrometer-tracing
+}
+```
+
+**Also use:** structured JSON logging with `traceId`/`spanId` (MDC), correlation ID in API gateway, Actuator metrics per service.
+
+**Debug flow:** user reports slow checkout → find trace ID in gateway logs → open waterfall → see PaymentService DB query took 4s.
+
+---
+
+### Q19. What steps would you take before scaling a Spring Boot application?
+
+**Fast answer:** Measure first, optimize the bottleneck, **then** scale horizontally — don't add pods to fix a slow query.
+
+**Checklist:**
+
+1. **Profile** — APM, load test (JMeter/k6), identify bottleneck (CPU, DB, memory, external API).
+2. **Optimize application** — fix N+1, add indexes, cache read-heavy data, tune thread pools and HikariCP.
+3. **Optimize JVM** — heap sizing, GC choice (G1/ZGC for low latency).
+4. **Stateless services** — session in Redis/JWT so you can scale pods horizontally.
+5. **Database scaling** — read replicas, connection pooling (PgBouncer), sharding if needed.
+6. **Caching layer** — Redis for hot reads.
+7. **Async decoupling** — Kafka for heavy/non-critical work.
+8. **Horizontal pod autoscaling** — CPU/RPS-based HPA in Kubernetes.
+9. **Load balancer** — distribute traffic; health checks via Actuator.
+10. **Rate limiting / circuit breakers** — protect downstream under spike.
+
+**Anti-pattern:** 10 replicas each with pool of 50 connections = 500 DB connections → DB dies first.
+
+---
+
+### Q20. If a production issue is reported but there are no exceptions in the logs, what's your debugging approach?
+
+**Fast answer:** No exception ≠ no problem. Check **symptoms** — latency, wrong data, silent failures, swallowed exceptions, or downstream timeouts logged at WARN.
+
+**Systematic approach:**
+
+1. **Reproduce scope** — one user? one region? one endpoint? intermittent?
+2. **Check metrics first** — error rate, latency p99, CPU, memory, pool wait, Kafka lag (not just logs).
+3. **Trace one bad request** — distributed trace ID from support ticket → APM waterfall.
+4. **Audit logs / DB** — was data written? wrong state? race condition?
+5. **Search WARN** — timeouts, retries, circuit breaker open, `OptimisticLockException` handled silently.
+6. **Feature flags / recent deploy** — correlate with release timeline.
+7. **Thread dump** — blocked threads waiting on DB lock or external socket.
+8. **Compare prod vs staging** — config, data shape, traffic pattern.
+9. **Add temporary instrumentation** — structured log at decision points; dynamic log level via Actuator.
+10. **Verify assumptions** — "payment failed" might be 200 with `{ "status": "FAILED" }` in body — business failure, not exception.
+
+```java
+// Silent failure trap
+try {
+    externalService.call();
+} catch (Exception e) {
+    log.warn("Call failed", e);  // only WARN — easy to miss in log search
+    return Optional.empty();     // caller sees "not found", not error
+}
+```
+
+**30-second close:** *"I start with metrics and one traced request, not log grep for Exception. Silent bugs are often swallowed errors, logic bugs, timeouts at WARN, or pool/lock contention with no stack trace."*

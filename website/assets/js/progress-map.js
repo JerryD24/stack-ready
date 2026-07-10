@@ -215,6 +215,28 @@ const ProgressMap = (function () {
       ],
       '16-spring-annotations--simple-cheat-sheet': [
         'Spring annotations cheat sheet — core, Boot, REST, JPA, validation, security, testing'
+      ],
+      '17-production-interview-qa-20-must-know-questions': [
+        'Why @Transactional might not roll back',
+        'Spring Boot auto-configuration internals',
+        '@Component vs @Service vs @Repository',
+        'Duplicate API requests in a payment service (idempotency)',
+        'Two users updating the same record (optimistic vs pessimistic locking)',
+        'HikariCP connection pool in Spring Boot',
+        'Connection pool exhaustion — common causes',
+        'Secure REST APIs with Spring Security and JWT',
+        '@PathVariable vs @RequestParam',
+        'Improve a slow Spring Data JPA query',
+        'N+1 query problem and fixes',
+        'Debug Spring Boot slow only in production',
+        'Synchronous vs asynchronous processing in Spring Boot',
+        'Prevent duplicate Kafka message processing',
+        'Spring Boot Actuator — purpose and key endpoints',
+        'Upload large files without memory issues',
+        'BeanFactory vs ApplicationContext',
+        'Trace a request across Spring Boot microservices',
+        'Steps before scaling a Spring Boot application',
+        'Debug production issue with no exceptions in logs'
       ]
     },
 

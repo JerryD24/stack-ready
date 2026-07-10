@@ -16,7 +16,7 @@
 | File | Topics Covered |
 |------|---------------|
 | `01_Java_Core_to_Advanced.md` | Java 8–21, OOP, Collections, Concurrency, JVM, Design Patterns, **§22 wait/sleep/join, ThreadLocal, class loaders, deep/shallow copy** |
-| `02_SpringBoot.md` | Spring Core, Boot, REST, Security, JPA, Microservices, **§14 JPA/Hibernate deep dive, §15 Spring Q&A, §16 annotations cheat sheet** |
+| `02_SpringBoot.md` | Spring Core, Boot, REST, Security, JPA, Microservices, **§14 JPA/Hibernate deep dive, §15 Spring Q&A, §16 annotations cheat sheet, §17 production Q&A (20 questions)** |
 | `03_System_Design_HLD.md` | Scalability, Caching, Databases, Messaging, Real-world designs, **§14 Order tracking, Rate limiter, URL shortener, Redis KV, Auth** |
 | `04_System_Design_LLD.md` | OOP Design, SOLID, Design Patterns, LLD problems, **§8 Order Management System** |
 | `05_DSA.md` | Arrays, Strings, Trees, Graphs, DP, Greedy, Searching, Sorting |
@@ -210,6 +210,28 @@
 
 ### 2.7 Spring annotations cheat sheet (in `02_SpringBoot.md` §16)
 - [ ] Spring annotations cheat sheet — core, Boot, REST, JPA, validation, security, testing
+
+### 2.8 Production & Interview Q&A — 20 questions (in `02_SpringBoot.md` §17)
+- [ ] Why @Transactional might not roll back
+- [ ] Spring Boot auto-configuration internals
+- [ ] @Component vs @Service vs @Repository
+- [ ] Duplicate API requests in a payment service (idempotency)
+- [ ] Two users updating the same record (optimistic vs pessimistic locking)
+- [ ] HikariCP connection pool in Spring Boot
+- [ ] Connection pool exhaustion — common causes
+- [ ] Secure REST APIs with Spring Security and JWT
+- [ ] @PathVariable vs @RequestParam
+- [ ] Improve a slow Spring Data JPA query
+- [ ] N+1 query problem and fixes
+- [ ] Debug Spring Boot slow only in production
+- [ ] Synchronous vs asynchronous processing in Spring Boot
+- [ ] Prevent duplicate Kafka message processing
+- [ ] Spring Boot Actuator — purpose and key endpoints
+- [ ] Upload large files without memory issues
+- [ ] BeanFactory vs ApplicationContext
+- [ ] Trace a request across Spring Boot microservices
+- [ ] Steps before scaling a Spring Boot application
+- [ ] Debug production issue with no exceptions in logs
 
 ---
 
