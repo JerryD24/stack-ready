@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Prabhat Singh Rajput">
+  <meta name="description" content="StackReady by Prabhat Singh Rajput — Java, Spring, React, System Design, DSA interview prep">
+  <title>StackReady — Interview Prep</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="alternate icon" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=4d200360a8b3">
+  <script>(function(){try{var m=document.cookie.match(/(?:^|;\s*)sr_theme=([^;]+)/);if(m&&decodeURIComponent(m[1])==='dark'){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}})();</script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="index.html" class="logo">
+          <span class="logo-icon">🚀</span>
+          <span>StackReady</span>
+        </a>
+
+        <div class="search-wrap" id="searchWrap">
+          <span class="search-icon">🔍</span>
+          <input type="search" class="search-input" id="globalSearch" placeholder="Search topics — Java, Spring, HLD, DSA..." autocomplete="off">
+          <div class="search-results" id="searchResults"></div>
+        </div>
+
+        <nav class="header-nav">
+          <a href="#tracks" class="nav-link active">Topics</a>
+          <a href="practice.html" class="nav-link">🎴 Practice</a>
+          <a href="practice.html#bookmarks" class="nav-link">⭐ Bookmarks</a>
+          <a href="https://neetcode.io/practice/practice/neetcode150" class="nav-link nav-external" target="_blank" rel="noopener noreferrer">NeetCode 150</a>
+          <button class="install-btn" id="installBtn" style="display:none;" title="Install StackReady">⬇ Install</button>
+          <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <div class="hero-badge">
+            <span>🎯</span>
+            <span>Java Backend → Senior Role | 3+ YOE</span>
+          </div>
+          <div class="streak-chip" id="streakChip" style="display:none;"></div>
+          <h1>StackReady — Interview Preparation Hub</h1>
+          <p>
+            Structured guides from beginner to advanced — Java, Spring Boot, System Design,
+            DSA, Python, AWS, and AI Agents. Read, track progress, and ace your interviews.
+          </p>
+
+          <div class="stats-row" id="statsRow">
+            <div class="stat-card">
+              <div class="stat-value" id="statTopics">—</div>
+              <div class="stat-label">Study Guides</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="statTracks">7</div>
+              <div class="stat-label">Learning Tracks</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="statSections">100+</div>
+              <div class="stat-label">Deep Sections</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="statProgress">0%</div>
+              <div class="stat-label">Your Progress</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="container">
+        <div id="resumeBanner"></div>
+        <div class="utility-strip" id="utilityStrip"></div>
+      </section>
+
+      <section class="container" id="tracks">
+        <div class="filter-bar" id="filterBar">
+          <span class="filter-bar-label">Show:</span>
+          <button class="filter-chip active" data-filter="all">All</button>
+          <button class="filter-chip" data-filter="unchecked">◷ In progress</button>
+          <button class="filter-chip" data-filter="hard">🔴 Hard</button>
+          <button class="filter-chip" data-filter="bookmarked">⭐ Bookmarked</button>
+          <span class="filter-bar-hint" id="filterHint"></span>
+        </div>
+        <div class="tracks-grid" id="tracksGrid"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="data-actions">
+          <button class="btn-link-sm" id="exportBtn" title="Download your progress as a file">⬆ Export progress</button>
+          <button class="btn-link-sm" id="importBtn" title="Restore progress from a file">⬇ Import progress</button>
+          <input type="file" id="importFile" accept="application/json,.json" style="display:none;">
+        </div>
+        <p style="font-size:0.85rem;color:var(--gray-400);">Progress saved in your browser cookies · Created by <strong>Prabhat Singh Rajput</strong></p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="config.js?v=4d200360a8b3"></script>
+  <script src="assets/js/site.js?v=4d200360a8b3"></script>
+  <script src="assets/js/cookies.js?v=4d200360a8b3"></script>
+  <script src="assets/js/theme.js?v=4d200360a8b3"></script>
+  <script src="assets/js/content-meta.js?v=4d200360a8b3"></script>
+  <script src="assets/js/study-data.js?v=4d200360a8b3" defer></script>
+  <script src="assets/js/confetti.js?v=4d200360a8b3"></script>
+  <script src="assets/js/progress-map.js?v=4d200360a8b3"></script>
+  <script src="assets/js/topics.js?v=4d200360a8b3"></script>
+  <script src="assets/js/app.js?v=4d200360a8b3"></script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Prabhat Singh Rajput">
+  <meta name="description" content="StackReady Practice — flashcards, mock interviews, and bookmarks">
+  <title>Practice — StackReady</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="alternate icon" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <link rel="stylesheet" href="assets/css/styles.css?v=4d200360a8b3">
+  <script>(function(){try{var m=document.cookie.match(/(?:^|;\s*)sr_theme=([^;]+)/);if(m&&decodeURIComponent(m[1])==='dark'){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}})();</script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="index.html" class="logo">
+          <span class="logo-icon">🚀</span>
+          <span>StackReady</span>
+        </a>
+        <nav class="header-nav">
+          <a href="index.html" class="nav-link">← Dashboard</a>
+          <a href="practice.html" class="nav-link active">🎴 Practice</a>
+          <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container practice-page">
+      <div class="practice-head">
+        <h1>Practice Mode</h1>
+        <p>Revise with flashcards, run a timed mock interview, or review your bookmarks.</p>
+      </div>
+
+      <div class="practice-tabs" id="practiceTabs">
+        <button class="practice-tab active" data-tab="flashcards">🎴 Flashcards</button>
+        <button class="practice-tab" data-tab="mock">⏱ Mock Interview</button>
+        <button class="practice-tab" data-tab="bookmarks">⭐ Bookmarks</button>
+      </div>
+
+      <!-- FLASHCARDS -->
+      <section class="practice-panel" id="panel-flashcards">
+        <div class="practice-setup" id="flashSetup">
+          <h3>Pick tracks to revise</h3>
+          <div class="track-select" id="flashTracks"></div>
+          <div class="setup-actions">
+            <button class="btn btn-primary" id="flashStart">Start flashcards →</button>
+            <span class="setup-hint" id="flashHint"></span>
+          </div>
+        </div>
+
+        <div class="flashcard-stage" id="flashStage" style="display:none;">
+          <div class="stage-bar">
+            <button class="btn btn-outline btn-sm" id="flashExit">← Change tracks</button>
+            <span class="stage-counter" id="flashCounter"></span>
+            <button class="btn btn-outline btn-sm" id="flashShuffle">🔀 Shuffle</button>
+          </div>
+          <div class="flashcard" id="flashCard">
+            <div class="flashcard-track" id="flashCardTrack"></div>
+            <div class="flashcard-q" id="flashCardQ"></div>
+            <div class="mcq-options" id="flashOptions"></div>
+            <div class="flashcard-a" id="flashCardA" style="display:none;"></div>
+          </div>
+          <div class="flashcard-nav">
+            <button class="btn btn-outline" id="flashPrev">← Prev</button>
+            <a class="btn btn-outline flashcard-source" id="flashSource" href="#">Open in guide ↗</a>
+            <button class="btn btn-primary" id="flashNext">Next →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- MOCK -->
+      <section class="practice-panel" id="panel-mock" style="display:none;">
+        <div class="practice-setup" id="mockSetup">
+          <h3>Configure your mock interview</h3>
+          <div class="track-select" id="mockTracks"></div>
+          <div class="mock-options">
+            <label>Questions:
+              <select id="mockCount">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+              </select>
+            </label>
+          </div>
+          <div class="setup-actions">
+            <button class="btn btn-primary" id="mockStart">Start mock interview →</button>
+            <span class="setup-hint" id="mockHint"></span>
+          </div>
+        </div>
+
+        <div class="flashcard-stage" id="mockStage" style="display:none;">
+          <div class="stage-bar">
+            <button class="btn btn-outline btn-sm" id="mockExit">← End</button>
+            <span class="stage-counter" id="mockCounter"></span>
+            <span class="mock-timer" id="mockTimer">00:00</span>
+          </div>
+          <div class="flashcard" id="mockCard">
+            <div class="flashcard-track" id="mockCardTrack"></div>
+            <div class="flashcard-q" id="mockCardQ"></div>
+            <div class="mcq-options" id="mockOptions"></div>
+            <div class="flashcard-a" id="mockCardA" style="display:none;"></div>
+          </div>
+          <div class="flashcard-nav">
+            <a class="btn btn-outline flashcard-source" id="mockSource" href="#">Open in guide ↗</a>
+            <button class="btn btn-primary" id="mockNext">Next →</button>
+          </div>
+        </div>
+
+        <div class="mock-summary" id="mockSummary" style="display:none;"></div>
+      </section>
+
+      <!-- BOOKMARKS -->
+      <section class="practice-panel" id="panel-bookmarks" style="display:none;">
+        <div id="bookmarksList"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p style="font-size:0.85rem;color:var(--gray-400);">Progress saved in your browser cookies · Created by <strong>Prabhat Singh Rajput</strong></p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="config.js?v=4d200360a8b3"></script>
+  <script src="assets/js/site.js?v=4d200360a8b3"></script>
+  <script src="assets/js/cookies.js?v=4d200360a8b3"></script>
+  <script src="assets/js/theme.js?v=4d200360a8b3"></script>
+  <script src="assets/js/study-data.js?v=4d200360a8b3"></script>
+  <script src="assets/js/topics.js?v=4d200360a8b3"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="assets/js/practice.js?v=4d200360a8b3"></script>
+</body>
+</html>
