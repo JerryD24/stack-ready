@@ -24,6 +24,9 @@
 | `14_AI_Agents_and_MCP_For_Developers.md` | AI Agents, MCP servers, prompt & context engineering, RAG, Beginner → Pro |
 | `15_React_JS_Complete_Guide.md` | React.js — JSX, Hooks, Router, Redux, Performance, TypeScript, Testing, React 18/19, Q&A |
 | `32_Real_Interview_Questions.md` | **Real interview Q&A** — company-wise actual technical round questions with full answers |
+| `33_LangChain.md` | **LangChain** — chat models, prompts, output parsers, LCEL/Runnables, RAG, memory, tools & agents, streaming, production |
+| `34_LangGraph.md` | **LangGraph** — stateful LLM agents as graphs, state & reducers, conditional routing, cycles, checkpointers, human-in-the-loop, multi-agent |
+| `35_PyTorch.md` | **PyTorch** — tensors, autograd, nn.Module, losses/optimizers, training loop, DataLoaders, GPU, saving/inference, end-to-end |
 | `website/` | **StackReady Web UI** — responsive dashboard + markdown reader (`node server.js`) — deploy: `DEPLOY_GITHUB_PAGES.md` |
 
 ---
@@ -757,6 +760,57 @@
 - [ ] Python testing & tooling (pytest, ruff, uv, mypy)
 - [ ] Python tricky output & gotchas (floats, list refs, closures)
 - [ ] Pythonic coding problems (Counter, dedupe, group, LRU)
+
+---
+
+## SECTION 22 — LANGCHAIN (in `33_LangChain.md`)
+
+- [ ] What LangChain is & why it exists (Runnable interface, ecosystem packages)
+- [ ] LangChain installation & project setup (packages, API keys, .env)
+- [ ] Chat models & messages (System/Human/AI roles, invoke, parameters)
+- [ ] Prompt templates (ChatPromptTemplate, MessagesPlaceholder, few-shot)
+- [ ] Output parsers & structured output (with_structured_output, Pydantic)
+- [ ] LCEL — composing chains with Runnables (pipe, batch, parallel, passthrough)
+- [ ] Retrieval-Augmented Generation (loaders, splitters, embeddings, vector stores, retrievers)
+- [ ] LangChain memory & conversation history (RunnableWithMessageHistory, trimming)
+- [ ] LangChain tools & agents (@tool, bind_tools, ReAct loop, when to use agents)
+- [ ] LangChain streaming, async & batching (stream, ainvoke, batch)
+- [ ] LangChain observability, caching & production (LangSmith, cache, retries/fallbacks)
+- [ ] LangChain interview Q&A bank
+
+---
+
+## SECTION 23 — LANGGRAPH (in `34_LangGraph.md`)
+
+- [ ] What LangGraph is & why it exists (state machine vs linear chain)
+- [ ] LangGraph core concepts (State, Nodes, Edges, START/END, compile)
+- [ ] Building your first LangGraph (multi-node pipeline, accumulating state)
+- [ ] LangGraph state & reducers (add_messages, custom reducers)
+- [ ] LangGraph conditional edges & routing (router functions, branching)
+- [ ] LangGraph cycles & the agent loop (ReAct cycle, recursion limit)
+- [ ] LangGraph tools & prebuilt ReAct agent (create_react_agent, ToolNode)
+- [ ] LangGraph persistence & memory (checkpointers, thread_id, time travel)
+- [ ] LangGraph human-in-the-loop & interrupts (interrupt_before, resume)
+- [ ] LangGraph streaming & observability (stream modes, LangSmith)
+- [ ] LangGraph multi-agent patterns (supervisor, network, hierarchical)
+- [ ] LangGraph interview Q&A bank
+
+---
+
+## SECTION 24 — PYTORCH (in `35_PyTorch.md`)
+
+- [ ] What PyTorch is & why it exists (tensors, autograd, dynamic graph)
+- [ ] PyTorch tensors (shape, dtype, device, creation, NumPy interop)
+- [ ] Tensor operations & broadcasting (matmul, reshape, reductions)
+- [ ] Autograd & backpropagation (requires_grad, backward, no_grad, zero_grad)
+- [ ] Building models with nn.Module (layers, forward, parameters, activations)
+- [ ] Loss functions & optimizers (CrossEntropy/MSE, SGD/Adam, learning rate)
+- [ ] The PyTorch training loop (five steps, epochs, train/eval, overfitting)
+- [ ] Datasets & DataLoaders (__len__/__getitem__, batching, shuffling, workers)
+- [ ] GPU acceleration & devices (to(device), mixed precision, distributed)
+- [ ] Saving, loading & inference (state_dict, eval, no_grad, TorchScript/ONNX)
+- [ ] PyTorch end-to-end example (model → DataLoader → train → save)
+- [ ] PyTorch interview Q&A bank
 
 ---
 

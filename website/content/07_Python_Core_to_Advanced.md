@@ -23,6 +23,8 @@
 
 ## 1. Python Fundamentals
 
+**Theory.** Python source is not run line-by-line from text. CPython (the reference implementation written in C) first *compiles* your `.py` file into **bytecode** — a compact, platform-independent instruction set cached in `__pycache__` as `.pyc` — and then a **Python Virtual Machine (PVM)** executes that bytecode. This is why Python is called "interpreted" yet still has a compile step. The second idea that governs almost everything else is Python's object model: a **variable is just a name bound to an object**, and the *type lives on the object, not the name*. So `x = 10` then `x = "hi"` is legal — you have rebound the name to a different object, not changed a typed slot. The final foundational concept is **mutability**: some objects can be changed in place (`list`, `dict`, `set`) and some cannot (`int`, `str`, `tuple`). This single property explains argument passing, default-argument traps, dictionary keys, and identity (`is`) versus equality (`==`) — all covered below.
+
 ### Python Execution Model
 ```
 Source (.py)
@@ -100,6 +102,8 @@ module_name       = "snake_case"
 ---
 
 ## 2. Data Types & Data Structures
+
+**Theory.** Python ships with a small set of built-in types that cover most day-to-day work, and choosing the right one is largely a performance decision. **`list`** is an ordered, growable sequence — great for iteration and appending, but membership tests (`x in lst`) are O(n). **`tuple`** is an immutable sequence, useful as a fixed record or a dictionary key. **`dict`** is a hash map giving average O(1) lookup, insertion, and deletion by key, and since Python 3.7 it preserves insertion order. **`set`** is a hash-based collection of unique items with O(1) membership — reach for it whenever you find yourself checking "have I seen this before?". Numbers matter too: Python's `int` has *unlimited precision* (no overflow), while `float` is a 64-bit IEEE-754 double and therefore carries the usual rounding error (`0.1 + 0.2 != 0.3`), which you fix with `decimal.Decimal` for money. The `collections` module then extends these primitives with specialized, faster containers (`Counter`, `defaultdict`, `deque`) that turn common patterns into one-liners.
 
 ### Numbers
 ```python
@@ -723,6 +727,8 @@ class Vector:
 
 ## 5. Iterators, Generators & Comprehensions
 
+**Theory.** Iteration in Python is a protocol, not magic: any object with `__iter__` (returns an iterator) and `__next__` (returns the next value or raises `StopIteration`) can be used in a `for` loop. That protocol is what unifies lists, files, dict keys, and your own classes under one syntax. A **generator** is the easiest way to build an iterator — a function that uses `yield` instead of `return`. Each `yield` hands a value back and *pauses* the function, resuming exactly where it left off on the next request. The payoff is **laziness and memory efficiency**: a generator produces values one at a time on demand, so you can process a multi-gigabyte file or an infinite sequence without ever holding it all in memory. **Comprehensions** (`[...]`, `{...}`, `(...)`) are the compact, faster way to build a list/set/dict from an iterable; note that the parenthesized form is a *generator expression* — lazy, not a tuple — ideal for feeding straight into `sum()`, `any()`, or `max()` without an intermediate list.
+
 ### Iterators
 ```python
 # Iterator protocol: __iter__() and __next__()
@@ -939,6 +945,8 @@ with ExitStack() as stack:
 ---
 
 ## 7. Modules, Packages & Imports
+
+**Theory.** A **module** is a single `.py` file; a **package** is a directory of modules (historically marked by an `__init__.py`). Together they give Python its namespacing — code lives under dotted paths like `os.path.join` so names don't collide. When you `import`, Python finds the module (searching `sys.path`), *executes it once*, and caches it in `sys.modules` so repeated imports are cheap and side effects run a single time. Two practical points matter constantly: the **`if __name__ == "__main__":`** guard lets a file behave as both an importable library and a runnable script (the block runs only when the file is executed directly, not when imported); and you should prefer **explicit imports** over `from module import *`, which pollutes your namespace and hides where names came from. For anything beyond a toy script, isolate dependencies in a **virtual environment** so each project pins its own package versions.
 
 ```python
 # Import styles
@@ -1244,6 +1252,8 @@ Rule of thumb:
 
 ## 10. Memory Management & Internals
 
+**Theory.** CPython manages memory automatically using two cooperating mechanisms. The primary one is **reference counting**: every object tracks how many names/containers point at it, and the instant that count hits zero the memory is reclaimed — deterministic and immediate. Reference counting alone cannot free **reference cycles** (A points to B, B points to A, but nothing outside points to either), so a secondary **cyclic garbage collector** runs periodically to detect and collect those. Understanding this explains several real behaviors: why `__del__` timing is usually predictable but not guaranteed, why holding references (e.g., in a cache or a global list) causes "leaks" even with a GC, and why breaking cycles or using `weakref` helps. Two optimizations show up in interviews: **interning** (small integers −5..256 and many short strings are cached and reused, so `is` can surprise you), and **`__slots__`**, which replaces an instance's per-object `__dict__` with a fixed layout to cut memory and speed attribute access when you create millions of objects.
+
 ### Reference Counting & GC
 ```python
 import sys, gc
@@ -1397,6 +1407,8 @@ class Config:
 
 ## 12. Testing in Python
 
+**Theory.** `pytest` is the de facto standard because it strips testing down to plain functions and plain `assert` statements — no boilerplate base classes — while rewriting those asserts to give you rich failure output. Three features carry most of the value. **Fixtures** are functions marked `@pytest.fixture` that produce test dependencies (a database session, a temp directory, a configured client); a test simply names the fixture as a parameter and pytest injects it, and a fixture that `yield`s can tear itself down afterward. **Parametrization** (`@pytest.mark.parametrize`) runs the same test body across many input/expected pairs, so you cover edge cases without copy-paste. **Mocking** (`unittest.mock` / `monkeypatch`) replaces slow or external collaborators — network calls, clocks, third-party APIs — with controllable stand-ins so tests stay fast, deterministic, and isolated. The guiding principle is to test *behavior and public contracts*, not private implementation details, so tests survive refactoring.
+
 ### pytest
 ```python
 # test_mymodule.py
@@ -1473,6 +1485,8 @@ async def test_async_function():
 ---
 
 ## 13. Python vs Java — Key Differences
+
+**Theory.** The core divide is **dynamic vs static typing**. Python resolves types at runtime and embraces duck typing ("if it walks like a duck…"), which makes code short and flexible but pushes many errors to runtime. Java checks types at compile time, catching a whole class of bugs early at the cost of more ceremony. This philosophy ripples outward: Python is compiled to bytecode and interpreted by CPython (slower, but the JIT-based PyPy and native extensions like NumPy close the gap for hot paths), while Java's JVM JIT-compiles to fast native code. For concurrency, the **GIL** caps CPU-bound multithreading in CPython (you reach for multiprocessing), whereas the JVM offers genuine multithreaded parallelism. In short: Python optimizes for developer speed, scripting, data science, and ML; Java optimizes for large, long-lived, statically-verified enterprise systems. Knowing *why* each trade-off exists is what interviewers are actually probing.
 
 | Aspect | Python | Java |
 |--------|--------|------|
