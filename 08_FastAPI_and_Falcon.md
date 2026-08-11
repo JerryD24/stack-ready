@@ -19,7 +19,8 @@
 13. [Falcon — ASGI & Async](#13-falcon--asgi--async)
 14. [FastAPI vs Falcon vs Flask vs Django REST](#14-fastapi-vs-falcon-vs-flask-vs-django-rest)
 15. [Production Patterns & Deployment](#15-production-patterns--deployment)
-16. [Interview Q&A](#16-interview-qa)
+16. [Serving ML & LLM Models with FastAPI](#16-serving-ml--llm-models-with-fastapi)
+17. [Interview Q&A](#17-interview-qa)
 
 ---
 
@@ -187,6 +188,8 @@ class UserResponse(BaseModel):
 ---
 
 ## 3. FastAPI — Request & Response
+
+**Theory.** A request handler has two halves: what comes *in* and what goes *out*, and FastAPI drives both from types. On the way in, a Pydantic model parameter becomes the **request body** — FastAPI reads the JSON, validates it, and hands you a typed object (returning a structured `422` if anything is wrong). On the way out, the **`response_model`** does the reverse and is easy to underrate: it filters, validates, and documents the output, so internal fields (a password hash, an `is_admin` flag) never leak just because your ORM object happened to carry them. When the default JSON serialization isn't what you need, you return an explicit `Response` subclass — `JSONResponse` for custom status/headers, `StreamingResponse` for large or live data, `FileResponse` for downloads. **Exception handling** completes the picture: raise `HTTPException` for expected error cases, register `@app.exception_handler(...)` for your own error types, and the client always receives a consistent, well-shaped error body. **Middleware** wraps every request/response pair for cross-cutting concerns (CORS, GZip, request IDs, timing).
 
 ### Request Body
 ```python
@@ -699,6 +702,8 @@ async def get_user_cached(user_id: int, redis: aioredis.Redis = Depends(get_redi
 
 ## 7. FastAPI — Background Tasks & WebSockets
 
+**Theory.** Not everything should block the response. **Background tasks** let you return to the client immediately and run follow-up work (send a welcome email, write an audit log) *after* the response is sent — they run in the same process, so they suit short, best-effort jobs; anything heavy or that must survive a restart belongs in a real task queue like Celery or RQ backed by Redis/RabbitMQ. **WebSockets** flip the usual request/response model into a persistent, bidirectional connection: the client and server keep a socket open and push messages to each other at will, which is what powers chat, live dashboards, and multiplayer features. Because the connection is long-lived, you typically track active sockets in a small connection manager so you can broadcast to everyone or message one client. **Server-Sent Events (SSE)** are the lighter, one-directional cousin — the server streams a continuous feed to the client over a normal HTTP response — perfect for progress bars, notifications, or token-by-token LLM output where the client never needs to talk back.
+
 ### Background Tasks
 ```python
 from fastapi import BackgroundTasks
@@ -781,6 +786,8 @@ async def event_stream():
 
 ## 8. FastAPI — Testing
 
+**Theory.** FastAPI is designed to be tested without a running server. `TestClient` (built on `httpx`) makes requests directly against your `app` in-process, so tests are fast and need no network. The feature that makes testing genuinely clean is **dependency overrides**: because routes receive their collaborators through `Depends()`, you can swap the real dependency for a test double with `app.dependency_overrides[get_db] = fake_db` — pointing the app at an in-memory or throwaway database, or a fixed "current user" — without touching the route code. For endpoints that use `async` libraries end-to-end you use an async client so the event loop behaves as in production. The strategy that scales: cover request validation (does bad input yield `422`?), the happy path, and the important failure branches (404/403), and override I/O-bound dependencies so the suite stays deterministic and quick.
+
 ```python
 # requirements: pytest pytest-asyncio httpx
 
@@ -843,6 +850,8 @@ app.dependency_overrides[get_current_user] = override_get_current_user
 ---
 
 ## 9. FastAPI — Advanced Patterns
+
+**Theory.** As an app grows past a handful of routes, structure matters. **`APIRouter`** lets you split endpoints into feature modules (users, orders, products), each with its own prefix, tags, and shared dependencies, that `main.py` then wires together with `include_router` — this is also how you version an API (`/v1`, `/v2`). **Lifespan events** give you a single place to run startup and shutdown logic (open a DB pool or Redis connection when the app boots, close it cleanly on exit), replacing the older `@app.on_event` hooks. **Pydantic-Settings** centralizes configuration: environment variables and `.env` files are validated into a typed `Settings` object, cached once with `lru_cache`, so config errors surface at startup rather than mid-request. A **generic pagination** model standardizes list endpoints (items + total + page metadata) so every collection response looks the same to clients. Together these patterns keep a large FastAPI codebase modular, configurable, and predictable.
 
 ### Routers & APIRouter
 ```python
@@ -963,6 +972,8 @@ async def get_products(
 
 ## 10. Falcon — Core Concepts
 
+**Theory.** Falcon takes the opposite philosophy to FastAPI: instead of "batteries included," it is deliberately minimal and unopinionated, which is why it posts some of the lowest per-request overhead of any Python framework. Its central abstraction is the **resource class** — a plain class whose methods are named for HTTP verbs (`on_get`, `on_post`, `on_put`, `on_delete`). You register one resource instance per route, and Falcon dispatches an incoming request to the matching method, passing a `req` (request) and `resp` (response) object you read from and write to directly. There is no built-in ORM, validation layer, or auto-generated docs — you bring your own — which is exactly the appeal for teams that want full control and predictable performance in high-throughput or resource-constrained services (telco, fintech, embedded). Falcon runs as **WSGI** (synchronous, via Gunicorn) or **ASGI** (async, via Uvicorn), so you choose the concurrency model to match your workload.
+
 ### Installation & Basic App
 ```python
 pip install falcon gunicorn
@@ -1009,6 +1020,8 @@ app.resp_options.media_handlers.update(extra_handlers)
 ---
 
 ## 11. Falcon — Routing & Resources
+
+**Theory.** Falcon's router maps a URL template to a resource instance, and within that resource each HTTP method is a separate `on_<verb>` responder — a clean, REST-shaped structure where "a URL is a resource and verbs are the operations on it." Route templates support typed converters (`{user_id:int}`, `{id:uuid}`) so Falcon coerces and rejects bad path segments before your code runs. Because Falcon has no validation framework, you read query and body data explicitly (`req.get_param_as_int`, `req.get_media`) and signal errors by raising Falcon's built-in HTTP error classes (`HTTPNotFound`, `HTTPBadRequest`, `HTTPConflict`, …), which serialize to proper status codes and bodies. A **sink** provides a regex catch-all for unmatched paths, and a registered **error handler** centralizes how exceptions become responses — the two hooks you use to keep behavior consistent across a minimal framework.
 
 ```python
 import falcon
@@ -1187,6 +1200,8 @@ class UserResource:
 
 ## 13. Falcon — ASGI & Async
 
+**Theory.** Falcon 3+ offers a full **ASGI** variant (`falcon.asgi.App`) that mirrors the WSGI API but makes responders and middleware `async`, so I/O-bound work (`await`ing a database, cache, or upstream service) no longer blocks other requests. The programming model is identical — same resource classes, same routing — you simply write `async def on_get(...)` and `await req.get_media()`. The ASGI build also unlocks features that require a persistent connection, notably **WebSockets** via an `on_websocket` responder. The decision is the usual one: choose WSGI for straightforward synchronous services and libraries, and ASGI when you need high I/O concurrency or real-time connections. Run the WSGI app under Gunicorn and the ASGI app under Uvicorn.
+
 ```python
 # ASGI Falcon (v3+) — full async support
 import falcon.asgi
@@ -1292,6 +1307,8 @@ FastAPI wins on developer experience; Falcon wins on raw throughput.
 
 ## 15. Production Patterns & Deployment
 
+**Theory.** Running a Python API in production is about turning a single-process dev server into a resilient, observable, multi-core service. The standard pattern is **Gunicorn as the process manager running Uvicorn workers**: Gunicorn spawns and supervises several worker processes (roughly `2 × CPU cores + 1`) so you use every core and survive a crashed worker, while each Uvicorn worker runs the ASGI event loop. **Recycling workers** (`--max-requests`) periodically restarts them to bound the impact of slow memory leaks. You package the app in a slim **Docker** image for reproducible deploys, put **rate limiting** in front of expensive or public endpoints to protect the service from abuse and stampedes, and emit **structured (JSON) logs** so a log aggregator can search and alert on fields like request ID, user, latency, and status. The throughline: make the service horizontally scalable, fail gracefully under load, and expose enough telemetry to debug it in production.
+
 ### Uvicorn + Gunicorn Setup
 ```bash
 # Development
@@ -1368,7 +1385,106 @@ log.info("user_created", user_id=123, email="a@b.com")
 
 ---
 
-## 16. Interview Q&A
+## 16. Serving ML & LLM Models with FastAPI
+
+**Theory.** FastAPI is the most common way to put a machine-learning model behind an HTTP API, but model serving has a few rules that ordinary CRUD APIs don't. First, **load the model once, not per request.** Models are expensive to load (hundreds of MB to many GB); load them at startup in the `lifespan` handler and keep the object in `app.state`, so every request reuses the same in-memory model. Second, **respect the difference between I/O-bound and CPU/GPU-bound work.** A call to a remote LLM API (OpenAI, etc.) is I/O-bound — use `async def` and `await`. Running a local model with PyTorch is CPU/GPU-bound and *blocks the event loop*; run it in a thread or process pool (or a dedicated inference server) so it doesn't freeze other requests. Third, **stream long generations** so users see tokens as they are produced instead of waiting for the whole answer. The three snippets below map to the three new guides in this track — local model inference (PyTorch), LLM orchestration (LangChain), and stateful agents (LangGraph).
+
+### Load a model once at startup and predict
+```python
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Depends
+from fastapi.concurrency import run_in_threadpool
+from pydantic import BaseModel
+import torch
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Load the trained model ONCE when the app boots (not per request)
+    model = torch.load("model.pt", map_location="cpu")
+    model.eval()                 # inference mode: disables dropout/batchnorm updates
+    app.state.model = model
+    yield
+    # (optional) free resources on shutdown
+    app.state.model = None
+
+app = FastAPI(lifespan=lifespan)
+
+class PredictRequest(BaseModel):
+    features: list[float]
+
+class PredictResponse(BaseModel):
+    label: int
+    confidence: float
+
+def _infer(model, features: list[float]) -> PredictResponse:
+    # Pure CPU/GPU work — synchronous on purpose
+    with torch.no_grad():                          # no gradients needed at inference
+        x = torch.tensor(features).unsqueeze(0)    # add batch dimension
+        logits = model(x)
+        probs = torch.softmax(logits, dim=1)
+        conf, idx = torch.max(probs, dim=1)
+    return PredictResponse(label=int(idx), confidence=float(conf))
+
+@app.post("/predict", response_model=PredictResponse)
+async def predict(req: PredictRequest):
+    model = app.state.model
+    # Offload the blocking inference to a worker thread so the event loop stays free
+    return await run_in_threadpool(_infer, model, req.features)
+```
+
+### Stream tokens from an LLM (Server-Sent Events)
+```python
+from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+from openai import AsyncOpenAI          # calling a hosted LLM is I/O-bound → async
+
+app = FastAPI()
+client = AsyncOpenAI()
+
+@app.post("/chat/stream")
+async def chat_stream(prompt: str):
+    async def token_generator():
+        stream = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            stream=True,                 # ask the provider to stream partial tokens
+        )
+        async for chunk in stream:
+            delta = chunk.choices[0].delta.content or ""
+            if delta:
+                yield f"data: {delta}\n\n"   # SSE frame — client renders as it arrives
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(token_generator(), media_type="text/event-stream")
+```
+
+### Expose a LangChain / LangGraph pipeline as an endpoint
+```python
+from fastapi import FastAPI
+from pydantic import BaseModel
+# 'chain' here is any LangChain Runnable or compiled LangGraph app (see guides 33 & 34)
+
+app = FastAPI()
+
+class Ask(BaseModel):
+    question: str
+    session_id: str          # used to key conversation memory / graph state
+
+@app.post("/ask")
+async def ask(body: Ask):
+    # LangChain Runnables and LangGraph apps expose async .ainvoke()
+    result = await chain.ainvoke(
+        {"question": body.question},
+        config={"configurable": {"thread_id": body.session_id}},  # persists state per session
+    )
+    return {"answer": result}
+```
+
+**Production notes.** Batch multiple incoming requests before a single GPU forward pass to raise throughput; add a timeout and a circuit breaker around hosted-LLM calls (they fail and rate-limit); cache identical prompts/inputs; and for heavy local models prefer a dedicated inference runtime (TorchServe, Triton, vLLM) behind FastAPI rather than running the model inside the web workers. See guide **35 (PyTorch)** for building/training the model, **33 (LangChain)** for composing LLM pipelines, and **34 (LangGraph)** for stateful multi-step agents.
+
+---
+
+## 17. Interview Q&A
 
 **Q: What makes FastAPI different from Flask?**
 A: FastAPI is built on ASGI (async-native), uses Python type hints for automatic request validation via Pydantic, generates OpenAPI docs automatically, and has much better performance for async I/O. Flask is WSGI (synchronous), requires extensions for validation and docs, but has a larger ecosystem and is simpler to learn.

@@ -591,6 +591,51 @@ const ProgressMap = (function () {
       '3-ai-saas-company--java-backend-round-2': ['AI SaaS company round 2 — Kafka lag, DLQ/offsets, design patterns, SOLID OCP, factory OCP, top K spend coding'],
       '4-java-and-spring-topic-wise-qa': ['Java & Spring topic-wise Q&A bank — Java core, OOP, exceptions, Java 8, concurrency, design patterns, Spring Boot, collections, Streams, functional programming'],
       '5-more-companies-coming-soon': ['More company interview rounds (coming soon)']
+    },
+
+    '33_LangChain.md': {
+      '1-what-langchain-is-why-it-exists': ['What LangChain is & why it exists (Runnable interface, ecosystem packages)'],
+      '2-installation-project-setup': ['LangChain installation & project setup (packages, API keys, .env)'],
+      '3-chat-models-messages': ['Chat models & messages (System/Human/AI roles, invoke, parameters)'],
+      '4-prompt-templates': ['Prompt templates (ChatPromptTemplate, MessagesPlaceholder, few-shot)'],
+      '5-output-parsers-structured-output': ['Output parsers & structured output (with_structured_output, Pydantic)'],
+      '6-lcel-composing-chains-with-runnables': ['LCEL — composing chains with Runnables (pipe, batch, parallel, passthrough)'],
+      '7-retrieval-augmented-generation-rag': ['Retrieval-Augmented Generation (loaders, splitters, embeddings, vector stores, retrievers)'],
+      '8-memory-conversation-history': ['LangChain memory & conversation history (RunnableWithMessageHistory, trimming)'],
+      '9-tools-agents': ['LangChain tools & agents (@tool, bind_tools, ReAct loop, when to use agents)'],
+      '10-streaming-async-batching': ['LangChain streaming, async & batching (stream, ainvoke, batch)'],
+      '11-observability-caching-production': ['LangChain observability, caching & production (LangSmith, cache, retries/fallbacks)'],
+      '12-interview-qa': ['LangChain interview Q&A bank']
+    },
+
+    '34_LangGraph.md': {
+      '1-what-langgraph-is-why-it-exists': ['What LangGraph is & why it exists (state machine vs linear chain)'],
+      '2-installation-core-concepts': ['LangGraph core concepts (State, Nodes, Edges, START/END, compile)'],
+      '3-building-your-first-graph': ['Building your first LangGraph (multi-node pipeline, accumulating state)'],
+      '4-state-reducers': ['LangGraph state & reducers (add_messages, custom reducers)'],
+      '5-conditional-edges-routing': ['LangGraph conditional edges & routing (router functions, branching)'],
+      '6-cycles-the-agent-loop': ['LangGraph cycles & the agent loop (ReAct cycle, recursion limit)'],
+      '7-tools-the-prebuilt-react-agent': ['LangGraph tools & prebuilt ReAct agent (create_react_agent, ToolNode)'],
+      '8-persistence-memory-with-checkpointers': ['LangGraph persistence & memory (checkpointers, thread_id, time travel)'],
+      '9-human-in-the-loop-interrupts': ['LangGraph human-in-the-loop & interrupts (interrupt_before, resume)'],
+      '10-streaming-observability': ['LangGraph streaming & observability (stream modes, LangSmith)'],
+      '11-multi-agent-patterns': ['LangGraph multi-agent patterns (supervisor, network, hierarchical)'],
+      '12-interview-qa': ['LangGraph interview Q&A bank']
+    },
+
+    '35_PyTorch.md': {
+      '1-what-pytorch-is-why-it-exists': ['What PyTorch is & why it exists (tensors, autograd, dynamic graph)'],
+      '2-installation-tensors': ['PyTorch tensors (shape, dtype, device, creation, NumPy interop)'],
+      '3-tensor-operations-broadcasting': ['Tensor operations & broadcasting (matmul, reshape, reductions)'],
+      '4-autograd-automatic-differentiation': ['Autograd & backpropagation (requires_grad, backward, no_grad, zero_grad)'],
+      '5-building-models-with-nnmodule': ['Building models with nn.Module (layers, forward, parameters, activations)'],
+      '6-loss-functions-optimizers': ['Loss functions & optimizers (CrossEntropy/MSE, SGD/Adam, learning rate)'],
+      '7-the-training-loop': ['The PyTorch training loop (five steps, epochs, train/eval, overfitting)'],
+      '8-datasets-dataloaders': ['Datasets & DataLoaders (__len__/__getitem__, batching, shuffling, workers)'],
+      '9-gpu-acceleration-devices': ['GPU acceleration & devices (to(device), mixed precision, distributed)'],
+      '10-saving-loading-inference': ['Saving, loading & inference (state_dict, eval, no_grad, TorchScript/ONNX)'],
+      '11-end-to-end-example': ['PyTorch end-to-end example (model → DataLoader → train → save)'],
+      '12-interview-qa': ['PyTorch interview Q&A bank']
     }
   };
 

@@ -286,7 +286,7 @@ const INTERVIEW_TRACKS = [
   {
     id: 'python-stack',
     title: 'Python Stack',
-    subtitle: 'Core Python → FastAPI → Falcon',
+    subtitle: 'Core Python → FastAPI → LangChain / LangGraph / PyTorch',
     icon: '🐍',
     color: '#059669',
     gradient: 'linear-gradient(135deg, #047857 0%, #10b981 50%, #34d399 100%)',
@@ -305,11 +305,11 @@ const INTERVIEW_TRACKS = [
         id: 'fastapi',
         file: '08_FastAPI_and_Falcon.md',
         title: 'FastAPI & Falcon',
-        description: 'REST APIs, dependency injection, middleware, Falcon comparison',
-        sections: 10,
-        level: 'Intermediate',
+        description: 'REST APIs, Pydantic, dependency injection, auth/JWT, async DB, WebSockets, testing, Falcon comparison, production deployment, serving ML/LLM models',
+        sections: 17,
+        level: 'Intermediate → Advanced',
         priority: 'high',
-        tags: ['FastAPI', 'REST', 'API']
+        tags: ['FastAPI', 'REST', 'API', 'ML Serving']
       },
       {
         id: 'python-questions',
@@ -320,6 +320,36 @@ const INTERVIEW_TRACKS = [
         level: 'Beginner → Expert',
         priority: 'critical',
         tags: ['Python', 'Interview', 'GIL', 'Async']
+      },
+      {
+        id: 'langchain',
+        file: '33_LangChain.md',
+        title: 'LangChain — Complete Guide',
+        description: 'Build LLM apps in Python — chat models, prompt templates, output parsers, LCEL/Runnables, RAG (loaders, splitters, embeddings, vector stores, retrievers), memory, tools & agents, streaming/async, production',
+        sections: 12,
+        level: 'Beginner → Advanced',
+        priority: 'high',
+        tags: ['LangChain', 'LLM', 'RAG', 'AI']
+      },
+      {
+        id: 'langgraph',
+        file: '34_LangGraph.md',
+        title: 'LangGraph — Complete Guide',
+        description: 'Stateful multi-step LLM agents as graphs — state & reducers, nodes/edges, conditional routing, cycles & the agent loop, tools, checkpointers/persistence, human-in-the-loop, streaming, multi-agent patterns',
+        sections: 12,
+        level: 'Intermediate → Advanced',
+        priority: 'high',
+        tags: ['LangGraph', 'Agents', 'LLM', 'AI']
+      },
+      {
+        id: 'pytorch',
+        file: '35_PyTorch.md',
+        title: 'PyTorch — Complete Guide',
+        description: 'Deep learning in Python — tensors, broadcasting, autograd, nn.Module models, losses & optimizers, the training loop, datasets/DataLoaders, GPU acceleration, saving/loading & inference, end-to-end example',
+        sections: 12,
+        level: 'Beginner → Advanced',
+        priority: 'high',
+        tags: ['PyTorch', 'Deep Learning', 'ML', 'AI']
       }
     ]
   },
