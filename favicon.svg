@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="StackReady">
+  <defs>
+    <linearGradient id="bg" x1="32" y1="4" x2="32" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="flame" x1="24" y1="44" x2="36" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- Rocket body -->
+  <path d="M38 14c-8 4-14 12-16 22l-2 8 6-3c2-6 6-11 12-14z" fill="#f8fafc"/>
+  <path d="M38 14l8 6-4 10-8-4 4-12z" fill="#ef4444"/>
+  <circle cx="30" cy="28" r="3" fill="#38bdf8"/>
+  <path d="M22 36l-4 10 8-4-4-6z" fill="#ef4444"/>
+  <path d="M20 46c2 4 6 8 12 10-4-6-6-8-12-10z" fill="url(#flame)" opacity="0.95"/>
+</svg>
