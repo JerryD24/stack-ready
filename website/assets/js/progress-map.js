@@ -590,7 +590,8 @@ const ProgressMap = (function () {
       '2-product-company--java-backend-round-1': ['Product company Java backend round 1 — inheritance vs composition, abstract class, HashMap vs CHM, exceptions, streams invert map, test cases'],
       '3-ai-saas-company--java-backend-round-2': ['AI SaaS company round 2 — Kafka lag, DLQ/offsets, design patterns, SOLID OCP, factory OCP, top K spend coding'],
       '4-java-and-spring-topic-wise-qa': ['Java & Spring topic-wise Q&A bank — Java core, OOP, exceptions, Java 8, concurrency, design patterns, Spring Boot, collections, Streams, functional programming'],
-      '5-more-companies-coming-soon': ['More company interview rounds (coming soon)']
+      '5-backend-interview-questions-from-linkedin-posts': ['LinkedIn backend interview Q&A — Java 17 features, Spring Boot internals, SQL joins & indexes, Maven/testing/CI-CD, production debugging scenarios, DSA, HR'],
+      '6-more-companies-coming-soon': ['More company interview rounds (coming soon)']
     },
 
     '33_LangChain.md': {
