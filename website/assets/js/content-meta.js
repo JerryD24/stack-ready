@@ -4,8 +4,8 @@
  */
 window.CONTENT_META = {
   "00_Topic_List.md": {
-    "words": 4593,
-    "minutes": 23
+    "words": 5042,
+    "minutes": 25
   },
   "01_Java_Core_to_Advanced.md": {
     "words": 6944,
@@ -32,12 +32,12 @@ window.CONTENT_META = {
     "minutes": 4
   },
   "07_Python_Core_to_Advanced.md": {
-    "words": 1553,
-    "minutes": 8
+    "words": 2625,
+    "minutes": 13
   },
   "08_FastAPI_and_Falcon.md": {
-    "words": 1357,
-    "minutes": 7
+    "words": 2810,
+    "minutes": 14
   },
   "09_GoLang.md": {
     "words": 1460,
@@ -132,8 +132,20 @@ window.CONTENT_META = {
     "minutes": 25
   },
   "32_Real_Interview_Questions.md": {
-    "words": 4356,
-    "minutes": 22
+    "words": 31241,
+    "minutes": 156
+  },
+  "33_LangChain.md": {
+    "words": 2125,
+    "minutes": 11
+  },
+  "34_LangGraph.md": {
+    "words": 1822,
+    "minutes": 9
+  },
+  "35_PyTorch.md": {
+    "words": 2066,
+    "minutes": 10
   },
   "Complete_PeerReview_Report.md": {
     "words": 3202,
